@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/banner.png" alt="ELECTRO" width="100%">
-</p>
+
 
 <p align="center">
   <a href="https://github.com/dawsonblock/Electro/stargazers"><img src="https://img.shields.io/github/stars/dawsonblock/Electro?style=for-the-badge&color=F5A623&logo=github&logoColor=white" alt="Stars"></a>&nbsp;
