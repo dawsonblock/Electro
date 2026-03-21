@@ -744,17 +744,22 @@ fn format_budget_dashboard(
 
 /// Extract the latest user query text from history.
 fn extract_latest_query(history: &[ChatMessage]) -> String {
-    history
-        .iter()
-        .rev()
-        .find_map(|m| match &m.content {
-            MessageContent::Text(t) => Some(t.clone()),
-            MessageContent::Parts(parts) => parts.iter().find_map(|p| match p {
-                ContentPart::Text { text } => Some(text.clone()),
-                _ => None,
-            }),
-        })
-        .unwrap_or_default()
+    for m in history.iter().rev() {
+        match &m.content {
+            MessageContent::Text(t) if !t.is_empty() => return t.clone(),
+            MessageContent::Parts(parts) => {
+                for p in parts {
+                    if let ContentPart::Text { text } = p {
+                        if !text.is_empty() {
+                            return text.clone();
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    String::new()
 }
 
 /// Generate a brief summary of dropped messages for context continuity.

@@ -95,10 +95,10 @@ impl ParsedCommand {
         Self { program, args }
     }
 
-    fn argv(&self) -> Vec<String> {
+    fn argv(&self) -> Vec<&str> {
         let mut argv = Vec::with_capacity(self.args.len() + 1);
-        argv.push(self.program.clone());
-        argv.extend(self.args.clone());
+        argv.push(self.program.as_str());
+        argv.extend(self.args.iter().map(String::as_str));
         argv
     }
 }
@@ -188,7 +188,7 @@ fn parse_command_line(command: &str) -> Result<ParsedCommand, String> {
         DoubleQuoted,
     }
 
-    let mut args = Vec::new();
+    let mut args = Vec::with_capacity(8);
     let mut current = String::new();
     let mut mode = Mode::Normal;
     let mut escaped = false;
@@ -434,7 +434,7 @@ fn build_container_args(
     }
 
     args.push(policy.container_image.clone());
-    args.extend(parsed.argv());
+    args.extend(parsed.argv().into_iter().map(String::from));
     args
 }
 
@@ -549,7 +549,13 @@ fn render_output(
             }
 
             if content.len() > MAX_OUTPUT_SIZE {
-                content.truncate(MAX_OUTPUT_SIZE);
+                let end = content
+                    .char_indices()
+                    .map(|(i, _)| i)
+                    .take_while(|&i| i <= MAX_OUTPUT_SIZE)
+                    .last()
+                    .unwrap_or(0);
+                content.truncate(end);
                 content.push_str("\n... [output truncated]");
             }
 

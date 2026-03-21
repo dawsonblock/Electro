@@ -130,7 +130,13 @@ impl Tool for WebFetchTool {
                 match response.text().await {
                     Ok(mut body) => {
                         if body.len() > MAX_RESPONSE_SIZE {
-                            body.truncate(MAX_RESPONSE_SIZE);
+                            let end = body
+                                .char_indices()
+                                .map(|(i, _)| i)
+                                .take_while(|&i| i <= MAX_RESPONSE_SIZE)
+                                .last()
+                                .unwrap_or(0);
+                            body.truncate(end);
                             body.push_str("\n... [response truncated]");
                         }
 

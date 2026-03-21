@@ -301,7 +301,7 @@ fn extract_file_paths(arguments: &serde_json::Value) -> Vec<String> {
         "dest",
     ];
 
-    let mut paths = Vec::new();
+    let mut paths = Vec::with_capacity(4);
     if let serde_json::Value::Object(map) = arguments {
         for key in &path_keys {
             if let Some(serde_json::Value::String(p)) = map.get(*key) {

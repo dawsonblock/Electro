@@ -75,7 +75,13 @@ impl Tool for FileReadTool {
         match tokio::fs::read_to_string(&path).await {
             Ok(mut content) => {
                 if content.len() > MAX_READ_SIZE {
-                    content.truncate(MAX_READ_SIZE);
+                    let end = content
+                        .char_indices()
+                        .map(|(i, _)| i)
+                        .take_while(|&i| i <= MAX_READ_SIZE)
+                        .last()
+                        .unwrap_or(0);
+                    content.truncate(end);
                     content.push_str("\n... [file truncated]");
                 }
                 Ok(ToolOutput {

@@ -31,7 +31,8 @@ impl GitTool {
     /// Build command arguments for the given action and input arguments.
     /// Returns the git subcommand arguments or an error.
     fn build_args(action: &str, args: &serde_json::Value) -> Result<Vec<String>, ElectroError> {
-        let mut cmd_args: Vec<String> = vec![action.to_string()];
+        let mut cmd_args: Vec<String> = Vec::with_capacity(8);
+        cmd_args.push(action.to_string());
 
         match action {
             "clone" => {
@@ -334,9 +335,15 @@ browser_access: electro_core::policy::BrowserPolicy::Blocked,
                     );
                 }
 
-                // Truncate if too large
+                // Truncate if too large (char-safe boundary)
                 if content.len() > MAX_OUTPUT_SIZE {
-                    content.truncate(MAX_OUTPUT_SIZE);
+                    let end = content
+                        .char_indices()
+                        .map(|(i, _)| i)
+                        .take_while(|&i| i <= MAX_OUTPUT_SIZE)
+                        .last()
+                        .unwrap_or(0);
+                    content.truncate(end);
                     content.push_str("\n... [output truncated]");
                 }
 
