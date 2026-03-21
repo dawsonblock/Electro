@@ -32,7 +32,7 @@ pub use browser::BrowserTool;
 #[cfg(feature = "browser")]
 pub use browser_pool::BrowserPool;
 pub use check_messages::{CheckMessagesTool, PendingMessages};
-pub use custom_tools::{CustomToolRegistry, SelfCreateTool};
+pub use custom_tools::CustomToolRegistry;
 pub use file::{FileListTool, FileReadTool, FileWriteTool};
 pub use git::GitTool;
 pub use key_manage::KeyManageTool;

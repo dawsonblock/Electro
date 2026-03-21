@@ -6,14 +6,14 @@
 //! - "remove": Disconnect and remove an MCP server
 //! - "restart": Restart a crashed or misbehaving server
 
-use crate::config::McpServerConfig;
+
 use crate::manager::McpManager;
 use async_trait::async_trait;
 use std::sync::Arc;
 use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
 use temm1e_core::policy::CapabilityPolicy;
 
-use tracing::{info, warn};
+use tracing::info;
 
 /// Agent tool for managing MCP servers at runtime.
 pub struct McpManageTool {
@@ -34,7 +34,7 @@ impl Tool for McpManageTool {
 
     fn description(&self) -> &str {
         "Manage MCP (Model Context Protocol) servers. Actions: 'list' (show all servers and tools), \
-         'add' (connect a new MCP server), 'remove' (disconnect a server), 'restart' (restart a server). \
+          'remove' (disconnect a server), 'restart' (restart a server). \
          MCP servers provide external tools like search, SMS, document stores, etc."
     }
 
@@ -44,7 +44,7 @@ impl Tool for McpManageTool {
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["list", "add", "remove", "restart"],
+                    "enum": ["list", "remove", "restart"],
                     "description": "The action to perform"
                 },
                 "name": {
@@ -103,89 +103,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked, // Spawns subproces
                 })
             }
 
-            "add" => {
-                let name = match args.get("name").and_then(|v| v.as_str()) {
-                    Some(n) if !n.is_empty() => n,
-                    _ => {
-                        return Ok(ToolOutput {
-                            content: "Missing 'name' field for add action".to_string(),
-                            is_error: true,
-                        });
-                    }
-                };
-
-                let transport = args
-                    .get("transport")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("stdio");
-
-                let config = match transport {
-                    "stdio" => {
-                        let command = match args.get("command").and_then(|v| v.as_str()) {
-                            Some(c) if !c.is_empty() => c,
-                            _ => {
-                                return Ok(ToolOutput {
-                                    content: "Missing 'command' field for stdio transport"
-                                        .to_string(),
-                                    is_error: true,
-                                });
-                            }
-                        };
-                        let cmd_args: Vec<String> = args
-                            .get("args")
-                            .and_then(|v| v.as_array())
-                            .map(|arr| {
-                                arr.iter()
-                                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                                    .collect()
-                            })
-                            .unwrap_or_default();
-                        McpServerConfig::stdio(name, command, cmd_args)
-                    }
-                    "http" => {
-                        let url = match args.get("url").and_then(|v| v.as_str()) {
-                            Some(u) if !u.is_empty() => u,
-                            _ => {
-                                return Ok(ToolOutput {
-                                    content: "Missing 'url' field for http transport".to_string(),
-                                    is_error: true,
-                                });
-                            }
-                        };
-                        McpServerConfig::http(name, url)
-                    }
-                    other => {
-                        return Ok(ToolOutput {
-                            content: format!(
-                                "Unknown transport '{}'. Use 'stdio' or 'http'.",
-                                other
-                            ),
-                            is_error: true,
-                        });
-                    }
-                };
-
-                match self.manager.add_server(config).await {
-                    Ok(tool_count) => {
-                        info!(server = %name, tools = tool_count, "MCP server added via agent tool");
-                        Ok(ToolOutput {
-                            content: format!(
-                                "MCP server '{}' connected successfully with {} tools. \
-                                 The new tools will be available in the next message.",
-                                name, tool_count
-                            ),
-                            is_error: false,
-                        })
-                    }
-                    Err(e) => {
-                        warn!(server = %name, error = %e, "Failed to add MCP server via agent tool");
-                        Ok(ToolOutput {
-                            content: format!("Failed to add MCP server '{}': {}", name, e),
-                            is_error: true,
-                        })
-                    }
-                }
-            }
+            // 'add' action removed for security hardening (Phase 5)
 
             "remove" => {
                 let name = match args.get("name").and_then(|v| v.as_str()) {
@@ -282,23 +200,6 @@ mod tests {
         assert!(output.content.contains("No MCP servers configured"));
     }
 
-    #[tokio::test]
-    async fn mcp_manage_add_missing_name() {
-        let manager = Arc::new(McpManager::new());
-        let tool = McpManageTool::new(manager);
-        let ctx = ToolContext {
-            workspace_path: std::path::PathBuf::from("/tmp"),
-            session_id: "test".to_string(),
-            chat_id: "test".to_string(),
-        };
-        let input = ToolInput {
-            name: "mcp_manage".to_string(),
-            arguments: serde_json::json!({"action": "add"}),
-        };
-        let output = tool.execute(input, &ctx).await.unwrap();
-        assert!(output.is_error);
-        assert!(output.content.contains("Missing 'name'"));
-    }
 
     #[tokio::test]
     async fn mcp_manage_unknown_action() {

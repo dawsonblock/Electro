@@ -1475,9 +1475,6 @@ async fn main() -> Result<()> {
                     tracing::info!(count = custom_tools.len(), "Custom script tools loaded");
                     tools.extend(custom_tools);
                 }
-                tools.push(Arc::new(temm1e_tools::SelfCreateTool::new(
-                    custom_tool_registry.clone(),
-                )));
             }
 
             // ── MCP servers (external tool sources) ──────────
@@ -1491,10 +1488,6 @@ async fn main() -> Result<()> {
                     tracing::info!(count = mcp_tools.len(), "MCP bridge tools loaded");
                     tools.extend(mcp_tools);
                 }
-                // Add MCP agent tools: manage, self-extend (discover), self-add (install)
-                tools.push(Arc::new(temm1e_mcp::McpManageTool::new(mgr.clone())));
-                tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(mgr.clone())));
                 mgr
             };
 
@@ -2442,14 +2435,7 @@ Just type a message to chat with the AI agent.",
 
                                                 // Warn if target looks like a GitHub repo URL (not an MCP endpoint)
                                                 if target.contains("github.com/") && !target.contains("/sse") && !target.contains("/mcp") {
-                                                    format!(
-                                                        "That looks like a GitHub repository URL, not an MCP server endpoint.\n\n\
-                                                         To use an MCP server, you need the command to run it. For example:\n\
-                                                         • /mcp add {} npx @playwright/mcp@latest\n\
-                                                         • /mcp add {} npx -y @modelcontextprotocol/server-filesystem /path\n\n\
-                                                         Check the repo's README for the correct MCP server command.",
-                                                        name, name
-                                                    )
+                                                    format!("That looks like a GitHub repository URL, not an MCP server endpoint. Please check the README for the correct MCP command.")
                                                 } else {
                                                     let config = if target.starts_with("http://") || target.starts_with("https://") {
                                                         temm1e_mcp::McpServerConfig::http(name, target)
@@ -2466,9 +2452,6 @@ Just type a message to chat with the AI agent.",
                                                                 let mut new_tools = tools_template.clone();
                                                                 let mcp_tools = mcp_mgr.bridge_tools(&tool_names).await;
                                                                 new_tools.extend(mcp_tools);
-                                                                new_tools.push(Arc::new(temm1e_mcp::McpManageTool::new(mcp_mgr.clone())));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(mcp_mgr.clone())));
                                                                 let new_agent = Arc::new(temm1e_agent::AgentRuntime::with_limits(
                                                                     agent.provider_arc(),
                                                                     memory.clone(),
@@ -2495,9 +2478,6 @@ Just type a message to chat with the AI agent.",
                                                         let mut new_tools = tools_template.clone();
                                                         let mcp_tools = mcp_mgr.bridge_tools(&tool_names).await;
                                                         new_tools.extend(mcp_tools);
-                                                        new_tools.push(Arc::new(temm1e_mcp::McpManageTool::new(mcp_mgr.clone())));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(mcp_mgr.clone())));
                                                         let new_agent = Arc::new(temm1e_agent::AgentRuntime::with_limits(
                                                             agent.provider_arc(),
                                                             memory.clone(),
@@ -2522,9 +2502,6 @@ Just type a message to chat with the AI agent.",
                                                         let mut new_tools = tools_template.clone();
                                                         let mcp_tools = mcp_mgr.bridge_tools(&tool_names).await;
                                                         new_tools.extend(mcp_tools);
-                                                        new_tools.push(Arc::new(temm1e_mcp::McpManageTool::new(mcp_mgr.clone())));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                                                new_tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(mcp_mgr.clone())));
                                                         let new_agent = Arc::new(temm1e_agent::AgentRuntime::with_limits(
                                                             agent.provider_arc(),
                                                             memory.clone(),
@@ -3710,9 +3687,6 @@ Just type a message to chat with the AI agent.",
                                             let mut new_tools = tools_template.clone();
                                             let mcp_tools = mcp_mgr.bridge_tools(&tool_names).await;
                                             new_tools.extend(mcp_tools);
-                                            new_tools.push(std::sync::Arc::new(temm1e_mcp::McpManageTool::new(mcp_mgr.clone())));
-                                            new_tools.push(std::sync::Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                            new_tools.push(std::sync::Arc::new(temm1e_mcp::SelfAddMcpTool::new(mcp_mgr.clone())));
                                             let new_agent = Arc::new(temm1e_agent::AgentRuntime::with_limits(
                                                 agent.provider_arc(),
                                                 memory.clone(),
@@ -3734,15 +3708,11 @@ Just type a message to chat with the AI agent.",
                                                 tracing::info!(count = custom_tools.len(), "Reloaded custom tools");
                                                 new_tools.extend(custom_tools);
                                             }
-                                            new_tools.push(std::sync::Arc::new(temm1e_tools::SelfCreateTool::new(custom_registry.clone())));
                                             #[cfg(feature = "mcp")]
                                             {
                                                 let tool_names: Vec<String> = new_tools.iter().map(|t| t.name().to_string()).collect();
                                                 let mcp_tools = mcp_mgr.bridge_tools(&tool_names).await;
                                                 new_tools.extend(mcp_tools);
-                                                new_tools.push(std::sync::Arc::new(temm1e_mcp::McpManageTool::new(mcp_mgr.clone())));
-                                                new_tools.push(std::sync::Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                                new_tools.push(std::sync::Arc::new(temm1e_mcp::SelfAddMcpTool::new(mcp_mgr.clone())));
                                             }
                                             let new_agent = Arc::new(temm1e_agent::AgentRuntime::with_limits(
                                                 agent.provider_arc(),
@@ -4180,9 +4150,6 @@ Just type a message to chat with the AI agent.",
                     tracing::info!(count = custom_tools.len(), "Custom script tools loaded");
                     tools_template.extend(custom_tools);
                 }
-                tools_template.push(Arc::new(temm1e_tools::SelfCreateTool::new(
-                    custom_tool_registry.clone(),
-                )));
             }
 
             // ── MCP servers (external tool sources) ──────────
@@ -4199,9 +4166,6 @@ Just type a message to chat with the AI agent.",
                     tracing::info!(count = mcp_tools.len(), "MCP bridge tools loaded");
                     tools_template.extend(mcp_tools);
                 }
-                tools_template.push(Arc::new(temm1e_mcp::McpManageTool::new(mgr.clone())));
-                tools_template.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                tools_template.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(mgr.clone())));
                 mgr
             };
 
@@ -4587,16 +4551,6 @@ Just type a message to chat with the AI agent.",
                                             let mcp_tools =
                                                 mcp_manager.bridge_tools(&tool_names).await;
                                             new_tools.extend(mcp_tools);
-                                            new_tools.push(Arc::new(
-                                                temm1e_mcp::McpManageTool::new(mcp_manager.clone()),
-                                            ));
-                                            new_tools
-                                                .push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                            new_tools.push(Arc::new(
-                                                temm1e_mcp::SelfAddMcpTool::new(
-                                                    mcp_manager.clone(),
-                                                ),
-                                            ));
                                             agent_opt = Some(
                                                 temm1e_agent::AgentRuntime::with_limits(
                                                     agent.provider_arc(),
@@ -4640,13 +4594,6 @@ Just type a message to chat with the AI agent.",
                                     let mut new_tools = tools_template.clone();
                                     let mcp_tools = mcp_manager.bridge_tools(&tool_names).await;
                                     new_tools.extend(mcp_tools);
-                                    new_tools.push(Arc::new(temm1e_mcp::McpManageTool::new(
-                                        mcp_manager.clone(),
-                                    )));
-                                    new_tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                    new_tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(
-                                        mcp_manager.clone(),
-                                    )));
                                     agent_opt = Some(
                                         temm1e_agent::AgentRuntime::with_limits(
                                             agent.provider_arc(),
@@ -4685,13 +4632,6 @@ Just type a message to chat with the AI agent.",
                                     let mut new_tools = tools_template.clone();
                                     let mcp_tools = mcp_manager.bridge_tools(&tool_names).await;
                                     new_tools.extend(mcp_tools);
-                                    new_tools.push(Arc::new(temm1e_mcp::McpManageTool::new(
-                                        mcp_manager.clone(),
-                                    )));
-                                    new_tools.push(Arc::new(temm1e_mcp::SelfExtendTool::new()));
-                                    new_tools.push(Arc::new(temm1e_mcp::SelfAddMcpTool::new(
-                                        mcp_manager.clone(),
-                                    )));
                                     agent_opt = Some(
                                         temm1e_agent::AgentRuntime::with_limits(
                                             agent.provider_arc(),

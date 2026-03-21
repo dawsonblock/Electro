@@ -30,12 +30,8 @@ pub mod config;
 pub mod jsonrpc;
 pub mod manager;
 pub mod mcp_manage;
-pub mod self_add;
-pub mod self_extend;
 pub mod transport;
 
 pub use config::{McpConfig, McpServerConfig};
 pub use manager::McpManager;
 pub use mcp_manage::McpManageTool;
-pub use self_add::SelfAddMcpTool;
-pub use self_extend::SelfExtendTool;
