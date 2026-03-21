@@ -45,7 +45,8 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use temm1e_core::types::error::Temm1eError;
 use temm1e_core::{
-    PathAccess, Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput, ToolOutputImage, Vault,
+    Tool, ToolContext, ToolInput, ToolOutput, ToolOutputImage, Vault};
+use temm1e_core::policy::{CapabilityPolicy, FileAccessPolicy, BrowserPolicy,
 };
 use tokio::sync::Mutex;
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
@@ -1758,14 +1759,15 @@ impl Tool for BrowserTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: vec![
-                PathAccess::ReadWrite("~/.temm1e/sessions".into()),
-                PathAccess::Write(".".into()),
+                FileAccessPolicy::ReadWrite("~/.temm1e/sessions".into()),
+                FileAccessPolicy::Write(".".into()),
             ],
             network_access: vec!["public-http".to_string()],
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -3077,8 +3079,8 @@ mod tests {
             let tool = BrowserTool::new();
             let decl = tool.declarations();
             assert!(!decl.network_access.is_empty());
-            assert_eq!(decl.network_access[0], "*");
-            assert!(!decl.shell_access);
+            assert_eq!(decl.network_access[0], "public-http");
+            assert_eq!(decl.shell_access, temm1e_core::policy::ShellPolicy::Blocked);
         });
     }
 

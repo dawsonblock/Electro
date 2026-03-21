@@ -12,7 +12,9 @@ use std::process::Stdio;
 
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 
 /// Default command timeout in seconds.
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
@@ -595,11 +597,12 @@ impl Tool for ShellTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: true,
+            shell_access: temm1e_core::policy::ShellPolicy::Allowed,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

@@ -18,9 +18,10 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
 use temm1e_core::{
-    Memory, MemoryEntry, MemoryEntryType, SearchOpts, Tool, ToolContext, ToolDeclarations,
+    Memory, MemoryEntry, MemoryEntryType, SearchOpts, Tool, ToolContext,
     ToolInput, ToolOutput,
 };
+use temm1e_core::policy::CapabilityPolicy;
 
 pub struct MemoryManageTool {
     memory: Arc<dyn Memory>,
@@ -526,11 +527,12 @@ impl Tool for MemoryManageTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -871,7 +873,8 @@ mod tests {
 
         assert_eq!(tool.name(), "memory_manage");
         assert!(tool.description().contains("persistent knowledge"));
-        assert!(!tool.declarations().shell_access);
+        use temm1e_core::policy::ShellPolicy;
+        assert_eq!(tool.declarations().shell_access, ShellPolicy::Blocked);
 
         let schema = tool.parameters_schema();
         let props = schema.get("properties").unwrap();

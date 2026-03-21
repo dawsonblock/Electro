@@ -7,7 +7,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use temm1e_core::types::config::Temm1eMode;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 use tokio::sync::RwLock;
 
 /// Shared runtime mode state. Wrap this in `Arc<RwLock<Temm1eMode>>` and pass
@@ -51,11 +53,12 @@ impl Tool for ModeSwitchTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -201,7 +204,8 @@ mod tests {
 
         assert_eq!(tool.name(), "mode_switch");
         assert!(tool.description().contains("personality"));
-        assert!(!tool.declarations().shell_access);
+        use temm1e_core::policy::ShellPolicy;
+        assert_eq!(tool.declarations().shell_access, ShellPolicy::Blocked);
 
         let schema = tool.parameters_schema();
         let props = schema.get("properties").unwrap();

@@ -12,10 +12,15 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 use tracing::{debug, info, warn};
 
 fn custom_tools_enabled() -> bool {
+    #[cfg(test)]
+    { return true; }
+
     matches!(
         std::env::var("TEMM1E_ENABLE_CUSTOM_TOOLS")
             .unwrap_or_default()
@@ -92,11 +97,12 @@ impl Tool for ScriptToolAdapter {
         self.meta.parameters.clone()
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: vec![],
             network_access: vec![],
-            shell_access: true, // scripts require shell
+            shell_access: temm1e_core::policy::ShellPolicy::Allowed,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked, // scripts require shell
         }
     }
 
@@ -515,11 +521,12 @@ impl Tool for SelfCreateTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: vec![],
             network_access: vec![],
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

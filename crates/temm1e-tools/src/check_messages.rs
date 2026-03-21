@@ -12,7 +12,9 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 
 /// Shared pending-message queue. Maps chat_id → list of message texts.
 pub type PendingMessages = Arc<Mutex<HashMap<String, Vec<String>>>>;
@@ -49,11 +51,12 @@ impl Tool for CheckMessagesTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

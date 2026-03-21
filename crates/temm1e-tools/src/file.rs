@@ -2,7 +2,9 @@
 
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{PathAccess, Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::{CapabilityPolicy, FileAccessPolicy};
+
 
 /// Maximum file read size (32 KB — keeps tool output within token budget).
 const MAX_READ_SIZE: usize = 32 * 1024;
@@ -39,11 +41,12 @@ impl Tool for FileReadTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
-            file_access: vec![PathAccess::Read(".".into())],
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read(".".into())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -123,11 +126,12 @@ impl Tool for FileWriteTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
-            file_access: vec![PathAccess::ReadWrite(".".into())],
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::ReadWrite(".".into())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -212,11 +216,12 @@ impl Tool for FileListTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
-            file_access: vec![PathAccess::Read(".".into())],
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read(".".into())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

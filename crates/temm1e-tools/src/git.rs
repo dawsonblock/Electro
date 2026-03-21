@@ -2,7 +2,9 @@
 
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 
 /// Default command timeout in seconds (git ops can be slow).
 const DEFAULT_TIMEOUT_SECS: u64 = 60;
@@ -243,11 +245,12 @@ impl Tool for GitTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: true,
+            shell_access: temm1e_core::policy::ShellPolicy::Allowed,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -378,7 +381,7 @@ mod tests {
     fn test_declarations_has_shell_access() {
         let tool = GitTool::new();
         let decl = tool.declarations();
-        assert!(decl.shell_access);
+        assert_eq!(decl.shell_access, temm1e_core::policy::ShellPolicy::Allowed);
         assert!(decl.file_access.is_empty());
         assert!(decl.network_access.is_empty());
     }

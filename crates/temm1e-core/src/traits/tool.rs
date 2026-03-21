@@ -1,24 +1,7 @@
 use crate::types::error::Temm1eError;
+use crate::policy::{CapabilityPolicy, FileAccessPolicy};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-
-/// Tool capability declarations — what resources a tool needs
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToolDeclarations {
-    /// File paths this tool needs access to
-    pub file_access: Vec<PathAccess>,
-    /// Network domains this tool needs to reach
-    pub network_access: Vec<String>,
-    /// Whether this tool needs shell execution
-    pub shell_access: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PathAccess {
-    Read(String),
-    Write(String),
-    ReadWrite(String),
-}
 
 /// Input to a tool execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -64,7 +47,7 @@ pub trait Tool: Send + Sync {
     fn parameters_schema(&self) -> serde_json::Value;
 
     /// What resources this tool needs (for sandboxing enforcement)
-    fn declarations(&self) -> ToolDeclarations;
+    fn declarations(&self) -> CapabilityPolicy;
 
     /// Execute the tool with given input
     async fn execute(&self, input: ToolInput, ctx: &ToolContext)

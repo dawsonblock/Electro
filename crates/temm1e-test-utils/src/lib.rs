@@ -15,8 +15,9 @@ use temm1e_core::types::message::*;
 use temm1e_core::types::session::SessionContext;
 use temm1e_core::{
     Channel, FileTransfer, Memory, MemoryEntry, MemoryEntryType, Provider, SearchOpts, Tool,
-    ToolContext, ToolDeclarations, ToolInput, ToolOutput,
+    ToolContext, ToolInput, ToolOutput,
 };
+use temm1e_core::policy::CapabilityPolicy;
 
 // ---------------------------------------------------------------------------
 // MockProvider
@@ -306,7 +307,7 @@ impl Channel for MockChannel {
 /// A mock tool for testing the executor/sandbox.
 pub struct MockTool {
     tool_name: String,
-    declarations: ToolDeclarations,
+    declarations: CapabilityPolicy,
     output: ToolOutput,
 }
 
@@ -314,10 +315,11 @@ impl MockTool {
     pub fn new(name: &str) -> Self {
         Self {
             tool_name: name.to_string(),
-            declarations: ToolDeclarations {
+            declarations: CapabilityPolicy {
                 file_access: Vec::new(),
                 network_access: Vec::new(),
-                shell_access: false,
+                shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             },
             output: ToolOutput {
                 content: "mock output".to_string(),
@@ -326,7 +328,7 @@ impl MockTool {
         }
     }
 
-    pub fn with_declarations(mut self, declarations: ToolDeclarations) -> Self {
+    pub fn with_declarations(mut self, declarations: CapabilityPolicy) -> Self {
         self.declarations = declarations;
         self
     }
@@ -354,7 +356,7 @@ impl Tool for MockTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
         self.declarations.clone()
     }
 

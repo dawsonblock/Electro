@@ -874,7 +874,7 @@ mod tests {
         );
         config.insert("max_instances".to_string(), "5".to_string());
 
-        let err = create_orchestrator("docker", &config).unwrap_err().to_string();
+        let err = create_orchestrator("docker", &config).err().unwrap().to_string();
         assert!(err.contains("disabled"));
     }
 
@@ -885,7 +885,7 @@ mod tests {
     #[tokio::test]
     async fn test_factory_docker_defaults() {
         let config = HashMap::new();
-        let err = create_orchestrator("docker", &config).unwrap_err().to_string();
+        let err = create_orchestrator("docker", &config).err().unwrap().to_string();
         assert!(err.contains("disabled"));
     }
 
@@ -896,7 +896,7 @@ mod tests {
     #[tokio::test]
     async fn test_factory_kubernetes() {
         let config = HashMap::new();
-        let err = create_orchestrator("kubernetes", &config).unwrap_err().to_string();
+        let err = create_orchestrator("kubernetes", &config).err().unwrap().to_string();
         assert!(err.contains("disabled"));
     }
 

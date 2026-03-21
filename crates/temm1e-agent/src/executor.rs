@@ -12,7 +12,9 @@ use std::sync::Arc;
 use futures::stream::{FuturesUnordered, StreamExt};
 use temm1e_core::types::error::Temm1eError;
 use temm1e_core::types::session::SessionContext;
-use temm1e_core::{PathAccess, Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::audit::CapabilityDecisionRecord;
+use temm1e_core::policy::{CapabilityPolicy, FileAccessPolicy, PolicyEngine, PolicyDecision};
 use tokio::sync::Semaphore;
 use tracing::{debug, info, warn};
 
@@ -372,10 +374,22 @@ pub async fn execute_tool(
         .ok_or_else(|| Temm1eError::Tool(format!("Unknown tool: {}", tool_name)))?;
 
     // Validate sandbox declarations against workspace scope
-    validate_sandbox(tool.as_ref(), session)?;
+    if let Err(e) = validate_sandbox(tool.as_ref(), session) {
+        let record = CapabilityDecisionRecord::denied(tool_name, &session.session_id, "sandbox_baseline", &temm1e_core::policy::DenialReason::PathEscape);
+        tracing::warn!(audit = %serde_json::to_string(&record).unwrap(), "Capability denied (sandbox layout)");
+        return Err(e);
+    }
 
-    // Validate runtime arguments against workspace scope (CA-02 / CA-06)
-    validate_arguments(tool_name, &arguments, session)?;
+    // Validate runtime arguments against workspace scope and authoritative capability policy
+    if let Err(e) = validate_arguments(tool_name, &arguments, session, tool.as_ref()) {
+        let record = CapabilityDecisionRecord::denied(tool_name, &session.session_id, "arguments", &temm1e_core::policy::DenialReason::UndeclaredFileOp); // Placeholder reason for now
+        tracing::warn!(audit = %serde_json::to_string(&record).unwrap(), "Capability denied (arguments violation)");
+        return Err(e);
+    }
+    
+    // Log the allow decision
+    let record = CapabilityDecisionRecord::allowed(tool_name, &session.session_id, "execute");
+    tracing::info!(audit = %serde_json::to_string(&record).unwrap(), "Capability allowed");
 
     let ctx = ToolContext {
         workspace_path: session.workspace_path.clone(),
@@ -412,7 +426,9 @@ fn validate_arguments(
     tool_name: &str,
     arguments: &serde_json::Value,
     session: &SessionContext,
+    tool: &dyn Tool,
 ) -> Result<(), Temm1eError> {
+    let policy = tool.declarations();
     // Validate file path arguments
     let path_keys = [
         "path",
@@ -428,20 +444,108 @@ fn validate_arguments(
     if let serde_json::Value::Object(map) = arguments {
         for key in &path_keys {
             if let Some(serde_json::Value::String(path_str)) = map.get(*key) {
+                // The validate_path_in_workspace does trajectory validation
                 validate_path_in_workspace(tool_name, path_str, session)?;
+                
+                // Authoritative policy test: are we allowed to access files at all?
+                if policy.file_access.is_empty() {
+                    return Err(Temm1eError::SandboxViolation(format!(
+                        "Policy rejection: Tool '{}' attempted to access file path '{}' but declared no file capabilities.",
+                        tool_name, path_str
+                    )));
+                }
+
+                // Check against specific policy grants
+                let requested_path = std::path::Path::new(path_str);
+                let abs_req = if requested_path.is_relative() {
+                    session.workspace_path.join(requested_path)
+                } else {
+                    requested_path.to_path_buf()
+                };
+                let req_canonical = abs_req.canonicalize().unwrap_or(abs_req);
+
+                let mut allowed = false;
+                for access in &policy.file_access {
+                    let granted_path_str = match access {
+                        FileAccessPolicy::Read(p) => p,
+                        FileAccessPolicy::Write(p) => p,
+                        FileAccessPolicy::ReadWrite(p) => p,
+                    };
+                    
+                    if granted_path_str == "*" {
+                        allowed = true;
+                        break;
+                    }
+
+                    let granted_path = std::path::Path::new(granted_path_str);
+                    let abs_granted = if granted_path.is_relative() {
+                        session.workspace_path.join(granted_path)
+                    } else {
+                        granted_path.to_path_buf()
+                    };
+                    let granted_canonical = abs_granted.canonicalize().unwrap_or(abs_granted);
+
+                    if req_canonical.starts_with(&granted_canonical) {
+                        allowed = true;
+                        break;
+                    }
+                }
+
+                if !allowed {
+                    return Err(Temm1eError::SandboxViolation(format!(
+                        "Policy rejection: Tool '{}' attempted to access '{}' which is not within any granted policy scope.",
+                        tool_name, path_str
+                    )));
+                }
             }
         }
 
-        // Validate shell/command arguments for dangerous patterns
+        // Validate shell/command arguments for dangerous patterns and permission
+        let mut shell_command_attempted = false;
         if let Some(serde_json::Value::String(cmd)) = map.get("command") {
+            shell_command_attempted = true;
             validate_shell_command(tool_name, cmd)?;
         }
         if let Some(serde_json::Value::String(cmd)) = map.get("cmd") {
+            shell_command_attempted = true;
             validate_shell_command(tool_name, cmd)?;
+        }
+
+        if shell_command_attempted {
+            match PolicyEngine::evaluate_shell(&policy) {
+                PolicyDecision::Allow => {}
+                PolicyDecision::Deny(reason) => {
+                    return Err(Temm1eError::SandboxViolation(format!(
+                        "Policy rejection: Tool '{}' attempted to execute a shell command but lacks the policy grant. Reason: {}",
+                        tool_name, reason
+                    )));
+                }
+            }
         }
 
         if let Some(serde_json::Value::String(raw_url)) = map.get("url") {
             validate_public_url_argument(tool_name, raw_url)?;
+
+            // Additionally enforce that if it attempts network, it must have it
+            if policy.network_access.is_empty() && tool_name != "browser" {
+                return Err(Temm1eError::SandboxViolation(format!(
+                    "Policy rejection: Tool '{}' attempted network access to '{}' but declared no network capabilities.",
+                    tool_name, raw_url
+                )));
+            }
+        }
+    }
+
+    // Explicit check for browser automation
+    if tool_name == "browser" {
+        match PolicyEngine::evaluate_browser(&policy) {
+            PolicyDecision::Allow => {}
+            PolicyDecision::Deny(reason) => {
+                return Err(Temm1eError::SandboxViolation(format!(
+                    "Policy rejection: Tool '{}' attempted browser automation without a policy grant. Reason: {}",
+                    tool_name, reason
+                )));
+            }
         }
     }
 
@@ -613,10 +717,14 @@ fn validate_sandbox(tool: &dyn Tool, session: &SessionContext) -> Result<(), Tem
     // Check file access paths are within the workspace
     for path_access in &declarations.file_access {
         let path_str = match path_access {
-            PathAccess::Read(p) => p,
-            PathAccess::Write(p) => p,
-            PathAccess::ReadWrite(p) => p,
+            FileAccessPolicy::Read(p) => p,
+            FileAccessPolicy::Write(p) => p,
+            FileAccessPolicy::ReadWrite(p) => p,
         };
+
+        if path_str == "*" {
+            continue;
+        }
 
         let path = std::path::Path::new(path_str);
 
@@ -652,7 +760,7 @@ mod tests {
     use super::*;
     use async_trait::async_trait;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use temm1e_core::{PathAccess, ToolDeclarations};
+    use temm1e_core::policy::CapabilityPolicy;
     use temm1e_test_utils::{make_session, MockTool};
 
     // ── Test helpers ────────────────────────────────────────────────────
@@ -701,11 +809,12 @@ mod tests {
         fn parameters_schema(&self) -> serde_json::Value {
             serde_json::json!({"type": "object", "properties": {}})
         }
-        fn declarations(&self) -> ToolDeclarations {
-            ToolDeclarations {
-                file_access: Vec::new(),
+        fn declarations(&self) -> CapabilityPolicy {
+            CapabilityPolicy {
+                file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
                 network_access: Vec::new(),
-                shell_access: false,
+                shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+                browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
         }
         async fn execute(
@@ -741,11 +850,12 @@ mod tests {
         fn parameters_schema(&self) -> serde_json::Value {
             serde_json::json!({"type": "object", "properties": {}})
         }
-        fn declarations(&self) -> ToolDeclarations {
-            ToolDeclarations {
+        fn declarations(&self) -> CapabilityPolicy {
+            CapabilityPolicy {
                 file_access: Vec::new(),
                 network_access: Vec::new(),
-                shell_access: false,
+                shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
         }
         async fn execute(
@@ -775,11 +885,12 @@ mod tests {
         fn parameters_schema(&self) -> serde_json::Value {
             serde_json::json!({"type": "object", "properties": {}})
         }
-        fn declarations(&self) -> ToolDeclarations {
-            ToolDeclarations {
-                file_access: Vec::new(),
+        fn declarations(&self) -> CapabilityPolicy {
+            CapabilityPolicy {
+                file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
                 network_access: Vec::new(),
-                shell_access: false,
+                shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+                browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
         }
         async fn execute(
@@ -833,10 +944,11 @@ mod tests {
         let inner_dir = workspace.join("subdir");
         std::fs::create_dir_all(&inner_dir).unwrap();
 
-        let tool = MockTool::new("file_tool").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::Read("subdir".to_string())],
+        let tool = MockTool::new("file_tool").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read("subdir".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -858,10 +970,11 @@ mod tests {
         let workspace = tmp.path().join("workspace");
         std::fs::create_dir_all(&workspace).unwrap();
 
-        let tool = MockTool::new("evil_tool").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::Write("/etc/passwd".to_string())],
+        let tool = MockTool::new("evil_tool").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Write("/etc/passwd".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -887,10 +1000,11 @@ mod tests {
         let workspace = tmp.path().join("workspace");
         std::fs::create_dir_all(&workspace).unwrap();
 
-        let tool = MockTool::new("traversal_tool").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::Read("../../etc/shadow".to_string())],
+        let tool = MockTool::new("traversal_tool").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read("../../etc/shadow".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -933,10 +1047,11 @@ mod tests {
         std::fs::create_dir_all(&workspace).unwrap();
 
         // Path with encoded-style traversal (literal string, not URL-encoded)
-        let tool = MockTool::new("encoded_traversal").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::Read("../../../etc/passwd".to_string())],
+        let tool = MockTool::new("encoded_traversal").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read("../../../etc/passwd".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -958,10 +1073,11 @@ mod tests {
         let workspace = tmp.path().join("workspace");
         std::fs::create_dir_all(&workspace).unwrap();
 
-        let tool = MockTool::new("root_access").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::ReadWrite("/".to_string())],
+        let tool = MockTool::new("root_access").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::ReadWrite("/".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -984,10 +1100,11 @@ mod tests {
         let nested = workspace.join("src").join("lib");
         std::fs::create_dir_all(&nested).unwrap();
 
-        let tool = MockTool::new("nested_tool").with_declarations(ToolDeclarations {
-            file_access: vec![PathAccess::Read("src/lib".to_string())],
+        let tool = MockTool::new("nested_tool").with_declarations(CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read("src/lib".to_string())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -1010,13 +1127,14 @@ mod tests {
         std::fs::create_dir_all(workspace.join("src")).unwrap();
         std::fs::create_dir_all(workspace.join("docs")).unwrap();
 
-        let tool = MockTool::new("multi_tool").with_declarations(ToolDeclarations {
+        let tool = MockTool::new("multi_tool").with_declarations(CapabilityPolicy {
             file_access: vec![
-                PathAccess::Read("src".to_string()),
-                PathAccess::Write("docs".to_string()),
+                FileAccessPolicy::Read("src".to_string()),
+                FileAccessPolicy::Write("docs".to_string()),
             ],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -1038,13 +1156,14 @@ mod tests {
         let workspace = tmp.path().join("workspace");
         std::fs::create_dir_all(workspace.join("valid")).unwrap();
 
-        let tool = MockTool::new("mixed_tool").with_declarations(ToolDeclarations {
+        let tool = MockTool::new("mixed_tool").with_declarations(CapabilityPolicy {
             file_access: vec![
-                PathAccess::Read("valid".to_string()),
-                PathAccess::Write("/etc/shadow".to_string()),
+                FileAccessPolicy::Read("valid".to_string()),
+                FileAccessPolicy::Write("/etc/shadow".to_string()),
             ],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
 
         let session = SessionContext {
@@ -1559,14 +1678,25 @@ mod tests {
 
     #[tokio::test]
     async fn parallel_multiple_different_tools() {
-        let read_tool = MockTool::new("file_read").with_output(ToolOutput {
-            content: "read result".to_string(),
-            is_error: false,
-        });
-        let write_tool = MockTool::new("file_write").with_output(ToolOutput {
-            content: "write result".to_string(),
-            is_error: false,
-        });
+        let decl_policy = temm1e_core::policy::CapabilityPolicy {
+            file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
+            network_access: Vec::new(),
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+            browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
+        };
+
+        let read_tool = MockTool::new("file_read")
+            .with_declarations(decl_policy.clone())
+            .with_output(ToolOutput {
+                content: "read result".to_string(),
+                is_error: false,
+            });
+        let write_tool = MockTool::new("file_write")
+            .with_declarations(decl_policy)
+            .with_output(ToolOutput {
+                content: "write result".to_string(),
+                is_error: false,
+            });
         let tools: Vec<Arc<dyn Tool>> = vec![Arc::new(read_tool), Arc::new(write_tool)];
         let session = make_session();
 

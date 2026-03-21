@@ -7,7 +7,8 @@ use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
 use temm1e_core::types::file::{FileData, OutboundFile};
 use temm1e_core::{
-    Channel, PathAccess, Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput,
+    Channel, Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::{CapabilityPolicy, FileAccessPolicy,
 };
 
 /// Maximum file size to send (50 MB — Telegram's upload limit).
@@ -56,11 +57,12 @@ impl Tool for SendFileTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
-            file_access: vec![PathAccess::Read(".".into())],
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
+            file_access: vec![FileAccessPolicy::Read(".".into())],
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

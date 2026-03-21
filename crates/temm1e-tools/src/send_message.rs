@@ -7,7 +7,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
 use temm1e_core::types::message::OutboundMessage;
-use temm1e_core::{Channel, Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{    Channel, Tool, ToolContext, ToolInput, ToolOutput,
+};
+use temm1e_core::policy::CapabilityPolicy;
 
 pub struct SendMessageTool {
     channel: Arc<dyn Channel>,
@@ -49,11 +51,12 @@ impl Tool for SendMessageTool {
         })
     }
 
-    fn declarations(&self) -> ToolDeclarations {
-        ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
+        CapabilityPolicy {
             file_access: Vec::new(),
             network_access: Vec::new(),
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 

@@ -6,7 +6,9 @@
 use crate::client::McpClient;
 use async_trait::async_trait;
 use std::sync::Arc;
-use temm1e_core::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use temm1e_core::{Tool, ToolContext, ToolInput, ToolOutput};
+use temm1e_core::policy::CapabilityPolicy;
+
 use tracing::{debug, warn};
 
 /// Bridge adapter: wraps a single MCP tool as a TEMM1E Tool.
@@ -59,13 +61,14 @@ impl Tool for McpBridgeTool {
         self.input_schema.clone()
     }
 
-    fn declarations(&self) -> ToolDeclarations {
+    fn declarations(&self) -> CapabilityPolicy {
         // MCP tools have opaque resource needs — we declare network access
         // since they may call external services, but can't know specifics.
-        ToolDeclarations {
+        CapabilityPolicy {
             file_access: vec![],
             network_access: vec!["*".to_string()], // MCP tools may access any network
-            shell_access: false,
+            shell_access: temm1e_core::policy::ShellPolicy::Blocked,
+browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
