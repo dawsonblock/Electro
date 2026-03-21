@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:bookworm-20240408-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends         squid         netcat-openbsd         && rm -rf /var/lib/apt/lists/*
 

@@ -38,7 +38,12 @@ pub enum BrowserPolicy {
     #[default]
     Blocked,
     /// Can automate an isolated browser
-    Allowed,
+    Allowed {
+        /// If true, the tool may evaluate arbitrary JavaScript against the page content
+        eval_js: bool,
+        /// If true, the tool may persist and restore browser session cookies
+        session_persistence: bool,
+    },
 }
 
 /// Evaluation context when enforcing a policy
@@ -92,7 +97,7 @@ impl PolicyEngine {
 
     pub fn evaluate_browser(policy: &CapabilityPolicy) -> PolicyDecision {
         match policy.browser_access {
-            BrowserPolicy::Allowed => PolicyDecision::Allow,
+            BrowserPolicy::Allowed { .. } => PolicyDecision::Allow,
             BrowserPolicy::Blocked => PolicyDecision::Deny(DenialReason::UndeclaredBrowser),
         }
     }

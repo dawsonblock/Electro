@@ -539,7 +539,26 @@ fn validate_arguments(
     // Explicit check for browser automation
     if tool_name == "browser" {
         match PolicyEngine::evaluate_browser(&policy) {
-            PolicyDecision::Allow => {}
+            PolicyDecision::Allow => {
+                if let serde_json::Value::Object(map) = arguments {
+                    if let Some(serde_json::Value::String(action)) = map.get("action") {
+                        if let temm1e_core::policy::BrowserPolicy::Allowed { eval_js, session_persistence } = policy.browser_access {
+                            if action == "evaluate" && !eval_js {
+                                return Err(Temm1eError::SandboxViolation(format!(
+                                    "Policy rejection: Tool '{}' attempted to evaluate JavaScript without a policy grant. JS evaluation requires explicit executor override.",
+                                    tool_name
+                                )));
+                            }
+                            if (action == "save_session" || action == "restore_session") && !session_persistence {
+                                return Err(Temm1eError::SandboxViolation(format!(
+                                    "Policy rejection: Tool '{}' attempted to persist or restore a browser session without a policy grant. Default profiles are ephemeral.",
+                                    tool_name
+                                )));
+                            }
+                        }
+                    }
+                }
+            }
             PolicyDecision::Deny(reason) => {
                 return Err(Temm1eError::SandboxViolation(format!(
                     "Policy rejection: Tool '{}' attempted browser automation without a policy grant. Reason: {}",

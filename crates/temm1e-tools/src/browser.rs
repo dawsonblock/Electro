@@ -1136,9 +1136,6 @@ fn browser_domain_allowlist() -> Vec<String> {
     load_domain_allowlist_from_env(PUBLIC_WEB_ALLOWLIST_ENV)
 }
 
-fn browser_eval_enabled() -> bool {
-    std::env::var("TEMM1E_BROWSER_ALLOW_EVAL").unwrap_or_default() == "1"
-}
 
 /// Sanitize a session name to a safe filename (alphanumeric, dots, dashes, underscores).
 fn sanitize_session_name(name: &str) -> String {
@@ -1767,7 +1764,10 @@ impl Tool for BrowserTool {
             ],
             network_access: vec!["public-http".to_string()],
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
-browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
+            browser_access: temm1e_core::policy::BrowserPolicy::Allowed {
+                eval_js: false, // Default: JS evaluation requires explicit executor override
+                session_persistence: false, // Default: ephemeral profiles only
+            },
         }
     }
 
@@ -2178,11 +2178,6 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
 
             "evaluate" => {
-                if !browser_eval_enabled() {
-                    return Err(Temm1eError::Tool(
-                        "Browser JavaScript evaluation is disabled by default. Set TEMM1E_BROWSER_ALLOW_EVAL=1 to enable it on a deliberately trusted task.".into(),
-                    ));
-                }
 
                 let script = input
                     .arguments

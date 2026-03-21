@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:bookworm-20240408-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends         chromium         ca-certificates         fonts-liberation         fonts-noto-color-emoji         tini         && rm -rf /var/lib/apt/lists/*
 
