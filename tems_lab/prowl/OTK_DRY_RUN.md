@@ -55,7 +55,7 @@ The vault is now properly wired to both CLI and gateway paths.
 
 ## 3. Piped Stdin Limitation
 
-When testing via piped stdin (`echo "..." | temm1e chat`), all input lines are pre-buffered. The interactive loop reads them faster than the browser can process clicks, causing timing mismatches:
+When testing via piped stdin (`echo "..." | electro chat`), all input lines are pre-buffered. The interactive loop reads them faster than the browser can process clicks, causing timing mismatches:
 
 - User sends "2" (click username field) → click processes
 - User sends "tomsmith" → arrives before focus propagates → "No element is focused" error
@@ -210,4 +210,4 @@ User (Telegram)
 
 ---
 
-*OTK dry run report. March 2026. TEMM1E Labs.*
+*OTK dry run report. March 2026. ELECTRO Labs.*

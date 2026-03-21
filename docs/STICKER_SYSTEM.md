@@ -1,8 +1,8 @@
-# Temm1e Sticker System — Design Doc
+# Electro Sticker System — Design Doc
 
 ## Overview
 
-Give Temm1e the ability to send contextually appropriate stickers from a custom pixel art expression sheet.
+Give Electro the ability to send contextually appropriate stickers from a custom pixel art expression sheet.
 
 ## Source Asset
 
@@ -42,7 +42,7 @@ One tool, not 100. The LLM sees a single `sticker` tool with curated emotion lab
    - Each sticker gets a `file_id` for instant sending
    - No re-upload needed after initial registration
 
-4. **Rust Tool** (`crates/temm1e-tools/src/sticker.rs`)
+4. **Rust Tool** (`crates/electro-tools/src/sticker.rs`)
    - Loads manifest at startup
    - Tool description lists available emotions
    - Returns `StickerOutput` handled by Telegram channel as `sendSticker`

@@ -1,7 +1,7 @@
 # ================================================
-# TEMM1E - Terraform Infrastructure
+# ELECTRO - Terraform Infrastructure
 # Deploys a single compute instance running the
-# TEMM1E Docker image with persistent storage.
+# ELECTRO Docker image with persistent storage.
 #
 # Supports: AWS (default), with variables to
 # customise region, instance size, and image tag.
@@ -19,8 +19,8 @@ terraform {
 
   # Remote state (uncomment and configure for production)
   # backend "s3" {
-  #   bucket = "temm1e-tfstate"
-  #   key    = "temm1e/terraform.tfstate"
+  #   bucket = "electro-tfstate"
+  #   key    = "electro/terraform.tfstate"
   #   region = "us-east-1"
   # }
 }
@@ -34,7 +34,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "temm1e"
+      Project     = "electro"
       Environment = var.environment
       ManagedBy   = "terraform"
     }
@@ -75,14 +75,14 @@ data "aws_subnets" "default" {
 # Security Group
 # ------------------------------------------------
 
-resource "aws_security_group" "temm1e" {
-  name_prefix = "temm1e-${var.environment}-"
-  description = "TEMM1E gateway security group"
+resource "aws_security_group" "electro" {
+  name_prefix = "electro-${var.environment}-"
+  description = "ELECTRO gateway security group"
   vpc_id      = data.aws_vpc.default.id
 
   # Gateway HTTP port
   ingress {
-    description = "TEMM1E Gateway"
+    description = "ELECTRO Gateway"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
@@ -114,7 +114,7 @@ resource "aws_security_group" "temm1e" {
   }
 
   tags = {
-    Name = "temm1e-${var.environment}"
+    Name = "electro-${var.environment}"
   }
 }
 
@@ -122,14 +122,14 @@ resource "aws_security_group" "temm1e" {
 # EBS Volume (persistent data)
 # ------------------------------------------------
 
-resource "aws_ebs_volume" "temm1e_data" {
+resource "aws_ebs_volume" "electro_data" {
   availability_zone = "${var.aws_region}a"
   size              = var.volume_size_gb
   type              = "gp3"
   encrypted         = true
 
   tags = {
-    Name = "temm1e-data-${var.environment}"
+    Name = "electro-data-${var.environment}"
   }
 }
 
@@ -137,10 +137,10 @@ resource "aws_ebs_volume" "temm1e_data" {
 # EC2 Instance
 # ------------------------------------------------
 
-resource "aws_instance" "temm1e" {
+resource "aws_instance" "electro" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
-  vpc_security_group_ids = [aws_security_group.temm1e.id]
+  vpc_security_group_ids = [aws_security_group.electro.id]
   subnet_id              = data.aws_subnets.default.ids[0]
   availability_zone      = "${var.aws_region}a"
 
@@ -164,7 +164,7 @@ resource "aws_instance" "temm1e" {
 
     # Format and mount data volume
     DEVICE="/dev/xvdf"
-    MOUNT="/var/lib/temm1e"
+    MOUNT="/var/lib/electro"
     if ! blkid "$DEVICE" > /dev/null 2>&1; then
       mkfs.ext4 "$DEVICE"
     fi
@@ -172,17 +172,17 @@ resource "aws_instance" "temm1e" {
     mount "$DEVICE" "$MOUNT"
     echo "$DEVICE $MOUNT ext4 defaults,nofail 0 2" >> /etc/fstab
 
-    # Create temm1e config directory
-    mkdir -p "$MOUNT/.temm1e"
+    # Create electro config directory
+    mkdir -p "$MOUNT/.electro"
 
-    # Pull and run TEMM1E
+    # Pull and run ELECTRO
     docker pull ${var.docker_image}:${var.docker_tag}
     docker run -d \
-      --name temm1e \
+      --name electro \
       --restart unless-stopped \
       -p 8080:8080 \
-      -v "$MOUNT/.temm1e:/var/lib/temm1e" \
-      -e TEMM1E_MODE=${var.temm1e_mode} \
+      -v "$MOUNT/.electro:/var/lib/electro" \
+      -e ELECTRO_MODE=${var.electro_mode} \
       -e ANTHROPIC_API_KEY=${var.anthropic_api_key} \
       -e TELEGRAM_BOT_TOKEN=${var.telegram_bot_token} \
       -e RUST_LOG=${var.log_level} \
@@ -190,7 +190,7 @@ resource "aws_instance" "temm1e" {
   USERDATA
 
   tags = {
-    Name = "temm1e-${var.environment}"
+    Name = "electro-${var.environment}"
   }
 
   lifecycle {
@@ -199,22 +199,22 @@ resource "aws_instance" "temm1e" {
 }
 
 # Attach the persistent data volume
-resource "aws_volume_attachment" "temm1e_data" {
+resource "aws_volume_attachment" "electro_data" {
   device_name = "/dev/xvdf"
-  volume_id   = aws_ebs_volume.temm1e_data.id
-  instance_id = aws_instance.temm1e.id
+  volume_id   = aws_ebs_volume.electro_data.id
+  instance_id = aws_instance.electro.id
 }
 
 # ------------------------------------------------
 # Elastic IP (stable public address)
 # ------------------------------------------------
 
-resource "aws_eip" "temm1e" {
+resource "aws_eip" "electro" {
   count    = var.enable_eip ? 1 : 0
-  instance = aws_instance.temm1e.id
+  instance = aws_instance.electro.id
   domain   = "vpc"
 
   tags = {
-    Name = "temm1e-${var.environment}"
+    Name = "electro-${var.environment}"
   }
 }

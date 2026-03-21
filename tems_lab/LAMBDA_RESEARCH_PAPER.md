@@ -2,7 +2,7 @@
 
 > Memory that fades, not disappears. Recall by hash. The skull never overflows.
 
-**Author:** TEMM1E's Lab
+**Author:** ELECTRO's Lab
 **Date:** 2026-03-15
 **Status:** Implemented & Benchmarked
 **Repository:** `skyclaw` branch `gradient_memory`
@@ -307,7 +307,7 @@ We researched the entire landscape. Here's what nobody else does:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     TEMM1E Runtime                           │
+│                     ELECTRO Runtime                           │
 │                                                             │
 │  User message                                               │
 │       │                                                     │
@@ -352,17 +352,17 @@ We researched the entire landscape. Here's what nobody else does:
 
 ## Implementation
 
-Built in Rust, integrated into the TEMM1E agent runtime. Zero new external dependencies.
+Built in Rust, integrated into the ELECTRO agent runtime. Zero new external dependencies.
 
 | Component | File | Lines | What it does |
 |-----------|------|-------|-------------|
-| Core types | `temm1e-core/traits/memory.rs` | +50 | `LambdaMemoryEntry`, `LambdaMemoryType`, 6 trait methods |
-| Config | `temm1e-core/types/config.rs` | +35 | `LambdaMemoryConfig` with tunable constants |
-| SQLite storage | `temm1e-memory/sqlite.rs` | +180 | Table + FTS5 + all 6 trait implementations |
-| Decay engine | `temm1e-agent/lambda_memory.rs` | **530** | Decay scoring, context assembly, memory parsing, 16 unit tests |
-| Recall tool | `temm1e-tools/lambda_recall.rs` | **115** | Hash-based recall with reheat |
-| Context integration | `temm1e-agent/context.rs` | ~100 modified | λ-Memory replaces Categories 5/5b/6 with legacy fallback |
-| Runtime integration | `temm1e-agent/runtime.rs` | +55 | Parses `<memory>` blocks from LLM responses |
+| Core types | `electro-core/traits/memory.rs` | +50 | `LambdaMemoryEntry`, `LambdaMemoryType`, 6 trait methods |
+| Config | `electro-core/types/config.rs` | +35 | `LambdaMemoryConfig` with tunable constants |
+| SQLite storage | `electro-memory/sqlite.rs` | +180 | Table + FTS5 + all 6 trait implementations |
+| Decay engine | `electro-agent/lambda_memory.rs` | **530** | Decay scoring, context assembly, memory parsing, 16 unit tests |
+| Recall tool | `electro-tools/lambda_recall.rs` | **115** | Hash-based recall with reheat |
+| Context integration | `electro-agent/context.rs` | ~100 modified | λ-Memory replaces Categories 5/5b/6 with legacy fallback |
+| Runtime integration | `electro-agent/runtime.rs` | +55 | Parses `<memory>` blocks from LLM responses |
 
 **Verification:** 1,509 tests pass, 0 failures. Clippy clean. Full workspace compiles.
 
@@ -451,7 +451,7 @@ The three genuinely novel contributions:
 
 The token cost premium (+61% single-session, +65% multi-session) is tunable down to ~+10% with token capping, and the score-per-token efficiency is identical in multi-session scenarios.
 
-λ-Memory is implemented, tested, and ready for production in TEMM1E.
+λ-Memory is implemented, tested, and ready for production in ELECTRO.
 
 ---
 
@@ -490,4 +490,4 @@ The token cost premium (+61% single-session, +65% multi-session) is tunable down
 
 ---
 
-*TEMM1E's Lab — λ-Memory Research, 2026*
+*ELECTRO's Lab — λ-Memory Research, 2026*

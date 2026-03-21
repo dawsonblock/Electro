@@ -4,7 +4,7 @@
 
 **Status:** Implemented
 **Branch:** `gradient_memory`
-**Author:** TEMM1E's Lab
+**Author:** ELECTRO's Lab
 **Date:** 2026-03-15
 **Prerequisites:** [Design Doc](LAMBDA_MEMORY.md) | [Research](LAMBDA_MEMORY_RESEARCH.md)
 
@@ -13,12 +13,12 @@
 ## Table of Contents
 
 1. [Scope of Changes](#1-scope-of-changes)
-2. [Phase 1: Data Layer (temm1e-memory)](#2-phase-1-data-layer)
-3. [Phase 2: Core Types (temm1e-core)](#3-phase-2-core-types)
-4. [Phase 3: Decay Engine (temm1e-agent)](#4-phase-3-decay-engine)
-5. [Phase 4: Context Integration (temm1e-agent/context.rs)](#5-phase-4-context-integration)
-6. [Phase 5: Memory Extraction (temm1e-agent/runtime.rs)](#6-phase-5-memory-extraction)
-7. [Phase 6: Recall Tool (temm1e-tools)](#7-phase-6-recall-tool)
+2. [Phase 1: Data Layer (electro-memory)](#2-phase-1-data-layer)
+3. [Phase 2: Core Types (electro-core)](#3-phase-2-core-types)
+4. [Phase 3: Decay Engine (electro-agent)](#4-phase-3-decay-engine)
+5. [Phase 4: Context Integration (electro-agent/context.rs)](#5-phase-4-context-integration)
+6. [Phase 5: Memory Extraction (electro-agent/runtime.rs)](#6-phase-5-memory-extraction)
+7. [Phase 6: Recall Tool (electro-tools)](#7-phase-6-recall-tool)
 8. [Phase 7: Configuration](#8-phase-7-configuration)
 9. [Migration Strategy](#9-migration-strategy)
 10. [Test Plan](#10-test-plan)
@@ -30,20 +30,20 @@
 ### Files to Create
 | File | Crate | Purpose |
 |------|-------|---------|
-| `crates/temm1e-agent/src/lambda_memory.rs` | temm1e-agent | Decay engine, scoring, context assembly, packing |
-| `crates/temm1e-tools/src/lambda_recall.rs` | temm1e-tools | Hash-based recall tool |
+| `crates/electro-agent/src/lambda_memory.rs` | electro-agent | Decay engine, scoring, context assembly, packing |
+| `crates/electro-tools/src/lambda_recall.rs` | electro-tools | Hash-based recall tool |
 
 ### Files to Modify
 | File | Crate | Change |
 |------|-------|--------|
-| `crates/temm1e-memory/src/sqlite.rs` | temm1e-memory | Add `lambda_memories` table + FTS5, new methods |
-| `crates/temm1e-memory/src/lib.rs` | temm1e-memory | Re-export new types |
-| `crates/temm1e-core/src/traits/memory.rs` | temm1e-core | Add λ-Memory methods to Memory trait (with default impls) |
-| `crates/temm1e-core/src/types/config.rs` | temm1e-core | Add `LambdaMemoryConfig` |
-| `crates/temm1e-agent/src/context.rs` | temm1e-agent | Replace Categories 5/5b/6 with λ-Memory assembly |
-| `crates/temm1e-agent/src/runtime.rs` | temm1e-agent | Parse `<memory>` blocks from LLM responses |
-| `crates/temm1e-agent/src/mod.rs` or `lib.rs` | temm1e-agent | Add `pub mod lambda_memory;` |
-| `crates/temm1e-tools/src/lib.rs` | temm1e-tools | Register `LambdaRecallTool` in `create_tools()` |
+| `crates/electro-memory/src/sqlite.rs` | electro-memory | Add `lambda_memories` table + FTS5, new methods |
+| `crates/electro-memory/src/lib.rs` | electro-memory | Re-export new types |
+| `crates/electro-core/src/traits/memory.rs` | electro-core | Add λ-Memory methods to Memory trait (with default impls) |
+| `crates/electro-core/src/types/config.rs` | electro-core | Add `LambdaMemoryConfig` |
+| `crates/electro-agent/src/context.rs` | electro-agent | Replace Categories 5/5b/6 with λ-Memory assembly |
+| `crates/electro-agent/src/runtime.rs` | electro-agent | Parse `<memory>` blocks from LLM responses |
+| `crates/electro-agent/src/mod.rs` or `lib.rs` | electro-agent | Add `pub mod lambda_memory;` |
+| `crates/electro-tools/src/lib.rs` | electro-tools | Register `LambdaRecallTool` in `create_tools()` |
 
 ### Files NOT Modified
 - `runtime.rs` main loop structure — untouched, we only add parsing after line ~941
@@ -54,11 +54,11 @@
 
 ---
 
-## 2. Phase 1: Data Layer (temm1e-memory)
+## 2. Phase 1: Data Layer (electro-memory)
 
 ### 2.1 New Table: `lambda_memories`
 
-Add to `SqliteMemory::init_tables()` in `crates/temm1e-memory/src/sqlite.rs`:
+Add to `SqliteMemory::init_tables()` in `crates/electro-memory/src/sqlite.rs`:
 
 ```sql
 CREATE TABLE IF NOT EXISTS lambda_memories (
@@ -118,41 +118,41 @@ END;
 
 ### 2.3 New Methods on Memory Trait
 
-Add to `crates/temm1e-core/src/traits/memory.rs` with **default implementations** so existing backends don't break:
+Add to `crates/electro-core/src/traits/memory.rs` with **default implementations** so existing backends don't break:
 
 ```rust
 /// Store a λ-memory entry.
-async fn lambda_store(&self, entry: LambdaMemoryEntry) -> Result<(), Temm1eError> {
+async fn lambda_store(&self, entry: LambdaMemoryEntry) -> Result<(), ElectroError> {
     let _ = entry;
     Ok(()) // No-op default
 }
 
 /// Query λ-memories ordered by importance DESC, limited to `limit`.
-async fn lambda_query_candidates(&self, limit: usize) -> Result<Vec<LambdaMemoryEntry>, Temm1eError> {
+async fn lambda_query_candidates(&self, limit: usize) -> Result<Vec<LambdaMemoryEntry>, ElectroError> {
     let _ = limit;
     Ok(Vec::new()) // Empty default
 }
 
 /// Look up a λ-memory by hash prefix.
-async fn lambda_recall(&self, hash_prefix: &str) -> Result<Option<LambdaMemoryEntry>, Temm1eError> {
+async fn lambda_recall(&self, hash_prefix: &str) -> Result<Option<LambdaMemoryEntry>, ElectroError> {
     let _ = hash_prefix;
     Ok(None) // Not found default
 }
 
 /// Update last_accessed and access_count for a recalled memory.
-async fn lambda_touch(&self, hash: &str) -> Result<(), Temm1eError> {
+async fn lambda_touch(&self, hash: &str) -> Result<(), ElectroError> {
     let _ = hash;
     Ok(()) // No-op default
 }
 
 /// FTS5 search returning (hash, bm25_rank) pairs.
-async fn lambda_fts_search(&self, query: &str, limit: usize) -> Result<Vec<(String, f64)>, Temm1eError> {
+async fn lambda_fts_search(&self, query: &str, limit: usize) -> Result<Vec<(String, f64)>, ElectroError> {
     let _ = (query, limit);
     Ok(Vec::new()) // Empty default
 }
 
 /// Garbage collect expired λ-memories.
-async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, Temm1eError> {
+async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, ElectroError> {
     let _ = (now_epoch, max_age_secs);
     Ok(0) // No-op default
 }
@@ -160,7 +160,7 @@ async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, Te
 
 ### 2.4 LambdaMemoryEntry Struct
 
-Add to `crates/temm1e-core/src/traits/memory.rs` (or a new file `lambda.rs` in types):
+Add to `crates/electro-core/src/traits/memory.rs` (or a new file `lambda.rs` in types):
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -189,11 +189,11 @@ pub enum LambdaMemoryType {
 
 ### 2.5 SQLite Implementation
 
-In `crates/temm1e-memory/src/sqlite.rs`, implement the 6 new trait methods:
+In `crates/electro-memory/src/sqlite.rs`, implement the 6 new trait methods:
 
 **lambda_store():**
 ```rust
-async fn lambda_store(&self, entry: LambdaMemoryEntry) -> Result<(), Temm1eError> {
+async fn lambda_store(&self, entry: LambdaMemoryEntry) -> Result<(), ElectroError> {
     let tags_json = serde_json::to_string(&entry.tags).unwrap_or_default();
     let memory_type = match entry.memory_type {
         LambdaMemoryType::Conversation => "conversation",
@@ -220,28 +220,28 @@ async fn lambda_store(&self, entry: LambdaMemoryEntry) -> Result<(), Temm1eError
     .bind(&entry.session_id)
     .execute(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_store failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_store failed: {e}")))?;
     Ok(())
 }
 ```
 
 **lambda_query_candidates():**
 ```rust
-async fn lambda_query_candidates(&self, limit: usize) -> Result<Vec<LambdaMemoryEntry>, Temm1eError> {
+async fn lambda_query_candidates(&self, limit: usize) -> Result<Vec<LambdaMemoryEntry>, ElectroError> {
     let rows = sqlx::query_as::<_, LambdaMemoryRow>(
         "SELECT * FROM lambda_memories ORDER BY importance DESC LIMIT ?"
     )
     .bind(limit as i64)
     .fetch_all(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_query_candidates failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_query_candidates failed: {e}")))?;
     Ok(rows.into_iter().map(|r| r.into()).collect())
 }
 ```
 
 **lambda_recall():**
 ```rust
-async fn lambda_recall(&self, hash_prefix: &str) -> Result<Option<LambdaMemoryEntry>, Temm1eError> {
+async fn lambda_recall(&self, hash_prefix: &str) -> Result<Option<LambdaMemoryEntry>, ElectroError> {
     let pattern = format!("{}%", hash_prefix);
     let row = sqlx::query_as::<_, LambdaMemoryRow>(
         "SELECT * FROM lambda_memories WHERE hash LIKE ? LIMIT 1"
@@ -249,14 +249,14 @@ async fn lambda_recall(&self, hash_prefix: &str) -> Result<Option<LambdaMemoryEn
     .bind(&pattern)
     .fetch_optional(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_recall failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_recall failed: {e}")))?;
     Ok(row.map(|r| r.into()))
 }
 ```
 
 **lambda_touch():**
 ```rust
-async fn lambda_touch(&self, hash: &str) -> Result<(), Temm1eError> {
+async fn lambda_touch(&self, hash: &str) -> Result<(), ElectroError> {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -268,14 +268,14 @@ async fn lambda_touch(&self, hash: &str) -> Result<(), Temm1eError> {
     .bind(hash)
     .execute(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_touch failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_touch failed: {e}")))?;
     Ok(())
 }
 ```
 
 **lambda_fts_search():**
 ```rust
-async fn lambda_fts_search(&self, query: &str, limit: usize) -> Result<Vec<(String, f64)>, Temm1eError> {
+async fn lambda_fts_search(&self, query: &str, limit: usize) -> Result<Vec<(String, f64)>, ElectroError> {
     if query.trim().is_empty() {
         return Ok(Vec::new());
     }
@@ -293,14 +293,14 @@ async fn lambda_fts_search(&self, query: &str, limit: usize) -> Result<Vec<(Stri
     .bind(limit as i64)
     .fetch_all(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_fts_search failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_fts_search failed: {e}")))?;
     Ok(rows)
 }
 ```
 
 **lambda_gc():**
 ```rust
-async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, Temm1eError> {
+async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, ElectroError> {
     let cutoff = (now_epoch - max_age_secs) as i64;
     let result = sqlx::query(
         "DELETE FROM lambda_memories
@@ -311,18 +311,18 @@ async fn lambda_gc(&self, now_epoch: u64, max_age_secs: u64) -> Result<usize, Te
     .bind(cutoff)
     .execute(&self.pool)
     .await
-    .map_err(|e| Temm1eError::Memory(format!("lambda_gc failed: {e}")))?;
+    .map_err(|e| ElectroError::Memory(format!("lambda_gc failed: {e}")))?;
     Ok(result.rows_affected() as usize)
 }
 ```
 
 ---
 
-## 3. Phase 2: Core Types (temm1e-core)
+## 3. Phase 2: Core Types (electro-core)
 
 ### 3.1 Config: `LambdaMemoryConfig`
 
-Add to `crates/temm1e-core/src/types/config.rs`:
+Add to `crates/electro-core/src/types/config.rs`:
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -368,7 +368,7 @@ impl Default for LambdaMemoryConfig {
 }
 ```
 
-Add to the main config struct (likely `Temm1eConfig` or `AgentConfig`):
+Add to the main config struct (likely `ElectroConfig` or `AgentConfig`):
 ```rust
 #[serde(default)]
 pub lambda_memory: LambdaMemoryConfig,
@@ -376,13 +376,13 @@ pub lambda_memory: LambdaMemoryConfig,
 
 ### 3.2 Re-exports
 
-Ensure `LambdaMemoryEntry`, `LambdaMemoryType`, and `LambdaMemoryConfig` are re-exported from `temm1e-core` so other crates can use them.
+Ensure `LambdaMemoryEntry`, `LambdaMemoryType`, and `LambdaMemoryConfig` are re-exported from `electro-core` so other crates can use them.
 
 ---
 
-## 4. Phase 3: Decay Engine (temm1e-agent)
+## 4. Phase 3: Decay Engine (electro-agent)
 
-### 4.1 New file: `crates/temm1e-agent/src/lambda_memory.rs`
+### 4.1 New file: `crates/electro-agent/src/lambda_memory.rs`
 
 This is the core module. ~300 lines.
 
@@ -392,8 +392,8 @@ This is the core module. ~300 lines.
 //! Memories fade over time through exponential decay but never disappear.
 //! Tem sees faded memories as hashes and can recall them on demand.
 
-use temm1e_core::types::config::LambdaMemoryConfig;
-use temm1e_core::{LambdaMemoryEntry, LambdaMemoryType, Memory};
+use electro_core::types::config::LambdaMemoryConfig;
+use electro_core::{LambdaMemoryEntry, LambdaMemoryType, Memory};
 use crate::context::estimate_tokens;
 
 /// Minimum tokens to fit a faded entry (hash + timestamp + essence).
@@ -753,7 +753,7 @@ pub fn strip_memory_blocks(text: &str) -> String {
 
 ---
 
-## 5. Phase 4: Context Integration (temm1e-agent/context.rs)
+## 5. Phase 4: Context Integration (electro-agent/context.rs)
 
 ### 5.1 What Changes
 
@@ -810,7 +810,7 @@ If λ-Memory is disabled via config, fall back to the existing Category 5/5b/6 l
 
 ---
 
-## 6. Phase 5: Memory Extraction (temm1e-agent/runtime.rs)
+## 6. Phase 5: Memory Extraction (electro-agent/runtime.rs)
 
 ### 6.1 Where to Parse
 
@@ -924,18 +924,18 @@ for l in &learnings {
 
 ---
 
-## 7. Phase 6: Recall Tool (temm1e-tools)
+## 7. Phase 6: Recall Tool (electro-tools)
 
-### 7.1 New file: `crates/temm1e-tools/src/lambda_recall.rs`
+### 7.1 New file: `crates/electro-tools/src/lambda_recall.rs`
 
 ```rust
 //! λ-Memory recall tool — lets Tem retrieve faded memories by hash.
 
 use async_trait::async_trait;
 use std::sync::Arc;
-use temm1e_core::error::Temm1eError;
-use temm1e_core::traits::tool::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
-use temm1e_core::Memory;
+use electro_core::error::ElectroError;
+use electro_core::traits::tool::{Tool, ToolContext, ToolDeclarations, ToolInput, ToolOutput};
+use electro_core::Memory;
 
 pub struct LambdaRecallTool {
     memory: Arc<dyn Memory>,
@@ -984,12 +984,12 @@ impl Tool for LambdaRecallTool {
         &self,
         input: ToolInput,
         _ctx: &ToolContext,
-    ) -> Result<ToolOutput, Temm1eError> {
+    ) -> Result<ToolOutput, ElectroError> {
         let hash = input
             .arguments
             .get("hash")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| Temm1eError::Tool("Missing required parameter: hash".into()))?;
+            .ok_or_else(|| ElectroError::Tool("Missing required parameter: hash".into()))?;
 
         // Strip leading # if present
         let hash_clean = hash.trim_start_matches('#');
@@ -1043,7 +1043,7 @@ impl Tool for LambdaRecallTool {
 
 ### 7.2 Registration
 
-In `crates/temm1e-tools/src/lib.rs`, add to `create_tools()`:
+In `crates/electro-tools/src/lib.rs`, add to `create_tools()`:
 
 ```rust
 // After the existing memory_manage tool registration
@@ -1058,7 +1058,7 @@ Add `pub mod lambda_recall;` to the tools crate's module declarations.
 
 ## 8. Phase 7: Configuration
 
-### 8.1 temm1e.toml
+### 8.1 electro.toml
 
 ```toml
 [memory.lambda]
@@ -1083,7 +1083,7 @@ The `LambdaMemoryConfig` should be loaded from config and passed through to `bui
 On first startup with λ-Memory enabled, migrate existing `MemoryEntryType::Knowledge` entries:
 
 ```rust
-async fn migrate_knowledge_to_lambda(memory: &dyn Memory) -> Result<(), Temm1eError> {
+async fn migrate_knowledge_to_lambda(memory: &dyn Memory) -> Result<(), ElectroError> {
     let opts = SearchOpts {
         limit: 1000,
         entry_type_filter: Some(MemoryEntryType::Knowledge),
@@ -1249,7 +1249,7 @@ mod tests {
 
 ### 10.3 Live Test (30-Turn GPT-5.2 Conversation)
 
-Run via TEMM1E CLI:
+Run via ELECTRO CLI:
 1. 10 turns of varied tasks (file ops, shell, questions, decisions)
 2. Verify `<memory>` blocks are parsed and stored
 3. Wait simulated time or adjust λ for faster decay
@@ -1264,22 +1264,22 @@ Run via TEMM1E CLI:
 
 ### Cargo.toml changes
 
-**temm1e-agent:**
+**electro-agent:**
 ```toml
 blake3 = "1"       # For hashing memory entries
 ```
 
-**temm1e-tools:**
+**electro-tools:**
 ```toml
-# No new dependencies — uses existing temm1e-core traits
+# No new dependencies — uses existing electro-core traits
 ```
 
-**temm1e-core:**
+**electro-core:**
 ```toml
 # No new dependencies — just new types
 ```
 
-**temm1e-memory:**
+**electro-memory:**
 ```toml
 # No new dependencies — SQLite FTS5 is built into sqlx/sqlite
 ```
@@ -1295,6 +1295,6 @@ blake3 = "1"       # For hashing memory entries
 5. **lambda_recall tool** — standalone, depends on Memory trait
 6. **context.rs integration** — replace Cat 5/5b/6
 7. **runtime.rs integration** — parse `<memory>` blocks
-8. **Config loading** — wire up temm1e.toml
+8. **Config loading** — wire up electro.toml
 9. **Migration** — knowledge entries → lambda_memories
 10. **Tests** — unit + integration + live

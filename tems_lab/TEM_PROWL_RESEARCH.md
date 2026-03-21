@@ -178,7 +178,7 @@ Limitation: Sessions expire, some sites bind sessions to IP/fingerprint, cookie 
 5. LLM continues from post-login state
 
 This maps perfectly to Tem's architecture:
-- Vault already exists (`temm1e-vault` with ChaCha20-Poly1305)
+- Vault already exists (`electro-vault` with ChaCha20-Poly1305)
 - User sends credentials via Telegram → stored encrypted in vault with service name
 - Browser tool encounters login → tool layer retrieves from vault → injects via Playwright
 - LLM's context only shows: "Credentials for [service] were injected. Page now shows [post-login state]."

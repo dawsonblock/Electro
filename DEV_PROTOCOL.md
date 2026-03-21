@@ -1,6 +1,6 @@
-# TEMM1E Developer Protocol
+# ELECTRO Developer Protocol
 
-> The single source of truth for building TEMM1E. Every contributor — human or AI — follows this protocol.
+> The single source of truth for building ELECTRO. Every contributor — human or AI — follows this protocol.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### I. Traits in Core, Implementations in Crates
 
-All shared abstractions live in `temm1e-core/src/traits/`. Implementations live in their respective crates. A channel implementation never imports a provider. A tool never imports a memory backend. If two crates need the same type, it belongs in `temm1e-core/src/types/`.
+All shared abstractions live in `electro-core/src/traits/`. Implementations live in their respective crates. A channel implementation never imports a provider. A tool never imports a memory backend. If two crates need the same type, it belongs in `electro-core/src/types/`.
 
 ### II. No Cross-Implementation Dependencies
 
@@ -22,9 +22,9 @@ Platform-specific SDKs (teloxide, serenity, chromiumoxide) are behind Cargo feat
 
 Each crate exposes a `create_*()` function that takes a config and returns `Box<dyn Trait>`. The gateway and main.rs never construct implementations directly — they call the factory with a name string from config.
 
-### V. Every Error is a Temm1eError
+### V. Every Error is a ElectroError
 
-No `unwrap()` in production code. No `Box<dyn Error>`. Every fallible operation returns `Result<T, Temm1eError>` using the appropriate variant. The caller always knows what domain the error came from.
+No `unwrap()` in production code. No `Box<dyn Error>`. Every fallible operation returns `Result<T, ElectroError>` using the appropriate variant. The caller always knows what domain the error came from.
 
 ### VI. Security is Structural, Not Optional
 
@@ -35,20 +35,20 @@ Empty allowlists deny everyone. Numeric IDs only — never usernames. Path trave
 ## Architecture
 
 ```
-temm1e (binary)                    src/main.rs — CLI, onboarding, agent init
-├── temm1e-core         (traits)   13 trait definitions, types, errors, config
-├── temm1e-gateway      (http)     axum server, health, identity, OAuth
-├── temm1e-agent        (brain)    TEM'S MIND — 20 autonomy modules
-├── temm1e-providers    (llm)      Anthropic, OpenAI-compat (6 providers)
-├── temm1e-channels     (io)       Telegram, Discord, Slack, CLI
-├── temm1e-memory       (storage)  SQLite + Markdown with failover
-├── temm1e-vault        (crypto)   ChaCha20-Poly1305 encrypted secrets
-├── temm1e-tools        (actions)  Shell, browser, file ops, web fetch, git
-├── temm1e-skills       (extend)   Skill registry (TemHub v1)
-├── temm1e-automation   (cron)     Heartbeat, scheduled tasks
-├── temm1e-observable   (telemetry) OpenTelemetry, 6 predefined metrics
-├── temm1e-filestore    (files)    Local + S3/R2 storage
-└── temm1e-test-utils   (testing)  Shared test helpers
+electro (binary)                    src/main.rs — CLI, onboarding, agent init
+├── electro-core         (traits)   13 trait definitions, types, errors, config
+├── electro-gateway      (http)     axum server, health, identity, OAuth
+├── electro-agent        (brain)    TEM'S MIND — 20 autonomy modules
+├── electro-providers    (llm)      Anthropic, OpenAI-compat (6 providers)
+├── electro-channels     (io)       Telegram, Discord, Slack, CLI
+├── electro-memory       (storage)  SQLite + Markdown with failover
+├── electro-vault        (crypto)   ChaCha20-Poly1305 encrypted secrets
+├── electro-tools        (actions)  Shell, browser, file ops, web fetch, git
+├── electro-skills       (extend)   Skill registry (TemHub v1)
+├── electro-automation   (cron)     Heartbeat, scheduled tasks
+├── electro-observable   (telemetry) OpenTelemetry, 6 predefined metrics
+├── electro-filestore    (files)    Local + S3/R2 storage
+└── electro-test-utils   (testing)  Shared test helpers
 ```
 
 ### Message Flow
@@ -70,14 +70,14 @@ Channel.start() → inbound message via mpsc::channel
 | File | Purpose |
 |------|---------|
 | `src/main.rs` | CLI entry, onboarding flow, credential detection, agent init |
-| `crates/temm1e-core/src/types/config.rs` | Full config schema, validation, agent-accessible subset |
-| `crates/temm1e-core/src/types/error.rs` | Unified Temm1eError enum |
-| `crates/temm1e-core/src/traits/` | All 13 trait definitions |
-| `crates/temm1e-agent/src/runtime.rs` | Agent loop, tool execution, streaming |
-| `crates/temm1e-agent/src/context.rs` | Context building, token budgeting, history management |
-| `crates/temm1e-providers/src/lib.rs` | Provider factory |
-| `crates/temm1e-channels/src/lib.rs` | Channel factory |
-| `crates/temm1e-memory/src/lib.rs` | Memory backend factory |
+| `crates/electro-core/src/types/config.rs` | Full config schema, validation, agent-accessible subset |
+| `crates/electro-core/src/types/error.rs` | Unified ElectroError enum |
+| `crates/electro-core/src/traits/` | All 13 trait definitions |
+| `crates/electro-agent/src/runtime.rs` | Agent loop, tool execution, streaming |
+| `crates/electro-agent/src/context.rs` | Context building, token budgeting, history management |
+| `crates/electro-providers/src/lib.rs` | Provider factory |
+| `crates/electro-channels/src/lib.rs` | Channel factory |
+| `crates/electro-memory/src/lib.rs` | Memory backend factory |
 
 ---
 
@@ -85,33 +85,33 @@ Channel.start() → inbound message via mpsc::channel
 
 ### Error Handling
 
-All errors use `Temm1eError` from `temm1e-core/src/types/error.rs`:
+All errors use `ElectroError` from `electro-core/src/types/error.rs`:
 
 ```rust
 // 15 domain-specific variants
-Temm1eError::Config(String)          // Bad config
-Temm1eError::Provider(String)        // LLM API error
-Temm1eError::Channel(String)         // Messaging channel error
-Temm1eError::Memory(String)          // Storage error
-Temm1eError::Vault(String)           // Encryption error
-Temm1eError::Tool(String)            // Tool execution error
-Temm1eError::FileTransfer(String)    // File ops error
-Temm1eError::Auth(String)            // Authentication error
-Temm1eError::PermissionDenied(String)
-Temm1eError::SandboxViolation(String)
-Temm1eError::RateLimited(String)
-Temm1eError::NotFound(String)
-Temm1eError::Skill(String)
-Temm1eError::Serialization(#[from] serde_json::Error)  // auto-convert
-Temm1eError::Io(#[from] std::io::Error)                // auto-convert
-Temm1eError::Internal(String)
+ElectroError::Config(String)          // Bad config
+ElectroError::Provider(String)        // LLM API error
+ElectroError::Channel(String)         // Messaging channel error
+ElectroError::Memory(String)          // Storage error
+ElectroError::Vault(String)           // Encryption error
+ElectroError::Tool(String)            // Tool execution error
+ElectroError::FileTransfer(String)    // File ops error
+ElectroError::Auth(String)            // Authentication error
+ElectroError::PermissionDenied(String)
+ElectroError::SandboxViolation(String)
+ElectroError::RateLimited(String)
+ElectroError::NotFound(String)
+ElectroError::Skill(String)
+ElectroError::Serialization(#[from] serde_json::Error)  // auto-convert
+ElectroError::Io(#[from] std::io::Error)                // auto-convert
+ElectroError::Internal(String)
 ```
 
 **Rules:**
 - Pick the most specific variant. `Provider` for LLM errors, not `Internal`.
 - Include actionable context: `"Anthropic API error (429): rate limited"`, not `"request failed"`.
 - HTTP status codes map to variants: 401/403 → `Auth`, 429 → `RateLimited`, 404 → `NotFound`.
-- Use `.map_err()` to convert upstream errors: `.map_err(|e| Temm1eError::Tool(format!("Browser failed: {e}")))?`
+- Use `.map_err()` to convert upstream errors: `.map_err(|e| ElectroError::Tool(format!("Browser failed: {e}")))?`
 
 ### Trait Definitions
 
@@ -121,12 +121,12 @@ All traits follow this structure:
 #[async_trait]
 pub trait Channel: Send + Sync {
     fn name(&self) -> &str;                                           // Identity
-    async fn start(&mut self) -> Result<(), Temm1eError>;            // Lifecycle
-    async fn stop(&mut self) -> Result<(), Temm1eError>;             // Lifecycle
-    async fn send_message(&self, msg: OutboundMessage) -> Result<(), Temm1eError>;  // Core
+    async fn start(&mut self) -> Result<(), ElectroError>;            // Lifecycle
+    async fn stop(&mut self) -> Result<(), ElectroError>;             // Lifecycle
+    async fn send_message(&self, msg: OutboundMessage) -> Result<(), ElectroError>;  // Core
     fn file_transfer(&self) -> Option<&dyn FileTransfer>;             // Optional capability
     fn is_allowed(&self, user_id: &str) -> bool;                      // Security
-    async fn delete_message(&self, _chat_id: &str, _message_id: &str) -> Result<(), Temm1eError> {
+    async fn delete_message(&self, _chat_id: &str, _message_id: &str) -> Result<(), ElectroError> {
         Ok(())  // Default no-op
     }
 }
@@ -134,7 +134,7 @@ pub trait Channel: Send + Sync {
 
 **Rules:**
 - Always `#[async_trait]` + `Send + Sync`
-- Every method returns `Result<T, Temm1eError>` (except `name()`, `is_allowed()`)
+- Every method returns `Result<T, ElectroError>` (except `name()`, `is_allowed()`)
 - Default no-op implementations for optional capabilities
 - `name()` returns a static `&str` identifying the implementation
 
@@ -145,7 +145,7 @@ pub fn create_channel(
     name: &str,
     config: &ChannelConfig,
     workspace: PathBuf,
-) -> Result<Box<dyn Channel>, Temm1eError> {
+) -> Result<Box<dyn Channel>, ElectroError> {
     match name {
         "cli" => Ok(Box::new(CliChannel::new(workspace))),
 
@@ -153,11 +153,11 @@ pub fn create_channel(
         "telegram" => Ok(Box::new(TelegramChannel::new(config)?)),
 
         #[cfg(not(feature = "telegram"))]
-        "telegram" => Err(Temm1eError::Config(
+        "telegram" => Err(ElectroError::Config(
             "Telegram support not enabled. Compile with --features telegram".into(),
         )),
 
-        other => Err(Temm1eError::Config(format!("Unknown channel: {other}"))),
+        other => Err(ElectroError::Config(format!("Unknown channel: {other}"))),
     }
 }
 ```
@@ -165,7 +165,7 @@ pub fn create_channel(
 **Rules:**
 - Return `Box<dyn Trait>`
 - Feature-gated with both `#[cfg(feature)]` and `#[cfg(not(feature))]` arms
-- Disabled features return a descriptive `Temm1eError::Config` explaining how to enable
+- Disabled features return a descriptive `ElectroError::Config` explaining how to enable
 - Catch-all `other` arm for unknown names
 
 ### Builder Pattern
@@ -306,8 +306,8 @@ mod tests {
 
 ```bash
 cargo test --workspace                    # All 1012 tests
-cargo test -p temm1e-agent               # Single crate
-cargo test -p temm1e-tools -- browser    # Filter by name
+cargo test -p electro-agent               # Single crate
+cargo test -p electro-tools -- browser    # Filter by name
 cargo clippy --workspace --all-targets --all-features -- -D warnings  # 0 warnings
 cargo fmt --all -- --check                # Format check
 ```
@@ -320,8 +320,8 @@ cargo fmt --all -- --check                # Format check
 
 **Touchpoints:** 6 files
 
-1. **`crates/temm1e-providers/src/lib.rs`** — Add match arm in `create_provider()`
-2. **`crates/temm1e-providers/src/openai_compat.rs`** — If OpenAI-compatible, add preset base URL (like Gemini/Grok). If not, create new file.
+1. **`crates/electro-providers/src/lib.rs`** — Add match arm in `create_provider()`
+2. **`crates/electro-providers/src/openai_compat.rs`** — If OpenAI-compatible, add preset base URL (like Gemini/Grok). If not, create new file.
 3. **`src/main.rs`** — Add to `detect_api_key()` with key prefix pattern
 4. **`src/main.rs`** — Add default model in onboarding message
 5. **`src/main.rs`** — Add to vault credential detector if applicable
@@ -333,10 +333,10 @@ cargo fmt --all -- --check                # Format check
 
 **Touchpoints:** 5 files
 
-1. **`crates/temm1e-channels/Cargo.toml`** — Add feature flag + optional dependency
-2. **`crates/temm1e-channels/src/{name}.rs`** — Implement `Channel` trait
-3. **`crates/temm1e-channels/src/lib.rs`** — Add `#[cfg(feature)]` module + re-export + factory arm
-4. **`crates/temm1e-core/src/types/config.rs`** — Add channel-specific config fields if needed
+1. **`crates/electro-channels/Cargo.toml`** — Add feature flag + optional dependency
+2. **`crates/electro-channels/src/{name}.rs`** — Implement `Channel` trait
+3. **`crates/electro-channels/src/lib.rs`** — Add `#[cfg(feature)]` module + re-export + factory arm
+4. **`crates/electro-core/src/types/config.rs`** — Add channel-specific config fields if needed
 5. **`Cargo.toml` (root)** — Add feature to workspace default features
 
 **Channel must implement:**
@@ -350,15 +350,15 @@ cargo fmt --all -- --check                # Format check
 
 **Touchpoints:** 3 files
 
-1. **`crates/temm1e-tools/src/{name}.rs`** — Implement `Tool` trait
-2. **`crates/temm1e-tools/src/lib.rs`** — Register in `create_tools()` vec
-3. **`crates/temm1e-tools/Cargo.toml`** — Add feature flag if tool has optional dependencies
+1. **`crates/electro-tools/src/{name}.rs`** — Implement `Tool` trait
+2. **`crates/electro-tools/src/lib.rs`** — Register in `create_tools()` vec
+3. **`crates/electro-tools/Cargo.toml`** — Add feature flag if tool has optional dependencies
 
 **Tool must declare:**
 ```rust
 fn declarations(&self) -> ToolDeclarations {
     ToolDeclarations {
-        file_access: vec![PathAccess::ReadWrite("~/.temm1e/sessions".into())],
+        file_access: vec![PathAccess::ReadWrite("~/.electro/sessions".into())],
         network_access: vec!["*.example.com".into()],
         shell_access: false,
     }
@@ -369,9 +369,9 @@ fn declarations(&self) -> ToolDeclarations {
 
 **Touchpoints:** 3 files
 
-1. **`crates/temm1e-memory/src/{name}.rs`** — Implement `Memory` trait
-2. **`crates/temm1e-memory/src/lib.rs`** — Add factory arm in `create_memory_backend()`
-3. **`crates/temm1e-core/src/types/config.rs`** — Add config fields if needed
+1. **`crates/electro-memory/src/{name}.rs`** — Implement `Memory` trait
+2. **`crates/electro-memory/src/lib.rs`** — Add factory arm in `create_memory_backend()`
+3. **`crates/electro-core/src/types/config.rs`** — Add config fields if needed
 
 **Memory must implement:** `store()`, `get()`, `delete()`, `search()`, `get_session_history()`, `clear_session()`
 
@@ -383,7 +383,7 @@ Understanding how the agent maintains conversation context is critical for debug
 
 ### Token Budget (default: 30,000)
 
-Priority-based allocation in `crates/temm1e-agent/src/context.rs`:
+Priority-based allocation in `crates/electro-agent/src/context.rs`:
 
 | Priority | Category | Budget | Notes |
 |----------|---------|--------|-------|
@@ -443,20 +443,20 @@ The fresh-user experience in `src/main.rs`:
    → Start in onboarding mode
 2. User sends any message to Telegram
    → Auto-whitelist first user as admin (numeric ID)
-   → Persist allowlist to ~/.temm1e/allowlist.toml
+   → Persist allowlist to ~/.electro/allowlist.toml
 3. Prompt user for API key
 4. User pastes API key in chat
    → detect_api_key() identifies provider from prefix
    → Validate key against real API (health_check)
-   → Save to ~/.temm1e/credentials.toml
+   → Save to ~/.electro/credentials.toml
    → Delete the credential message from chat
    → Initialize agent with detected provider + default model
 5. Agent online — subsequent messages route to LLM
 ```
 
 **Credential resolution priority chain:**
-1. Config file (`temm1e.toml` with `${ENV_VAR}` expansion)
-2. Saved credentials (`~/.temm1e/credentials.toml`)
+1. Config file (`electro.toml` with `${ENV_VAR}` expansion)
+2. Saved credentials (`~/.electro/credentials.toml`)
 3. Onboarding mode (no credentials anywhere → ask user)
 
 ---
@@ -471,17 +471,17 @@ cargo build --workspace                  # Debug build
 cargo test --workspace                   # All tests
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo fmt --all                          # Format
-cargo build --release --bin temm1e      # Release binary
+cargo build --release --bin electro      # Release binary
 ```
 
 ### Run Locally (Normal)
 
 ```bash
 # Source all env vars
-grep -E "^[A-Z_]+=" .env | sed 's/^/export /' > /tmp/temm1e_env.sh
-source /tmp/temm1e_env.sh
-./target/release/temm1e start > /tmp/temm1e.log 2>&1 &
-tail -f /tmp/temm1e.log
+grep -E "^[A-Z_]+=" .env | sed 's/^/export /' > /tmp/electro_env.sh
+source /tmp/electro_env.sh
+./target/release/electro start > /tmp/electro.log 2>&1 &
+tail -f /tmp/electro.log
 ```
 
 ### Run Locally (Fresh User — Ad-Hoc Testing Only)
@@ -490,20 +490,20 @@ For testing the onboarding flow from scratch. This is NOT in any code path — i
 
 ```bash
 # 1. Kill existing
-pkill -f "temm1e start"
+pkill -f "electro start"
 
 # 2. Reset user state
-echo 'admin = ""\nusers = []' > ~/.temm1e/allowlist.toml
-rm -f ~/.temm1e/credentials.toml
-rm -f ~/.temm1e/memory.db
+echo 'admin = ""\nusers = []' > ~/.electro/allowlist.toml
+rm -f ~/.electro/credentials.toml
+rm -f ~/.electro/memory.db
 
 # 3. Source env WITHOUT API key (so onboarding triggers)
-grep -E "^[A-Z_]+=" .env | grep -v "ANTHROPIC_API_KEY" | sed 's/^/export /' > /tmp/temm1e_env.sh
-source /tmp/temm1e_env.sh
+grep -E "^[A-Z_]+=" .env | grep -v "ANTHROPIC_API_KEY" | sed 's/^/export /' > /tmp/electro_env.sh
+source /tmp/electro_env.sh
 
 # 4. Launch & tail
-./target/release/temm1e start > /tmp/temm1e.log 2>&1 &
-tail -f /tmp/temm1e.log
+./target/release/electro start > /tmp/electro.log 2>&1 &
+tail -f /tmp/electro.log
 ```
 
 **Why exclude ANTHROPIC_API_KEY:** The config loader expands `${ANTHROPIC_API_KEY}` from env, which bypasses onboarding entirely. Excluding it forces the fresh-user path.
@@ -517,7 +517,7 @@ tail -f /tmp/temm1e.log
 | Mistake | Fix |
 |---------|-----|
 | `unwrap()` in production code | Use `.map_err()` + `?` operator |
-| Cross-crate dependency (e.g., tools → channels) | Move shared type to `temm1e-core` |
+| Cross-crate dependency (e.g., tools → channels) | Move shared type to `electro-core` |
 | Unconditional `use teloxide::*` | Gate behind `#[cfg(feature = "telegram")]` |
 | Logging API keys at info level | Use `debug` with redacting `Debug` impl |
 | Matching on username in allowlist | Match numeric user ID only (CA-04) |

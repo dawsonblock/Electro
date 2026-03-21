@@ -471,7 +471,7 @@ def main():
         w()
         w(f"> **Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         w(f"> **Model:** {MODEL}")
-        w(f"> **Author:** TEMM1E's Lab")
+        w(f"> **Author:** ELECTRO's Lab")
         w(f"> **Turns:** {len(ALL_TURNS)} per strategy ({len(ALL_TURNS)*3} total)")
         w(f"> **Elapsed:** {elapsed:.0f}s ({elapsed/60:.1f}min)")
         w()
@@ -526,7 +526,7 @@ def main():
             w()
 
         w("---")
-        w("*TEMM1E's Lab — v2 benchmark*")
+        w("*ELECTRO's Lab — v2 benchmark*")
 
     # Save metrics
     out = {}

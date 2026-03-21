@@ -7,20 +7,20 @@
 
 ## 1. Architecture Overview: Two Prompt Paths
 
-TEMM1E has **two distinct system prompt construction paths**:
+ELECTRO has **two distinct system prompt construction paths**:
 
 ### Path A: `build_system_prompt()` in `src/main.rs` (Gateway/Telegram)
 - Used for all gateway-dispatched messages (Telegram, Discord, Slack)
 - Monolithic prompt: `SYSTEM_PROMPT_BASE` + dynamic provider/model context + vision rules + current config + self-config rules + secret handling + MCP instructions + custom tool authoring instructions
 - **This is the path used in live production** and the one consuming ~25K tokens
 
-### Path B: `SystemPromptBuilder` in `crates/temm1e-agent/src/prompt_optimizer.rs` (V2 tiered)
+### Path B: `SystemPromptBuilder` in `crates/electro-agent/src/prompt_optimizer.rs` (V2 tiered)
 - Used when `prompt_tier` is set (V2 optimizations enabled)
 - Conditional sections based on tier (Minimal/Basic/Standard/Full)
 - **Much smaller** -- tested to stay under 1,500 tokens with 6 tools
 - Only activated when the classifier routes through the V2 path
 
-### Path C: Fallback in `crates/temm1e-agent/src/context.rs` line 818
+### Path C: Fallback in `crates/electro-agent/src/context.rs` line 818
 - Used when `system_prompt` is `None` and no V2 tier
 - Generates a minimal ~500-token prompt with tool list + workspace + guidelines
 
@@ -270,10 +270,10 @@ At Claude Sonnet pricing ($3/M input tokens), saving ~3,500 tokens per turn acro
 | File | Role |
 |------|------|
 | `src/main.rs` lines 323-507 | `SYSTEM_PROMPT_BASE` + `build_system_prompt()` |
-| `crates/temm1e-agent/src/context.rs` | Context builder, tool def injection, budget allocation |
-| `crates/temm1e-agent/src/prompt_optimizer.rs` | V2 `SystemPromptBuilder` with tiered sections |
-| `crates/temm1e-agent/src/prompt_patches.rs` | Self-tuning prompt patches |
-| `crates/temm1e-agent/src/blueprint.rs` | Blueprint injection logic |
-| `crates/temm1e-tools/src/lib.rs` | Tool registration factory |
-| `crates/temm1e-tools/src/*.rs` | Individual tool definitions (19 tools) |
-| `crates/temm1e-mcp/src/{self_extend,self_add,mcp_manage,bridge}.rs` | MCP tool definitions |
+| `crates/electro-agent/src/context.rs` | Context builder, tool def injection, budget allocation |
+| `crates/electro-agent/src/prompt_optimizer.rs` | V2 `SystemPromptBuilder` with tiered sections |
+| `crates/electro-agent/src/prompt_patches.rs` | Self-tuning prompt patches |
+| `crates/electro-agent/src/blueprint.rs` | Blueprint injection logic |
+| `crates/electro-tools/src/lib.rs` | Tool registration factory |
+| `crates/electro-tools/src/*.rs` | Individual tool definitions (19 tools) |
+| `crates/electro-mcp/src/{self_extend,self_add,mcp_manage,bridge}.rs` | MCP tool definitions |

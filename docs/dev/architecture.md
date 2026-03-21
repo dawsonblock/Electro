@@ -1,10 +1,10 @@
 # Developer Guide: Architecture
 
-This document describes TEMM1E's internal architecture: the crate dependency graph, data flow through the system, async runtime model, and extension points for adding new functionality.
+This document describes ELECTRO's internal architecture: the crate dependency graph, data flow through the system, async runtime model, and extension points for adding new functionality.
 
 ## Design Principles
 
-1. **Trait-based extensibility** -- every subsystem is defined by a trait in `temm1e-core`; implementations live in separate crates
+1. **Trait-based extensibility** -- every subsystem is defined by a trait in `electro-core`; implementations live in separate crates
 2. **Deny-by-default security** -- all access controls, sandboxing, and encryption are mandatory
 3. **Messaging-first UX** -- messaging apps are the primary control plane; file transfer is first-class
 4. **Dual-mode runtime** -- same binary runs in cloud (headless, TLS) and local (localhost, optional GUI) modes
@@ -15,63 +15,63 @@ These are codified in Architecture Decision Records at `docs/architecture/adr/00
 ## Crate Dependency Graph
 
 ```
-temm1e (binary)
+electro (binary)
   |
-  +-- temm1e-gateway
-  |     +-- temm1e-core
+  +-- electro-gateway
+  |     +-- electro-core
   |     +-- axum, tower, tower-http, rustls
   |
-  +-- temm1e-agent
-  |     +-- temm1e-core
+  +-- electro-agent
+  |     +-- electro-core
   |
-  +-- temm1e-providers
-  |     +-- temm1e-core
+  +-- electro-providers
+  |     +-- electro-core
   |     +-- reqwest
   |
-  +-- temm1e-channels
-  |     +-- temm1e-core
+  +-- electro-channels
+  |     +-- electro-core
   |     +-- teloxide (Telegram)
   |     +-- serenity, poise (Discord)
   |     +-- reqwest (Slack, WhatsApp)
   |
-  +-- temm1e-memory
-  |     +-- temm1e-core
+  +-- electro-memory
+  |     +-- electro-core
   |     +-- sqlx (SQLite, PostgreSQL)
   |
-  +-- temm1e-vault
-  |     +-- temm1e-core
+  +-- electro-vault
+  |     +-- electro-core
   |     +-- chacha20poly1305, ed25519-dalek
   |
-  +-- temm1e-tools
-  |     +-- temm1e-core
+  +-- electro-tools
+  |     +-- electro-core
   |     +-- chromiumoxide (browser)
   |
-  +-- temm1e-skills
-  |     +-- temm1e-core
+  +-- electro-skills
+  |     +-- electro-core
   |
-  +-- temm1e-automation
-  |     +-- temm1e-core
+  +-- electro-automation
+  |     +-- electro-core
   |
-  +-- temm1e-observable
-  |     +-- temm1e-core
+  +-- electro-observable
+  |     +-- electro-core
   |     +-- tracing, opentelemetry
   |
-  +-- temm1e-filestore
-        +-- temm1e-core
+  +-- electro-filestore
+        +-- electro-core
         +-- aws-sdk-s3
 ```
 
-**Key rule**: all crates depend on `temm1e-core` for trait definitions and shared types. No implementation crate depends on another implementation crate. This keeps the dependency graph clean and enables independent compilation.
+**Key rule**: all crates depend on `electro-core` for trait definitions and shared types. No implementation crate depends on another implementation crate. This keeps the dependency graph clean and enables independent compilation.
 
-## Core Crate: temm1e-core
+## Core Crate: electro-core
 
-The `temm1e-core` crate contains:
+The `electro-core` crate contains:
 
 - **12 trait definitions** (`traits/`) -- `Provider`, `Channel`, `FileTransfer`, `Tool`, `Memory`, `Vault`, `FileStore`, `Observable`, `Identity`, `Tunnel`, `Orchestrator`, `Tenant`, `Peripheral`
-- **Shared types** (`types/`) -- `InboundMessage`, `OutboundMessage`, `CompletionRequest`, `CompletionResponse`, `Temm1eError`, `Temm1eConfig`, etc.
+- **Shared types** (`types/`) -- `InboundMessage`, `OutboundMessage`, `CompletionRequest`, `CompletionResponse`, `ElectroError`, `ElectroConfig`, etc.
 - **Config loading** (`config/`) -- TOML parser, YAML compat reader, environment variable expansion, `vault://` URI resolution
 
-`temm1e-core` has minimal external dependencies: `serde`, `async-trait`, `thiserror`, `chrono`, `bytes`, `futures`. It defines interfaces only; no business logic.
+`electro-core` has minimal external dependencies: `serde`, `async-trait`, `thiserror`, `chrono`, `bytes`, `futures`. It defines interfaces only; no business logic.
 
 ## Data Flow
 
@@ -143,7 +143,7 @@ The `temm1e-core` crate contains:
 
 ## Async Runtime Model
 
-TEMM1E uses **Tokio** as its async runtime with the multi-threaded scheduler.
+ELECTRO uses **Tokio** as its async runtime with the multi-threaded scheduler.
 
 | Component | Execution Model |
 |-----------|----------------|
@@ -166,14 +166,14 @@ TEMM1E uses **Tokio** as its async runtime with the multi-threaded scheduler.
 
 | Layer | Approach |
 |-------|----------|
-| `temm1e-core` types | `Temm1eError` enum with `thiserror` -- domain-specific variants |
-| Implementation crates | Return `Result<T, Temm1eError>` at crate boundaries |
+| `electro-core` types | `ElectroError` enum with `thiserror` -- domain-specific variants |
+| Implementation crates | Return `Result<T, ElectroError>` at crate boundaries |
 | Binary entry point | `anyhow::Result` for ergonomic error propagation with backtraces |
 | User-facing errors | Converted to friendly messages before reaching channels |
 
 Error propagation path:
 ```
-sqlx::Error --> Temm1eError::Memory("...") --> anyhow::Error (at binary level)
+sqlx::Error --> ElectroError::Memory("...") --> anyhow::Error (at binary level)
                                             --> "Sorry, I had trouble accessing my memory" (to user)
 ```
 
@@ -185,16 +185,16 @@ sqlx::Error --> Temm1eError::Memory("...") --> anyhow::Error (at binary level)
 Compiled defaults
   |
   v
-/etc/temm1e/config.toml (system)
+/etc/electro/config.toml (system)
   |
   v
-~/.temm1e/config.toml (user)
+~/.electro/config.toml (user)
   |
   v
 ./config.toml (workspace)
   |
   v
-TEMM1E_* environment variables
+ELECTRO_* environment variables
   |
   v
 CLI flags (--mode, --config)
@@ -203,11 +203,11 @@ CLI flags (--mode, --config)
 vault:// URI resolution
 ```
 
-Later sources override earlier ones. The config module in `temm1e-core/src/config/` handles:
+Later sources override earlier ones. The config module in `electro-core/src/config/` handles:
 - `loader.rs` -- file discovery and loading
 - `toml.rs` -- native TOML parser
 - `yaml_compat.rs` -- OpenClaw YAML format reader
-- `env.rs` -- `${ENV_VAR}` expansion and `TEMM1E_*` mapping
+- `env.rs` -- `${ENV_VAR}` expansion and `ELECTRO_*` mapping
 
 ### Dual Mode Defaults
 
@@ -231,11 +231,11 @@ Later sources override earlier ones. The config module in `temm1e-core/src/confi
 
 | What | Where | How |
 |------|-------|-----|
-| AI Provider | `crates/temm1e-providers/src/` | Implement `Provider` trait |
-| Messaging Channel | `crates/temm1e-channels/src/` | Implement `Channel` + `FileTransfer` traits |
-| Tool | `crates/temm1e-tools/src/` | Implement `Tool` trait |
-| Memory Backend | `crates/temm1e-memory/src/` | Implement `Memory` trait |
-| File Storage Backend | `crates/temm1e-filestore/src/` | Implement `FileStore` trait |
+| AI Provider | `crates/electro-providers/src/` | Implement `Provider` trait |
+| Messaging Channel | `crates/electro-channels/src/` | Implement `Channel` + `FileTransfer` traits |
+| Tool | `crates/electro-tools/src/` | Implement `Tool` trait |
+| Memory Backend | `crates/electro-memory/src/` | Implement `Memory` trait |
+| File Storage Backend | `crates/electro-filestore/src/` | Implement `FileStore` trait |
 | Tunnel Provider | (new crate or in gateway) | Implement `Tunnel` trait |
 
 See the step-by-step tutorials:
@@ -249,10 +249,10 @@ Optional implementations are gated behind Cargo feature flags defined in the wor
 ```toml
 [features]
 default = ["telegram", "discord", "slack", "whatsapp", "browser", "postgres"]
-telegram = ["temm1e-channels/telegram"]
-discord = ["temm1e-channels/discord"]
-browser = ["temm1e-tools/browser"]
-postgres = ["temm1e-memory/postgres"]
+telegram = ["electro-channels/telegram"]
+discord = ["electro-channels/discord"]
+browser = ["electro-tools/browser"]
+postgres = ["electro-memory/postgres"]
 ```
 
 New extensions should follow the same pattern: add a feature flag so the component can be excluded from builds.

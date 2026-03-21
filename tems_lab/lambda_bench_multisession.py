@@ -464,7 +464,7 @@ def main():
         w()
         w(f"> **Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         w(f"> **Model:** {MODEL}")
-        w(f"> **Author:** TEMM1E's Lab")
+        w(f"> **Author:** ELECTRO's Lab")
         w(f"> **Sessions:** 5 (context reset between each)")
         w(f"> **Elapsed:** {elapsed:.0f}s ({elapsed/60:.1f}min)")
         w()
@@ -533,7 +533,7 @@ def main():
             w()
 
         w("---")
-        w("*TEMM1E's Lab — Multi-Session Benchmark*")
+        w("*ELECTRO's Lab — Multi-Session Benchmark*")
 
     # Metrics JSON
     out = {}

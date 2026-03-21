@@ -1,10 +1,10 @@
 # API Reference: Core Traits
 
-TEMM1E defines 12 core traits in `temm1e-core` (plus the `FileTransfer` sub-trait on `Channel`). Every subsystem is a trait implementation. Trait objects (`Box<dyn Trait>`) provide runtime polymorphism, with configuration determining which implementation is used.
+ELECTRO defines 12 core traits in `electro-core` (plus the `FileTransfer` sub-trait on `Channel`). Every subsystem is a trait implementation. Trait objects (`Box<dyn Trait>`) provide runtime polymorphism, with configuration determining which implementation is used.
 
 All traits require `Send + Sync` and use `#[async_trait]` for async method support.
 
-Source: `crates/temm1e-core/src/traits/`
+Source: `crates/electro-core/src/traits/`
 
 ---
 
@@ -21,20 +21,20 @@ pub trait Provider: Send + Sync {
     fn name(&self) -> &str;
 
     /// Send a completion request and get a full response
-    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, Temm1eError>;
+    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, ElectroError>;
 
     /// Send a completion request and get a streaming response
-    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, Temm1eError>>, Temm1eError>;
+    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, ElectroError>>, ElectroError>;
 
     /// Check if the provider is healthy and reachable
-    async fn health_check(&self) -> Result<bool, Temm1eError>;
+    async fn health_check(&self) -> Result<bool, ElectroError>;
 
     /// List available models for this provider
-    async fn list_models(&self) -> Result<Vec<String>, Temm1eError>;
+    async fn list_models(&self) -> Result<Vec<String>, ElectroError>;
 }
 ```
 
-**Implementations**: `temm1e-providers` crate -- `anthropic.rs`, `openai_compat.rs`, `google.rs`, `mistral.rs`, `groq.rs`
+**Implementations**: `electro-providers` crate -- `anthropic.rs`, `openai_compat.rs`, `google.rs`, `mistral.rs`, `groq.rs`
 
 ---
 
@@ -51,13 +51,13 @@ pub trait Channel: Send + Sync {
     fn name(&self) -> &str;
 
     /// Start the channel listener (connect to platform API)
-    async fn start(&mut self) -> Result<(), Temm1eError>;
+    async fn start(&mut self) -> Result<(), ElectroError>;
 
     /// Stop the channel listener gracefully
-    async fn stop(&mut self) -> Result<(), Temm1eError>;
+    async fn stop(&mut self) -> Result<(), ElectroError>;
 
     /// Send a text message to a specific chat
-    async fn send_message(&self, msg: OutboundMessage) -> Result<(), Temm1eError>;
+    async fn send_message(&self, msg: OutboundMessage) -> Result<(), ElectroError>;
 
     /// Get the file transfer capability for this channel (None if not supported)
     fn file_transfer(&self) -> Option<&dyn FileTransfer>;
@@ -67,7 +67,7 @@ pub trait Channel: Send + Sync {
 }
 ```
 
-**Implementations**: `temm1e-channels` crate -- `telegram.rs`, `discord.rs`, `slack.rs`, `whatsapp.rs`, `cli.rs`
+**Implementations**: `electro-channels` crate -- `telegram.rs`, `discord.rs`, `slack.rs`, `whatsapp.rs`, `cli.rs`
 
 ---
 
@@ -81,10 +81,10 @@ Bi-directional file transfer. Every messaging channel should implement this alon
 #[async_trait]
 pub trait FileTransfer: Send + Sync {
     /// Receive files attached to an inbound message
-    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, Temm1eError>;
+    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, ElectroError>;
 
     /// Send a file to a user via the messaging platform
-    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), Temm1eError>;
+    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), ElectroError>;
 
     /// Stream a large file with progress
     async fn send_file_stream(
@@ -92,14 +92,14 @@ pub trait FileTransfer: Send + Sync {
         chat_id: &str,
         stream: BoxStream<'_, Bytes>,
         metadata: FileMetadata,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
 
     /// Maximum file size this channel supports (in bytes)
     fn max_file_size(&self) -> usize;
 }
 ```
 
-**Implementations**: `temm1e-channels/src/file_transfer.rs` -- per-channel implementations
+**Implementations**: `electro-channels/src/file_transfer.rs` -- per-channel implementations
 
 ---
 
@@ -125,7 +125,7 @@ pub trait Tool: Send + Sync {
     fn declarations(&self) -> ToolDeclarations;
 
     /// Execute the tool with given input
-    async fn execute(&self, input: ToolInput, ctx: &ToolContext) -> Result<ToolOutput, Temm1eError>;
+    async fn execute(&self, input: ToolInput, ctx: &ToolContext) -> Result<ToolOutput, ElectroError>;
 }
 ```
 
@@ -137,7 +137,7 @@ pub trait Tool: Send + Sync {
 - `ToolOutput` -- content string + is_error flag
 - `ToolContext` -- workspace path + session ID
 
-**Implementations**: `temm1e-tools` crate -- `shell.rs`, `file_ops.rs`, `browser.rs`, `git.rs`, `http.rs`, `screenshot.rs`
+**Implementations**: `electro-tools` crate -- `shell.rs`, `file_ops.rs`, `browser.rs`, `git.rs`, `http.rs`, `screenshot.rs`
 
 ---
 
@@ -151,22 +151,22 @@ Persistence for conversations, long-term memory, and skills. Supports hybrid sea
 #[async_trait]
 pub trait Memory: Send + Sync {
     /// Store a memory entry
-    async fn store(&self, entry: MemoryEntry) -> Result<(), Temm1eError>;
+    async fn store(&self, entry: MemoryEntry) -> Result<(), ElectroError>;
 
     /// Hybrid search: vector similarity + keyword matching
-    async fn search(&self, query: &str, opts: SearchOpts) -> Result<Vec<MemoryEntry>, Temm1eError>;
+    async fn search(&self, query: &str, opts: SearchOpts) -> Result<Vec<MemoryEntry>, ElectroError>;
 
     /// Get a specific memory entry by ID
-    async fn get(&self, id: &str) -> Result<Option<MemoryEntry>, Temm1eError>;
+    async fn get(&self, id: &str) -> Result<Option<MemoryEntry>, ElectroError>;
 
     /// Delete a memory entry
-    async fn delete(&self, id: &str) -> Result<(), Temm1eError>;
+    async fn delete(&self, id: &str) -> Result<(), ElectroError>;
 
     /// List all sessions
-    async fn list_sessions(&self) -> Result<Vec<String>, Temm1eError>;
+    async fn list_sessions(&self) -> Result<Vec<String>, ElectroError>;
 
     /// Get conversation history for a session
-    async fn get_session_history(&self, session_id: &str, limit: usize) -> Result<Vec<MemoryEntry>, Temm1eError>;
+    async fn get_session_history(&self, session_id: &str, limit: usize) -> Result<Vec<MemoryEntry>, ElectroError>;
 
     /// Backend name (e.g., "sqlite", "postgres", "markdown")
     fn backend_name(&self) -> &str;
@@ -179,7 +179,7 @@ pub trait Memory: Send + Sync {
 - `MemoryEntryType` -- `Conversation`, `LongTerm`, `DailyLog`, `Skill`
 - `SearchOpts` -- limit, vector_weight (default 0.7), keyword_weight (default 0.3), optional session/type filters
 
-**Implementations**: `temm1e-memory` crate -- `sqlite.rs`, `postgres.rs`, `markdown.rs`
+**Implementations**: `electro-memory` crate -- `sqlite.rs`, `postgres.rs`, `markdown.rs`
 
 ---
 
@@ -193,29 +193,29 @@ Encrypted secrets management. Stores API keys and credentials encrypted at rest 
 #[async_trait]
 pub trait Vault: Send + Sync {
     /// Store a secret (encrypts before storage)
-    async fn store_secret(&self, key: &str, plaintext: &[u8]) -> Result<(), Temm1eError>;
+    async fn store_secret(&self, key: &str, plaintext: &[u8]) -> Result<(), ElectroError>;
 
     /// Retrieve a secret (decrypts on read)
-    async fn get_secret(&self, key: &str) -> Result<Option<Vec<u8>>, Temm1eError>;
+    async fn get_secret(&self, key: &str) -> Result<Option<Vec<u8>>, ElectroError>;
 
     /// Delete a secret
-    async fn delete_secret(&self, key: &str) -> Result<(), Temm1eError>;
+    async fn delete_secret(&self, key: &str) -> Result<(), ElectroError>;
 
     /// List secret keys (names only, not values)
-    async fn list_keys(&self) -> Result<Vec<String>, Temm1eError>;
+    async fn list_keys(&self) -> Result<Vec<String>, ElectroError>;
 
     /// Check if a key exists
-    async fn has_key(&self, key: &str) -> Result<bool, Temm1eError>;
+    async fn has_key(&self, key: &str) -> Result<bool, ElectroError>;
 
     /// Resolve a vault:// URI to its plaintext value
-    async fn resolve_uri(&self, uri: &str) -> Result<Option<Vec<u8>>, Temm1eError>;
+    async fn resolve_uri(&self, uri: &str) -> Result<Option<Vec<u8>>, ElectroError>;
 
     /// Vault backend name (e.g., "local-chacha20", "aws-kms")
     fn backend_name(&self) -> &str;
 }
 ```
 
-**Implementations**: `temm1e-vault` crate -- `local.rs` (ChaCha20-Poly1305), `resolver.rs` (vault:// URI resolution), `detector.rs` (API key pattern detection)
+**Implementations**: `electro-vault` crate -- `local.rs` (ChaCha20-Poly1305), `resolver.rs` (vault:// URI resolution), `detector.rs` (API key pattern detection)
 
 ---
 
@@ -229,7 +229,7 @@ File storage backends for local filesystem or cloud object storage (S3, R2, GCS)
 #[async_trait]
 pub trait FileStore: Send + Sync {
     /// Store a file and return its storage key
-    async fn store(&self, path: &str, data: Bytes, metadata: FileMetadata) -> Result<String, Temm1eError>;
+    async fn store(&self, path: &str, data: Bytes, metadata: FileMetadata) -> Result<String, ElectroError>;
 
     /// Store a file from a stream (for large files)
     async fn store_stream(
@@ -237,26 +237,26 @@ pub trait FileStore: Send + Sync {
         path: &str,
         stream: BoxStream<'_, Bytes>,
         metadata: FileMetadata,
-    ) -> Result<String, Temm1eError>;
+    ) -> Result<String, ElectroError>;
 
     /// Retrieve a file by its storage key
-    async fn get(&self, key: &str) -> Result<Option<Bytes>, Temm1eError>;
+    async fn get(&self, key: &str) -> Result<Option<Bytes>, ElectroError>;
 
     /// Generate a presigned URL for direct access (for cloud backends)
-    async fn presigned_url(&self, key: &str, expires_in_secs: u64) -> Result<Option<String>, Temm1eError>;
+    async fn presigned_url(&self, key: &str, expires_in_secs: u64) -> Result<Option<String>, ElectroError>;
 
     /// Delete a file
-    async fn delete(&self, key: &str) -> Result<(), Temm1eError>;
+    async fn delete(&self, key: &str) -> Result<(), ElectroError>;
 
     /// List files in a path prefix
-    async fn list(&self, prefix: &str) -> Result<Vec<String>, Temm1eError>;
+    async fn list(&self, prefix: &str) -> Result<Vec<String>, ElectroError>;
 
     /// Backend name (e.g., "local", "s3")
     fn backend_name(&self) -> &str;
 }
 ```
 
-**Implementations**: `temm1e-filestore` crate -- `local.rs`, `s3.rs`
+**Implementations**: `electro-filestore` crate -- `local.rs`, `s3.rs`
 
 ---
 
@@ -270,16 +270,16 @@ Monitoring, logging, and metrics collection. Used by all subsystems to report he
 #[async_trait]
 pub trait Observable: Send + Sync {
     /// Record a metric
-    async fn record_metric(&self, name: &str, value: f64, labels: &[(&str, &str)]) -> Result<(), Temm1eError>;
+    async fn record_metric(&self, name: &str, value: f64, labels: &[(&str, &str)]) -> Result<(), ElectroError>;
 
     /// Record a counter increment
-    async fn increment_counter(&self, name: &str, labels: &[(&str, &str)]) -> Result<(), Temm1eError>;
+    async fn increment_counter(&self, name: &str, labels: &[(&str, &str)]) -> Result<(), ElectroError>;
 
     /// Record a histogram observation
-    async fn observe_histogram(&self, name: &str, value: f64, labels: &[(&str, &str)]) -> Result<(), Temm1eError>;
+    async fn observe_histogram(&self, name: &str, value: f64, labels: &[(&str, &str)]) -> Result<(), ElectroError>;
 
     /// Report health status
-    async fn health_status(&self) -> Result<HealthStatus, Temm1eError>;
+    async fn health_status(&self) -> Result<HealthStatus, ElectroError>;
 }
 ```
 
@@ -289,7 +289,7 @@ pub trait Observable: Send + Sync {
 - `HealthState` -- `Healthy`, `Degraded`, `Unhealthy`
 - `ComponentHealth` -- name, status, optional message
 
-**Implementations**: `temm1e-observable` crate -- `logging.rs`, `metrics.rs`, `otel.rs`
+**Implementations**: `electro-observable` crate -- `logging.rs`, `metrics.rs`, `otel.rs`
 
 ---
 
@@ -303,13 +303,13 @@ Authentication and authorization for channel users.
 #[async_trait]
 pub trait Identity: Send + Sync {
     /// Authenticate a user from a channel message
-    async fn authenticate(&self, channel: &str, user_id: &str) -> Result<AuthResult, Temm1eError>;
+    async fn authenticate(&self, channel: &str, user_id: &str) -> Result<AuthResult, ElectroError>;
 
     /// Check if a user has a specific permission
-    async fn has_permission(&self, user_id: &str, permission: &str) -> Result<bool, Temm1eError>;
+    async fn has_permission(&self, user_id: &str, permission: &str) -> Result<bool, ElectroError>;
 
     /// Register a new user (from chat-based onboarding)
-    async fn register_user(&self, user_id: &str, channel: &str) -> Result<(), Temm1eError>;
+    async fn register_user(&self, user_id: &str, channel: &str) -> Result<(), ElectroError>;
 }
 ```
 
@@ -329,10 +329,10 @@ Secure external access via tunnel providers (Cloudflare Tunnel, ngrok, Tailscale
 #[async_trait]
 pub trait Tunnel: Send + Sync {
     /// Start the tunnel and return the public URL
-    async fn start(&mut self, local_port: u16) -> Result<String, Temm1eError>;
+    async fn start(&mut self, local_port: u16) -> Result<String, ElectroError>;
 
     /// Stop the tunnel
-    async fn stop(&mut self) -> Result<(), Temm1eError>;
+    async fn stop(&mut self) -> Result<(), ElectroError>;
 
     /// Get the current public URL (None if not running)
     fn public_url(&self) -> Option<&str>;
@@ -353,10 +353,10 @@ Container/VM lifecycle management. Stub for v0.1; designed for future multi-inst
 ```rust
 #[async_trait]
 pub trait Orchestrator: Send + Sync {
-    async fn provision(&self, spec: AgentSpec) -> Result<AgentInstance, Temm1eError>;
-    async fn scale(&self, instance: &AgentInstance, replicas: u32) -> Result<(), Temm1eError>;
-    async fn destroy(&self, instance: &AgentInstance) -> Result<(), Temm1eError>;
-    async fn health(&self, instance: &AgentInstance) -> Result<bool, Temm1eError>;
+    async fn provision(&self, spec: AgentSpec) -> Result<AgentInstance, ElectroError>;
+    async fn scale(&self, instance: &AgentInstance, replicas: u32) -> Result<(), ElectroError>;
+    async fn destroy(&self, instance: &AgentInstance) -> Result<(), ElectroError>;
+    async fn health(&self, instance: &AgentInstance) -> Result<bool, ElectroError>;
     fn backend_name(&self) -> &str;
 }
 ```
@@ -379,13 +379,13 @@ Multi-tenancy isolation. Stub for v0.1; single-tenant only, but the trait is des
 #[async_trait]
 pub trait Tenant: Send + Sync {
     /// Get tenant ID from a channel user
-    async fn resolve_tenant(&self, channel: &str, user_id: &str) -> Result<TenantId, Temm1eError>;
+    async fn resolve_tenant(&self, channel: &str, user_id: &str) -> Result<TenantId, ElectroError>;
 
     /// Get workspace path for a tenant
     fn workspace_path(&self, tenant_id: &TenantId) -> std::path::PathBuf;
 
     /// Check rate limits for a tenant
-    async fn check_rate_limit(&self, tenant_id: &TenantId) -> Result<bool, Temm1eError>;
+    async fn check_rate_limit(&self, tenant_id: &TenantId) -> Result<bool, ElectroError>;
 }
 ```
 
@@ -405,7 +405,7 @@ Hardware integration for sensors and GPIO. Stub for v0.1; out of scope.
 #[async_trait]
 pub trait Peripheral: Send + Sync {
     fn name(&self) -> &str;
-    async fn read(&self) -> Result<serde_json::Value, Temm1eError>;
-    async fn write(&self, data: serde_json::Value) -> Result<(), Temm1eError>;
+    async fn read(&self) -> Result<serde_json::Value, ElectroError>;
+    async fn write(&self, data: serde_json::Value) -> Result<(), ElectroError>;
 }
 ```

@@ -1,4 +1,4 @@
-# TEMM1E Hive — Implementation Plan
+# ELECTRO Hive — Implementation Plan
 
 ## Reference Document for Implementation
 
@@ -8,10 +8,10 @@
 
 ## Phase 1: Crate Scaffold + Core Types
 
-### 1.1 Create `crates/temm1e-hive/`
+### 1.1 Create `crates/electro-hive/`
 
 ```
-crates/temm1e-hive/
+crates/electro-hive/
 ├── Cargo.toml
 ├── src/
 │   ├── lib.rs              # Hive struct, public API
@@ -31,7 +31,7 @@ crates/temm1e-hive/
 
 ```toml
 [package]
-name = "temm1e-hive"
+name = "electro-hive"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -39,7 +39,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-temm1e-core = { path = "../temm1e-core" }
+electro-core = { path = "../electro-core" }
 tokio = { workspace = true }
 sqlx = { workspace = true }
 serde = { workspace = true }
@@ -193,7 +193,7 @@ pub struct HiveConfig {
 
 ```rust
 impl Blackboard {
-    pub async fn new(database_url: &str) -> Result<Self, Temm1eError>;
+    pub async fn new(database_url: &str) -> Result<Self, ElectroError>;
     pub async fn create_order(order: &HiveOrder) -> Result<(), _>;
     pub async fn create_tasks(tasks: &[HiveTask]) -> Result<(), _>;
     pub async fn claim_task(task_id: &str, worker_id: &str) -> Result<bool, _>;
@@ -234,7 +234,7 @@ impl Blackboard {
 
 ```rust
 impl PheromoneField {
-    pub async fn new(database_url: &str) -> Result<Self, Temm1eError>;
+    pub async fn new(database_url: &str) -> Result<Self, ElectroError>;
     pub async fn emit(&self, signal: PheromoneSignal) -> Result<(), _>;
     pub async fn read_total(&self, signal_type: SignalType, target: &str) -> Result<f64, _>;
     // ^ returns Σ intensities at current time
@@ -279,7 +279,7 @@ fn current_intensity(signal: &PheromoneSignal, now_ms: i64) -> f64 {
 **Public API:**
 
 ```rust
-pub fn validate_dag(tasks: &[DecomposedTask]) -> Result<(), Temm1eError>;
+pub fn validate_dag(tasks: &[DecomposedTask]) -> Result<(), ElectroError>;
 // ^ Kahn's algorithm cycle detection
 
 pub fn critical_path(tasks: &[DecomposedTask]) -> f64;
@@ -288,7 +288,7 @@ pub fn critical_path(tasks: &[DecomposedTask]) -> f64;
 pub fn max_speedup(tasks: &[DecomposedTask]) -> f64;
 // ^ total_estimated / critical_path — theoretical max parallelism benefit
 
-pub fn topological_sort(tasks: &[DecomposedTask]) -> Result<Vec<String>, Temm1eError>;
+pub fn topological_sort(tasks: &[DecomposedTask]) -> Result<Vec<String>, ElectroError>;
 // ^ Returns task IDs in topological order
 ```
 
@@ -386,7 +386,7 @@ impl Queen {
     pub fn build_decomposition_prompt(message: &str) -> String;
     // ^ Returns the prompt for the LLM
 
-    pub fn parse_decomposition(response: &str) -> Result<DecompositionResult, Temm1eError>;
+    pub fn parse_decomposition(response: &str) -> Result<DecompositionResult, ElectroError>;
     // ^ Parses LLM JSON response
 
     pub fn should_activate_swarm(
@@ -460,7 +460,7 @@ impl HiveWorker {
         memory: Arc<dyn Memory>,
         config: &HiveConfig,
         cancel: CancellationToken,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
     // ^ Main loop: select → claim → execute → complete/fail → repeat
 
     async fn execute_task(
@@ -470,7 +470,7 @@ impl HiveWorker {
         provider: &dyn Provider,
         tools: &[Arc<dyn Tool>],
         memory: &dyn Memory,
-    ) -> Result<TaskResult, Temm1eError>;
+    ) -> Result<TaskResult, ElectroError>;
     // ^ Builds scoped context, runs agent loop, returns result
 }
 
@@ -531,7 +531,7 @@ pub struct Hive {
 }
 
 impl Hive {
-    pub async fn new(config: &HiveConfig, database_url: &str) -> Result<Self, Temm1eError>;
+    pub async fn new(config: &HiveConfig, database_url: &str) -> Result<Self, ElectroError>;
 
     /// Decide whether to use swarm mode for this message.
     /// Returns None if single-agent is better.
@@ -540,7 +540,7 @@ impl Hive {
         message: &str,
         provider: &dyn Provider,
         model: &str,
-    ) -> Result<Option<HiveOrder>, Temm1eError>;
+    ) -> Result<Option<HiveOrder>, ElectroError>;
 
     /// Execute an order using swarm workers.
     /// Returns the aggregated result text.
@@ -552,10 +552,10 @@ impl Hive {
         memory: Arc<dyn Memory>,
         model: &str,
         cancel: CancellationToken,
-    ) -> Result<SwarmResult, Temm1eError>;
+    ) -> Result<SwarmResult, ElectroError>;
 
     /// Get current swarm status (for dashboard/logging).
-    pub async fn status(&self, order_id: &str) -> Result<SwarmStatus, Temm1eError>;
+    pub async fn status(&self, order_id: &str) -> Result<SwarmStatus, ElectroError>;
 }
 
 pub struct SwarmResult {
@@ -579,12 +579,12 @@ pub struct SwarmStatus {
 
 ## Phase 9: Integration into main.rs
 
-### 9.1 Config addition (temm1e-core/types/config.rs)
+### 9.1 Config addition (electro-core/types/config.rs)
 
-Add to `Temm1eConfig`:
+Add to `ElectroConfig`:
 ```rust
 #[serde(default)]
-pub hive: temm1e_hive::HiveConfig,
+pub hive: electro_hive::HiveConfig,
 ```
 
 ### 9.2 main.rs integration (in dispatcher)

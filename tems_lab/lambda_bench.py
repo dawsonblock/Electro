@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 MODEL = "gpt-5.2"
-DB_PATH = os.path.expanduser("~/.temm1e/memory.db")
+DB_PATH = os.path.expanduser("~/.electro/memory.db")
 LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lambda_bench_100turns_log.txt")
 
 SYSTEM_PROMPT = """You are Tem, a helpful AI assistant with λ-Memory.

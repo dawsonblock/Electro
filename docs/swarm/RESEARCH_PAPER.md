@@ -2,7 +2,7 @@
 
 **Authors:** Quan Duong, Claude Opus 4.6
 **Date:** March 2026
-**Project:** TEMM1E v3.0.0
+**Project:** ELECTRO v3.0.0
 
 ---
 
@@ -122,9 +122,9 @@ Scores within 5% of the maximum are treated as tied — random selection prevent
 
 ## 3. Implementation
 
-### 3.1 Crate: `temm1e-hive`
+### 3.1 Crate: `electro-hive`
 
-2,490 lines of Rust. 71 unit tests. New leaf crate depending only on `temm1e-core`.
+2,490 lines of Rust. 71 unit tests. New leaf crate depending only on `electro-core`.
 
 | Module | LOC | Tests | Purpose |
 |--------|-----|-------|---------|
@@ -264,16 +264,16 @@ The fundamental difference: other systems use LLM conversations for coordination
 ## 8. Reproducibility
 
 ```bash
-git clone https://github.com/nagisanzenin/temm1e
-cd temm1e && git checkout many-tems
+git clone https://github.com/nagisanzenin/electro
+cd electro && git checkout many-tems
 
 # Unit tests (71 tests including parallelism proofs)
-cargo test -p temm1e-hive
+cargo test -p electro-hive
 
 # Live benchmarks (requires API key)
 export GEMINI_API_KEY="your-key"
-cargo test -p temm1e-hive --test context_degradation_bench -- --nocapture
-cargo test -p temm1e-hive --test live_ab_bench execution_time_benchmark -- --nocapture
+cargo test -p electro-hive --test context_degradation_bench -- --nocapture
+cargo test -p electro-hive --test live_ab_bench execution_time_benchmark -- --nocapture
 ```
 
 ---
@@ -287,7 +287,7 @@ Many Tems demonstrates that stigmergic coordination — borrowed from ant colony
 3. **Zero coordination token overhead** — scent signals are arithmetic, not LLM calls
 4. **Invisible for simple tasks** — activation threshold correctly gates the pack
 
-The system is integrated into the TEMM1E runtime, tested with real API calls across Gemini and GPT providers, and verified with compilable, tested project outputs.
+The system is integrated into the ELECTRO runtime, tested with real API calls across Gemini and GPT providers, and verified with compilable, tested project outputs.
 
 ---
 

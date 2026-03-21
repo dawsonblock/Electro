@@ -1,13 +1,13 @@
-# TEMM1E — Vision & Architecture Spec
+# ELECTRO — Vision & Architecture Spec
 
 > **Cloud-native, Rust-based autonomous AI agent runtime**
 > "Higher than the claws that came before — native in the cloud, native in your chats."
 
 ---
 
-## 1. What is TEMM1E?
+## 1. What is ELECTRO?
 
-TEMM1E is a **cloud-native Rust AI agent runtime** that combines:
+ELECTRO is a **cloud-native Rust AI agent runtime** that combines:
 - **ZeroClaw's** performance, trait-based modularity, and security-first design
 - **OpenClaw's** rich ecosystem, multi-channel reach, and skill marketplace
 - A **cloud-first architecture** where users never need to SSH into a VM
@@ -18,7 +18,7 @@ TEMM1E is a **cloud-native Rust AI agent runtime** that combines:
 
 ## 2. Key Differentiators from OpenClaw & ZeroClaw
 
-| Dimension | OpenClaw | ZeroClaw | TEMM1E |
+| Dimension | OpenClaw | ZeroClaw | ELECTRO |
 |-----------|----------|----------|---------|
 | Deployment | Local-first, SSH for VPS | Local/edge, tunnels | **Cloud-native headless-first** |
 | Setup | SSH + install + config | SSH + binary + config | **Send auth via chat → done** |
@@ -88,9 +88,9 @@ TEMM1E is a **cloud-native Rust AI agent runtime** that combines:
 
 ### 3.2 Core Traits (Extending ZeroClaw's 8)
 
-TEMM1E inherits ZeroClaw's trait-based design and adds cloud-native traits:
+ELECTRO inherits ZeroClaw's trait-based design and adds cloud-native traits:
 
-| # | Trait | Purpose | TEMM1E Addition |
+| # | Trait | Purpose | ELECTRO Addition |
 |---|-------|---------|------------------|
 | 1 | **Provider** | AI model backends | Same as ZeroClaw |
 | 2 | **Channel** | Messaging adapters | **+ native file transfer protocol per channel** |
@@ -107,21 +107,21 @@ TEMM1E inherits ZeroClaw's trait-based design and adds cloud-native traits:
 
 ### 3.3 Native Messaging & File Transfer
 
-This is TEMM1E's **primary differentiator**. The messaging app IS the control plane.
+This is ELECTRO's **primary differentiator**. The messaging app IS the control plane.
 
 #### User Onboarding Flow (Zero SSH)
 ```
-User sends message to TEMM1E bot on Telegram:
+User sends message to ELECTRO bot on Telegram:
   "Hey, set up my agent"
 
-TEMM1E responds:
+ELECTRO responds:
   "Welcome! Send me your cloud credentials to get started.
    You can send:
    - A .env file with your API keys
    - OAuth: click this link to authorize [Google] [GitHub] [AWS]
    - Or just type: provider=anthropic key=sk-ant-..."
 
-User sends a .env file attachment → TEMM1E:
+User sends a .env file attachment → ELECTRO:
   1. Receives file via Telegram Bot API
   2. Parses credentials
   3. Encrypts with ChaCha20-Poly1305 → stores in Vault
@@ -180,7 +180,7 @@ pub struct OutboundFile {
 | Matrix | Configurable | Yes | Yes | Any |
 | Web API | Unlimited (streaming) | Yes | Yes | Any |
 
-For files exceeding channel limits, TEMM1E generates **presigned URLs** to cloud object storage.
+For files exceeding channel limits, ELECTRO generates **presigned URLs** to cloud object storage.
 
 ### 3.4 Cloud Auth via Messaging
 
@@ -190,9 +190,9 @@ Users authenticate and provide secrets **through their messaging app** — no co
 ```
 1. DIRECT KEY: User sends API key as message → encrypted → stored in Vault
 2. FILE UPLOAD: User sends .env / credentials.json → parsed → encrypted → Vault
-3. OAUTH LINK: TEMM1E sends OAuth URL → user clicks → callback → token stored
-4. QR CODE:    TEMM1E sends QR image in chat → user scans → paired
-5. MAGIC LINK: TEMM1E sends one-time link → user clicks → session established
+3. OAUTH LINK: ELECTRO sends OAuth URL → user clicks → callback → token stored
+4. QR CODE:    ELECTRO sends QR image in chat → user scans → paired
+5. MAGIC LINK: ELECTRO sends one-time link → user clicks → session established
 ```
 
 #### Supported Integrations (OAuth/API Key)
@@ -253,7 +253,7 @@ Hybrid search (vector 0.7 + keyword 0.3) preserved from ZeroClaw.
 
 ### 3.7 Skill System — Safe Marketplace
 
-TEMM1E takes a middle path between OpenClaw's open marketplace and ZeroClaw's compiled-in-only approach:
+ELECTRO takes a middle path between OpenClaw's open marketplace and ZeroClaw's compiled-in-only approach:
 
 #### TemHub (Skill Registry)
 - **Signed skills**: Every skill must be signed with ed25519 by the author
@@ -274,7 +274,7 @@ capabilities:
   file: [read]
   network: [api.example.com]
   shell: false
-temm1e_min: 0.1.0
+electro_min: 0.1.0
 openclaw_compat: true
 ---
 
@@ -315,7 +315,7 @@ Supported orchestrators:
 TOML-based (ZeroClaw compatible), with cloud-native extensions:
 
 ```toml
-[temm1e]
+[electro]
 mode = "cloud"  # "cloud" | "edge" | "hybrid"
 tenant_isolation = true
 
@@ -323,17 +323,17 @@ tenant_isolation = true
 host = "0.0.0.0"  # Cloud-native: bind to all interfaces
 port = 8080
 tls = true
-tls_cert = "/etc/temm1e/cert.pem"
-tls_key = "/etc/temm1e/key.pem"
+tls_cert = "/etc/electro/cert.pem"
+tls_key = "/etc/electro/key.pem"
 
 [provider]
 name = "anthropic"
 # Key loaded from vault, not config
-# api_key sourced from vault://temm1e/anthropic/api_key
+# api_key sourced from vault://electro/anthropic/api_key
 
 [memory]
 backend = "postgres"
-connection_string = "vault://temm1e/db/connection_string"
+connection_string = "vault://electro/db/connection_string"
 
 [memory.search]
 vector_weight = 0.7
@@ -341,17 +341,17 @@ keyword_weight = 0.3
 
 [filestore]
 backend = "s3"
-bucket = "temm1e-files"
+bucket = "electro-files"
 region = "us-east-1"
 # credentials from IAM role or vault
 
 [vault]
 backend = "aws-kms"  # or "hashicorp", "local-chacha20"
-# For local: key_file = "~/.temm1e/vault.key"
+# For local: key_file = "~/.electro/vault.key"
 
 [channel.telegram]
 enabled = true
-# token from vault://temm1e/telegram/bot_token
+# token from vault://electro/telegram/bot_token
 allowlist = []
 file_transfer = true
 max_file_size = "50MB"
@@ -363,11 +363,11 @@ file_transfer = true
 
 [channel.web]
 enabled = true
-cors_origins = ["https://app.temm1e.io"]
+cors_origins = ["https://app.electro.io"]
 
 [orchestrator]
 backend = "kubernetes"
-namespace = "temm1e-agents"
+namespace = "electro-agents"
 auto_scale = true
 min_replicas = 1
 max_replicas = 10
@@ -403,7 +403,7 @@ storage = "postgres"  # Persists across restarts and instances
 - Same memory backends (SQLite, PostgreSQL, Markdown)
 - Skills can be compiled-in (ZeroClaw style)
 
-### TEMM1E Native (TemHub)
+### ELECTRO Native (TemHub)
 - Signed skill registry
 - Cloud-native provisioning API
 - Multi-tenant management dashboard
@@ -434,7 +434,7 @@ storage = "postgres"  # Persists across restarts and instances
 
 ---
 
-## 7. Summary: Why TEMM1E?
+## 7. Summary: Why ELECTRO?
 
 1. **Cloud-native from day one** — not bolted on after
 2. **Messaging apps ARE the interface** — no SSH, no web UI required

@@ -8,10 +8,10 @@
 
 ## Phase 1: Crate Scaffold + Core Types
 
-### 1.1 Create `crates/temm1e-distill/`
+### 1.1 Create `crates/electro-distill/`
 
 ```
-crates/temm1e-distill/
+crates/electro-distill/
 ├── Cargo.toml
 ├── src/
 │   ├── lib.rs              # EigenTuneEngine struct, public API
@@ -64,7 +64,7 @@ crates/temm1e-distill/
 
 ```toml
 [package]
-name = "temm1e-distill"
+name = "electro-distill"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -72,7 +72,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-temm1e-core = { path = "../temm1e-core" }
+electro-core = { path = "../electro-core" }
 tokio = { workspace = true }
 sqlx = { workspace = true }
 serde = { workspace = true }
@@ -85,7 +85,7 @@ sha2 = "0.10"                   # for query hashing
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
-temm1e-test-utils = { path = "../temm1e-test-utils" }
+electro-test-utils = { path = "../electro-test-utils" }
 ```
 
 ### 1.3 Root Cargo.toml Changes
@@ -94,20 +94,20 @@ Add to workspace members:
 ```toml
 members = [
     # ... existing ...
-    "crates/temm1e-distill",
+    "crates/electro-distill",
 ]
 ```
 
 Add workspace dependency:
 ```toml
-temm1e-distill = { path = "crates/temm1e-distill" }
+electro-distill = { path = "crates/electro-distill" }
 ```
 
 Add feature flag:
 ```toml
 [features]
 default = ["telegram", "browser", "mcp", "codex-oauth", "eigentune"]
-eigentune = ["dep:temm1e-distill"]
+eigentune = ["dep:electro-distill"]
 ```
 
 ### 1.4 Types (`src/types.rs`)
@@ -763,44 +763,44 @@ pub struct EigenTuneStore {
 }
 
 impl EigenTuneStore {
-    pub async fn new(database_url: &str) -> Result<Self, Temm1eError>;
+    pub async fn new(database_url: &str) -> Result<Self, ElectroError>;
     // Creates tables if not exist
 
     // ─── Pairs ───
-    pub async fn save_pair(&self, pair: &TrainingPair) -> Result<(), Temm1eError>;
+    pub async fn save_pair(&self, pair: &TrainingPair) -> Result<(), ElectroError>;
     pub async fn update_quality(&self, id: &str, alpha: f64, beta: f64,
-                                 score: f64) -> Result<(), Temm1eError>;
+                                 score: f64) -> Result<(), ElectroError>;
     pub async fn update_signal(&self, id: &str, signal: &str,
-                                value: bool) -> Result<(), Temm1eError>;
+                                value: bool) -> Result<(), ElectroError>;
     pub async fn get_pairs_for_tier(&self, tier: &str, min_quality: f64)
-        -> Result<Vec<TrainingPair>, Temm1eError>;
+        -> Result<Vec<TrainingPair>, ElectroError>;
     pub async fn get_recent_pair(&self, conversation_id: &str)
-        -> Result<Option<TrainingPair>, Temm1eError>;
-    pub async fn count_pairs(&self, tier: &str) -> Result<i64, Temm1eError>;
+        -> Result<Option<TrainingPair>, ElectroError>;
+    pub async fn count_pairs(&self, tier: &str) -> Result<i64, ElectroError>;
     pub async fn count_high_quality_pairs(&self, tier: &str, threshold: f64)
-        -> Result<i64, Temm1eError>;
-    pub async fn get_category_counts(&self, tier: &str) -> Result<Vec<(String, u64)>, Temm1eError>;
+        -> Result<i64, ElectroError>;
+    pub async fn get_category_counts(&self, tier: &str) -> Result<Vec<(String, u64)>, ElectroError>;
 
     // ─── Runs ───
-    pub async fn save_run(&self, run: &TrainingRun) -> Result<(), Temm1eError>;
-    pub async fn update_run(&self, run: &TrainingRun) -> Result<(), Temm1eError>;
-    pub async fn get_run(&self, id: &str) -> Result<Option<TrainingRun>, Temm1eError>;
-    pub async fn get_latest_run(&self, tier: &str) -> Result<Option<TrainingRun>, Temm1eError>;
+    pub async fn save_run(&self, run: &TrainingRun) -> Result<(), ElectroError>;
+    pub async fn update_run(&self, run: &TrainingRun) -> Result<(), ElectroError>;
+    pub async fn get_run(&self, id: &str) -> Result<Option<TrainingRun>, ElectroError>;
+    pub async fn get_latest_run(&self, tier: &str) -> Result<Option<TrainingRun>, ElectroError>;
 
     // ─── Tiers ───
-    pub async fn get_tier(&self, tier: &str) -> Result<TierRecord, Temm1eError>;
-    pub async fn update_tier(&self, record: &TierRecord) -> Result<(), Temm1eError>;
-    pub async fn get_all_tiers(&self) -> Result<Vec<TierRecord>, Temm1eError>;
+    pub async fn get_tier(&self, tier: &str) -> Result<TierRecord, ElectroError>;
+    pub async fn update_tier(&self, record: &TierRecord) -> Result<(), ElectroError>;
+    pub async fn get_all_tiers(&self) -> Result<Vec<TierRecord>, ElectroError>;
 
     // ─── Observations ───
-    pub async fn save_observation(&self, obs: &Observation) -> Result<(), Temm1eError>;
+    pub async fn save_observation(&self, obs: &Observation) -> Result<(), ElectroError>;
     pub async fn count_observations(&self, tier: &str, phase: &str)
-        -> Result<i64, Temm1eError>;
+        -> Result<i64, ElectroError>;
 
     // ─── Status ───
-    pub async fn total_pairs(&self) -> Result<i64, Temm1eError>;
-    pub async fn total_high_quality(&self, threshold: f64) -> Result<i64, Temm1eError>;
-    pub async fn total_savings_usd(&self) -> Result<f64, Temm1eError>;
+    pub async fn total_pairs(&self) -> Result<i64, ElectroError>;
+    pub async fn total_high_quality(&self, threshold: f64) -> Result<i64, ElectroError>;
+    pub async fn total_savings_usd(&self) -> Result<f64, ElectroError>;
 }
 ```
 
@@ -825,7 +825,7 @@ impl EigenTuneStore {
 ### 4.1 Public API
 
 ```rust
-use temm1e_core::types::message::{CompletionRequest, CompletionResponse};
+use electro_core::types::message::{CompletionRequest, CompletionResponse};
 
 pub struct EigenTuneCollector {
     store: Arc<EigenTuneStore>,
@@ -845,14 +845,14 @@ impl EigenTuneCollector {
         turn: i32,
         source_model: &str,
         source_provider: &str,
-    ) -> Result<String, Temm1eError>;  // returns pair ID
+    ) -> Result<String, ElectroError>;  // returns pair ID
 
     /// Called when a quality signal is observed
     pub async fn observe_signal(
         &self,
         conversation_id: &str,
         signal: QualitySignal,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
 
     /// Classify domain category from message content
     pub fn classify_domain(request: &CompletionRequest) -> String;
@@ -909,10 +909,10 @@ impl EigenTuneScorer {
         &self,
         pair_id: &str,
         signal: QualitySignal,
-    ) -> Result<f64, Temm1eError>;  // returns new score
+    ) -> Result<f64, ElectroError>;  // returns new score
 
     /// Batch score all unscored pairs
-    pub async fn score_pending(&self) -> Result<u32, Temm1eError>;
+    pub async fn score_pending(&self) -> Result<u32, ElectroError>;
     // returns number scored
 }
 ```
@@ -940,7 +940,7 @@ impl EigenTuneStateMachine {
     pub fn new(store: Arc<EigenTuneStore>, config: EigenTuneConfig) -> Self;
 
     /// Check if a tier should transition
-    pub async fn check_transitions(&self, tier: EigenTier) -> Result<Option<TierState>, Temm1eError>;
+    pub async fn check_transitions(&self, tier: EigenTier) -> Result<Option<TierState>, ElectroError>;
 
     /// Execute a state transition
     pub async fn transition(
@@ -948,10 +948,10 @@ impl EigenTuneStateMachine {
         tier: EigenTier,
         from: TierState,
         to: TierState,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
 
     /// Get current state for a tier
-    pub async fn state(&self, tier: EigenTier) -> Result<TierState, Temm1eError>;
+    pub async fn state(&self, tier: EigenTier) -> Result<TierState, ElectroError>;
 }
 ```
 
@@ -980,13 +980,13 @@ impl EigenTuneRouter {
     pub async fn route(
         &self,
         complexity: &str,
-    ) -> Result<RouteDecision, Temm1eError>;
+    ) -> Result<RouteDecision, ElectroError>;
 
     /// Get the local model endpoint for a graduated tier
     pub async fn local_endpoint(
         &self,
         tier: EigenTier,
-    ) -> Result<Option<ModelEndpoint>, Temm1eError>;
+    ) -> Result<Option<ModelEndpoint>, ElectroError>;
 }
 
 #[derive(Debug, Clone)]
@@ -1026,7 +1026,7 @@ impl ShadowCoordinator {
         request: &CompletionRequest,
         local_response: &CompletionResponse,
         cloud_response: &CompletionResponse,
-    ) -> Result<SprtDecision, Temm1eError>;
+    ) -> Result<SprtDecision, ElectroError>;
 }
 ```
 
@@ -1053,7 +1053,7 @@ impl ProductionMonitor {
         request: &CompletionRequest,
         local_response: &CompletionResponse,
         cloud_response: &CompletionResponse,
-    ) -> Result<bool, Temm1eError>;  // returns true on CUSUM alarm
+    ) -> Result<bool, ElectroError>;  // returns true on CUSUM alarm
 }
 ```
 
@@ -1079,11 +1079,11 @@ pub struct OllamaBackend;
 #[async_trait]
 impl TrainingBackend for OllamaBackend {
     fn name(&self) -> &str { "ollama" }
-    async fn is_available(&self) -> Result<bool, Temm1eError>;
+    async fn is_available(&self) -> Result<bool, ElectroError>;
     // Check: curl http://localhost:11434/api/tags
-    async fn detect_base_models(&self) -> Result<Vec<BaseModelInfo>, Temm1eError>;
+    async fn detect_base_models(&self) -> Result<Vec<BaseModelInfo>, ElectroError>;
     // List available models via Ollama API
-    async fn train(&self, config: TrainJobConfig) -> Result<TrainResult, Temm1eError>;
+    async fn train(&self, config: TrainJobConfig) -> Result<TrainResult, ElectroError>;
     // Create Modelfile → ollama create
 }
 
@@ -1092,10 +1092,10 @@ pub struct OllamaServer;
 #[async_trait]
 impl ModelServer for OllamaServer {
     fn name(&self) -> &str { "ollama" }
-    async fn is_available(&self) -> Result<bool, Temm1eError>;
-    async fn deploy(&self, model_path: &str, name: &str) -> Result<ModelEndpoint, Temm1eError>;
-    async fn undeploy(&self, name: &str) -> Result<(), Temm1eError>;
-    async fn health_check(&self, name: &str) -> Result<bool, Temm1eError>;
+    async fn is_available(&self) -> Result<bool, ElectroError>;
+    async fn deploy(&self, model_path: &str, name: &str) -> Result<ModelEndpoint, ElectroError>;
+    async fn undeploy(&self, name: &str) -> Result<(), ElectroError>;
+    async fn health_check(&self, name: &str) -> Result<bool, ElectroError>;
 }
 ```
 
@@ -1133,7 +1133,7 @@ impl EmbeddingJudge {
     pub fn new(ollama_url: &str, model: &str, threshold: f64) -> Self;
 
     /// Get embedding vector from Ollama
-    async fn embed(&self, text: &str) -> Result<Vec<f64>, Temm1eError>;
+    async fn embed(&self, text: &str) -> Result<Vec<f64>, ElectroError>;
 
     /// Cosine similarity between two vectors
     fn cosine_similarity(a: &[f64], b: &[f64]) -> f64;
@@ -1148,7 +1148,7 @@ impl ResponseJudge for EmbeddingJudge {
         input: &CompletionRequest,
         response_a: &CompletionResponse,
         response_b: &CompletionResponse,
-    ) -> Result<JudgeVerdict, Temm1eError>;
+    ) -> Result<JudgeVerdict, ElectroError>;
     // Embeds both responses, computes cosine similarity
     // agree = similarity >= threshold
 }
@@ -1181,7 +1181,7 @@ impl ResponseJudge for BehaviorJudge {
         input: &CompletionRequest,
         response_a: &CompletionResponse,
         response_b: &CompletionResponse,
-    ) -> Result<JudgeVerdict, Temm1eError>;
+    ) -> Result<JudgeVerdict, ElectroError>;
     // Used in shadow/monitor phase: checks if user continued conversation
     // (local response shown), retried (disagreement), or abandoned (weak signal)
 }
@@ -1214,7 +1214,7 @@ impl ResponseJudge for TeacherJudge {
         input: &CompletionRequest,
         response_a: &CompletionResponse,
         response_b: &CompletionResponse,
-    ) -> Result<JudgeVerdict, Temm1eError>;
+    ) -> Result<JudgeVerdict, ElectroError>;
     // Sends two comparisons (A,B) and (B,A) for position debiasing
     // Only returns agree=true if BOTH orderings agree
 }
@@ -1263,7 +1263,7 @@ pub struct EigenTuneEngine {
 }
 
 impl EigenTuneEngine {
-    pub async fn new(config: &EigenTuneConfig, database_url: &str) -> Result<Self, Temm1eError>;
+    pub async fn new(config: &EigenTuneConfig, database_url: &str) -> Result<Self, ElectroError>;
 
     /// The collection hook — called after every Provider.complete()
     pub async fn on_completion(
@@ -1294,19 +1294,19 @@ impl EigenTuneEngine {
         request: &CompletionRequest,
         local_response: &CompletionResponse,
         cloud_response: &CompletionResponse,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
 
     /// Get full status report
-    pub async fn status(&self) -> Result<EigenTuneStatus, Temm1eError>;
+    pub async fn status(&self) -> Result<EigenTuneStatus, ElectroError>;
 
     /// Run curation cycle (called by cron)
-    pub async fn curate(&self) -> Result<(), Temm1eError>;
+    pub async fn curate(&self) -> Result<(), ElectroError>;
 
     /// Run training for a tier (called when conditions met)
-    pub async fn train(&self, tier: EigenTier) -> Result<(), Temm1eError>;
+    pub async fn train(&self, tier: EigenTier) -> Result<(), ElectroError>;
 
     /// Check and execute state transitions for all tiers
-    pub async fn tick(&self) -> Result<(), Temm1eError>;
+    pub async fn tick(&self) -> Result<(), ElectroError>;
 }
 ```
 
@@ -1314,14 +1314,14 @@ impl EigenTuneEngine {
 
 ## Phase 10: Integration
 
-### 10.1 Config Addition (`temm1e-core/types/config.rs`)
+### 10.1 Config Addition (`electro-core/types/config.rs`)
 
 ```rust
 #[serde(default)]
 pub eigentune: EigenTuneConfig,
 ```
 
-### 10.2 Agent Runtime Hook (`crates/temm1e-agent/src/runtime.rs`)
+### 10.2 Agent Runtime Hook (`crates/electro-agent/src/runtime.rs`)
 
 At line ~885, after `Provider.complete()` returns:
 

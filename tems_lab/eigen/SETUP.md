@@ -6,7 +6,7 @@ Get self-tuning running on your machine. Takes 5 minutes.
 
 ## Prerequisites
 
-Eigen-Tune needs two external tools. TEMM1E itself is pure Rust — these are only for the training and serving pipeline.
+Eigen-Tune needs two external tools. ELECTRO itself is pure Rust — these are only for the training and serving pipeline.
 
 ### 1. Ollama (Required — serves the fine-tuned model)
 
@@ -68,14 +68,14 @@ python3 -c "import unsloth; print('Unsloth ready')"
 
 ## Enable Eigen-Tune
 
-Add to your `temm1e.toml`:
+Add to your `electro.toml`:
 
 ```toml
 [eigentune]
 enabled = true
 ```
 
-That's it. Restart TEMM1E and the system begins collecting training data from every conversation.
+That's it. Restart ELECTRO and the system begins collecting training data from every conversation.
 
 ---
 
@@ -102,9 +102,9 @@ ollama pull mistral-small:24b
 ollama pull qwen2.5:32b
 ```
 
-Any model Ollama supports works. When new models release (Llama 4, Qwen3, etc.), just `ollama pull` them — no TEMM1E update needed.
+Any model Ollama supports works. When new models release (Llama 4, Qwen3, etc.), just `ollama pull` them — no ELECTRO update needed.
 
-### Step 2: Set the model in TEMM1E
+### Step 2: Set the model in ELECTRO
 
 ```
 /eigentune model                    Show what's available
@@ -112,7 +112,7 @@ Any model Ollama supports works. When new models release (Llama 4, Qwen3, etc.),
 /eigentune model auto               Let system pick based on your hardware
 ```
 
-Or in `temm1e.toml`:
+Or in `electro.toml`:
 
 ```toml
 [eigentune]
@@ -141,7 +141,7 @@ Bigger models produce better results but train slower and run slower. Start smal
 
 Eigen-Tune does not maintain its own model list. Ollama is the source of truth. This means:
 
-- **New models:** `ollama pull <new-model>` makes it instantly available. No TEMM1E update required.
+- **New models:** `ollama pull <new-model>` makes it instantly available. No ELECTRO update required.
 - **Custom models:** If you have a GGUF file from any source, import it via `ollama create mymodel -f Modelfile`. Eigen-Tune can fine-tune it.
 - **Model updates:** `ollama pull llama3.1:8b` always gets the latest version. Re-run training to use it.
 - **No lock-in:** Switch models anytime with `/eigentune model <name>`. Previous training data is preserved and can be used with the new model.
@@ -181,12 +181,12 @@ You don't need to do anything. The system handles the entire lifecycle. Cloud is
 
 **"Python not found" or "mlx_lm not found"**
 - Ensure Python 3.10+ is installed
-- If using a venv, activate it before starting TEMM1E
+- If using a venv, activate it before starting ELECTRO
 - Or install globally: `pip install mlx-lm`
 
 **"Not enough data"**
 - Eigen-Tune needs ~500 quality conversations per tier before first training
-- Keep using TEMM1E normally — data accumulates automatically
+- Keep using ELECTRO normally — data accumulates automatically
 - Check progress: `/eigentune status`
 
 ---

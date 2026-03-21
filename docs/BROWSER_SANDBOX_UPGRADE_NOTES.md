@@ -6,8 +6,8 @@ This pass upgrades the browser from process-level hardening to an OS-level bound
 
 ## New default
 
-- `TEMM1E_BROWSER_ISOLATION_MODE=remote`
-- `TEMM1E_BROWSER_REMOTE_URL=http://127.0.0.1:9223`
+- `ELECTRO_BROWSER_ISOLATION_MODE=remote`
+- `ELECTRO_BROWSER_REMOTE_URL=http://127.0.0.1:9223`
 
 ## Code changes
 

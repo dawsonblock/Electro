@@ -1,6 +1,6 @@
 # Developer Guide: Adding a New Messaging Channel
 
-This tutorial walks through adding a new messaging channel to TEMM1E. By the end, you will have a fully integrated channel that receives messages, sends replies, and transfers files.
+This tutorial walks through adding a new messaging channel to ELECTRO. By the end, you will have a fully integrated channel that receives messages, sends replies, and transfers files.
 
 ## Overview
 
@@ -14,47 +14,47 @@ Adding a channel requires:
 
 ## Step 1: Understand the Traits
 
-The two traits you need to implement are defined in `crates/temm1e-core/src/traits/channel.rs`:
+The two traits you need to implement are defined in `crates/electro-core/src/traits/channel.rs`:
 
 ```rust
 #[async_trait]
 pub trait Channel: Send + Sync {
     fn name(&self) -> &str;
-    async fn start(&mut self) -> Result<(), Temm1eError>;
-    async fn stop(&mut self) -> Result<(), Temm1eError>;
-    async fn send_message(&self, msg: OutboundMessage) -> Result<(), Temm1eError>;
+    async fn start(&mut self) -> Result<(), ElectroError>;
+    async fn stop(&mut self) -> Result<(), ElectroError>;
+    async fn send_message(&self, msg: OutboundMessage) -> Result<(), ElectroError>;
     fn file_transfer(&self) -> Option<&dyn FileTransfer>;
     fn is_allowed(&self, user_id: &str) -> bool;
 }
 
 #[async_trait]
 pub trait FileTransfer: Send + Sync {
-    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, Temm1eError>;
-    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), Temm1eError>;
+    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, ElectroError>;
+    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), ElectroError>;
     async fn send_file_stream(
         &self,
         chat_id: &str,
         stream: BoxStream<'_, Bytes>,
         metadata: FileMetadata,
-    ) -> Result<(), Temm1eError>;
+    ) -> Result<(), ElectroError>;
     fn max_file_size(&self) -> usize;
 }
 ```
 
 ## Step 2: Create the Channel Module
 
-Create a new file in `crates/temm1e-channels/src/`. For this example, we will add a hypothetical "Matrix" channel.
+Create a new file in `crates/electro-channels/src/`. For this example, we will add a hypothetical "Matrix" channel.
 
-**File**: `crates/temm1e-channels/src/matrix.rs`
+**File**: `crates/electro-channels/src/matrix.rs`
 
 ```rust
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures::stream::BoxStream;
-use temm1e_core::traits::{Channel, FileTransfer};
-use temm1e_core::types::error::Temm1eError;
-use temm1e_core::types::file::{FileMetadata, OutboundFile, ReceivedFile};
-use temm1e_core::types::message::{InboundMessage, OutboundMessage};
+use electro_core::traits::{Channel, FileTransfer};
+use electro_core::types::error::ElectroError;
+use electro_core::types::file::{FileMetadata, OutboundFile, ReceivedFile};
+use electro_core::types::message::{InboundMessage, OutboundMessage};
 
 pub struct MatrixChannel {
     // Store configuration and client state
@@ -80,7 +80,7 @@ impl Channel for MatrixChannel {
         "matrix"
     }
 
-    async fn start(&mut self) -> Result<(), Temm1eError> {
+    async fn start(&mut self) -> Result<(), ElectroError> {
         // Connect to the Matrix homeserver
         // Set up event listeners for incoming messages
         // Convert platform events into InboundMessage and forward to the gateway
@@ -88,13 +88,13 @@ impl Channel for MatrixChannel {
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<(), Temm1eError> {
+    async fn stop(&mut self) -> Result<(), ElectroError> {
         // Gracefully disconnect from the homeserver
         tracing::info!("Matrix channel stopping");
         Ok(())
     }
 
-    async fn send_message(&self, msg: OutboundMessage) -> Result<(), Temm1eError> {
+    async fn send_message(&self, msg: OutboundMessage) -> Result<(), ElectroError> {
         // Send a text message to the specified room (msg.chat_id)
         // Convert ParseMode to Matrix message format
         tracing::debug!(chat_id = %msg.chat_id, "Sending Matrix message");
@@ -112,7 +112,7 @@ impl Channel for MatrixChannel {
 
 #[async_trait]
 impl FileTransfer for MatrixChannel {
-    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, Temm1eError> {
+    async fn receive_file(&self, msg: &InboundMessage) -> Result<Vec<ReceivedFile>, ElectroError> {
         let mut files = Vec::new();
         for attachment in &msg.attachments {
             // Download each attachment from the Matrix media API
@@ -122,7 +122,7 @@ impl FileTransfer for MatrixChannel {
         Ok(files)
     }
 
-    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), Temm1eError> {
+    async fn send_file(&self, chat_id: &str, file: OutboundFile) -> Result<(), ElectroError> {
         // Upload the file to the Matrix media API
         // Send a message with the media URL to the room
         let _ = (chat_id, file);
@@ -134,7 +134,7 @@ impl FileTransfer for MatrixChannel {
         chat_id: &str,
         stream: BoxStream<'_, Bytes>,
         metadata: FileMetadata,
-    ) -> Result<(), Temm1eError> {
+    ) -> Result<(), ElectroError> {
         // For large files: stream the upload to Matrix media API
         let _ = (chat_id, stream, metadata);
         Ok(())
@@ -149,7 +149,7 @@ impl FileTransfer for MatrixChannel {
 
 ## Step 3: Register the Module
 
-Edit `crates/temm1e-channels/src/lib.rs` to include the new module:
+Edit `crates/electro-channels/src/lib.rs` to include the new module:
 
 ```rust
 pub mod cli;
@@ -165,11 +165,11 @@ pub mod matrix;
 
 ## Step 4: Add Dependencies
 
-If the channel requires a platform SDK, add it to `crates/temm1e-channels/Cargo.toml`:
+If the channel requires a platform SDK, add it to `crates/electro-channels/Cargo.toml`:
 
 ```toml
 [dependencies]
-temm1e-core.workspace = true
+electro-core.workspace = true
 async-trait.workspace = true
 bytes.workspace = true
 futures.workspace = true
@@ -194,18 +194,18 @@ In the root `Cargo.toml`:
 ```toml
 [features]
 default = ["telegram", "discord", "slack", "whatsapp", "browser", "postgres"]
-telegram = ["temm1e-channels/telegram"]
-discord = ["temm1e-channels/discord"]
-slack = ["temm1e-channels/slack"]
-whatsapp = ["temm1e-channels/whatsapp"]
-matrix = ["temm1e-channels/matrix"]          # <-- Add this
-browser = ["temm1e-tools/browser"]
-postgres = ["temm1e-memory/postgres"]
+telegram = ["electro-channels/telegram"]
+discord = ["electro-channels/discord"]
+slack = ["electro-channels/slack"]
+whatsapp = ["electro-channels/whatsapp"]
+matrix = ["electro-channels/matrix"]          # <-- Add this
+browser = ["electro-tools/browser"]
+postgres = ["electro-memory/postgres"]
 ```
 
 ## Step 6: Wire into the Gateway
 
-In `crates/temm1e-gateway/src/router.rs` (or wherever channels are instantiated), add logic to create the Matrix channel from config:
+In `crates/electro-gateway/src/router.rs` (or wherever channels are instantiated), add logic to create the Matrix channel from config:
 
 ```rust
 #[cfg(feature = "matrix")]
@@ -235,7 +235,7 @@ file_transfer = true
 
 ## Step 8: Write Tests
 
-Add tests in the channel module or in `crates/temm1e-channels/tests/`:
+Add tests in the channel module or in `crates/electro-channels/tests/`:
 
 ```rust
 #[cfg(test)]
@@ -279,7 +279,7 @@ mod tests {
 cargo build --features matrix
 
 # Run tests
-cargo test -p temm1e-channels --features matrix
+cargo test -p electro-channels --features matrix
 
 # Verify it compiles without the feature too
 cargo build --no-default-features
@@ -291,7 +291,7 @@ cargo build --no-default-features
 - [ ] `FileTransfer` trait implemented with `receive_file()`, `send_file()`, `send_file_stream()`, `max_file_size()`
 - [ ] `file_transfer()` returns `Some(self)` so the gateway can transfer files
 - [ ] Allowlist enforced in `is_allowed()` -- empty list = deny all
-- [ ] Feature flag added to `temm1e-channels/Cargo.toml` and root `Cargo.toml`
+- [ ] Feature flag added to `electro-channels/Cargo.toml` and root `Cargo.toml`
 - [ ] Module gated with `#[cfg(feature = "...")]`
 - [ ] Channel wired into gateway router
 - [ ] Unit tests for allowlist logic and message conversion

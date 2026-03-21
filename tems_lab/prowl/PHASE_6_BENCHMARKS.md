@@ -9,7 +9,7 @@
 
 **Location:** `tems_lab/prowl/bench/`
 
-**Pattern:** Same as existing Lambda benchmarks — Python scripts that launch TEMM1E, send messages via CLI chat, capture output, measure metrics.
+**Pattern:** Same as existing Lambda benchmarks — Python scripts that launch ELECTRO, send messages via CLI chat, capture output, measure metrics.
 
 **Core measurement framework:**
 
@@ -19,7 +19,7 @@
 import subprocess, time, json, re
 
 class TBenchRunner:
-    def __init__(self, binary="./target/release/temm1e"):
+    def __init__(self, binary="./target/release/electro"):
         self.binary = binary
         self.results = []
 
@@ -95,7 +95,7 @@ class TBenchRunner:
 ```python
 tasks = [
     ("nav_wikipedia", "Go to wikipedia.org and tell me the featured article title"),
-    ("nav_github", "Go to github.com/temm1e-labs/temm1e and tell me the star count"),
+    ("nav_github", "Go to github.com/electro-labs/electro and tell me the star count"),
     ("nav_hackernews", "Go to news.ycombinator.com and list the top 3 stories"),
     ("nav_weather", "Go to wttr.in/Tokyo and tell me tomorrow's weather"),
     # ... 6 more navigation tasks
@@ -338,10 +338,10 @@ def measure_speedup(task, messages):
 set -e
 
 # Build release binary
-cargo build --release --bin temm1e --features prowl
+cargo build --release --bin electro --features prowl
 
 # Ensure clean state
-rm -f ~/.temm1e/memory.db
+rm -f ~/.electro/memory.db
 
 # Source env (without ANTHROPIC_API_KEY for onboarding test, with for others)
 grep -E "^[A-Z_]+=" .env | sed 's/^/export /' > /tmp/prowl_env.sh

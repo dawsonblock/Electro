@@ -210,7 +210,7 @@ def main():
         w("# λ-Memory Effectiveness Report")
         w()
         w("> Scoring recall accuracy across 50 recall questions (turns 51-100).")
-        w(f"> **Author:** TEMM1E's Lab")
+        w(f"> **Author:** ELECTRO's Lab")
         w(f"> **Scoring:** CORRECT=1.0 | PARTIAL=0.5 | VAGUE=0.25 | WRONG=0.0 | HALLUCINATED=-0.5")
         w()
         w("---")
@@ -268,7 +268,7 @@ def main():
             w()
 
         w("---")
-        w("*Scored by TEMM1E's Lab automated rubric*")
+        w("*Scored by ELECTRO's Lab automated rubric*")
 
     print(f"\nReport saved: {SCORE_REPORT_PATH}")
 

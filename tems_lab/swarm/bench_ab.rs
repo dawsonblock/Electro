@@ -1,4 +1,4 @@
-//! TEMM1E Hive A/B Benchmark — Single Agent vs Swarm
+//! ELECTRO Hive A/B Benchmark — Single Agent vs Swarm
 //!
 //! This benchmark compares single-agent execution against swarm execution
 //! for tasks of varying complexity. It uses Gemini 3.1 Flash Lite to
@@ -6,11 +6,11 @@
 //!
 //! ## Usage
 //!
-//! This is a reference script — integrate into the TEMM1E binary or run
+//! This is a reference script — integrate into the ELECTRO binary or run
 //! as a standalone test with:
 //!
 //! ```bash
-//! cargo test -p temm1e-hive --test bench_ab -- --nocapture
+//! cargo test -p electro-hive --test bench_ab -- --nocapture
 //! ```
 //!
 //! ## Budget Tracking

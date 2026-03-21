@@ -1,4 +1,4 @@
-# TEMM1E Hive: Swarm vs Single Agent — Full Experiment Report
+# ELECTRO Hive: Swarm vs Single Agent — Full Experiment Report
 
 **Date:** 2026-03-18
 **Model:** Gemini 3.1 Pro Preview (primary), Gemini 3.1 Flash Lite (supplementary)
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-We built a stigmergic swarm intelligence runtime (`temm1e-hive`) for the TEMM1E AI agent platform and ran five benchmarks comparing single-agent vs swarm execution. Results range from **swarm underperforming** to **6.2x faster at 3.4x lower cost with identical quality**. The difference depends entirely on task structure.
+We built a stigmergic swarm intelligence runtime (`electro-hive`) for the ELECTRO AI agent platform and ran five benchmarks comparing single-agent vs swarm execution. Results range from **swarm underperforming** to **6.2x faster at 3.4x lower cost with identical quality**. The difference depends entirely on task structure.
 
 | Scenario | Speedup | Token Cost | Quality | Verdict |
 |----------|---------|-----------|---------|---------|
@@ -147,13 +147,13 @@ The activation threshold (`S_max ≥ 1.3`) handles this automatically — it onl
 
 ## What We Built
 
-`temm1e-hive` — a new crate in the TEMM1E workspace:
+`electro-hive` — a new crate in the ELECTRO workspace:
 - 2,490 lines of Rust, 70 unit tests, 0 existing tests broken
 - Parallel worker execution via `tokio::spawn` with atomic SQLite task claims
 - Pheromone-based coordination (zero LLM tokens for worker communication)
 - DAG-aware scheduling with dependency resolution
 - Compile-fix loop support for real agentic workflows
-- Wired into the live TEMM1E runtime behind `[hive] enabled = true`
+- Wired into the live ELECTRO runtime behind `[hive] enabled = true`
 
 ---
 
@@ -166,16 +166,16 @@ git checkout many-tems
 export GEMINI_API_KEY="your-key"
 
 # Unit tests (70 tests, including parallel execution proofs)
-cargo test -p temm1e-hive
+cargo test -p electro-hive
 
 # Context degradation benchmark (the key result)
-cargo test -p temm1e-hive --test context_degradation_bench -- --nocapture
+cargo test -p electro-hive --test context_degradation_bench -- --nocapture
 
 # Python project benchmark
-cargo test -p temm1e-hive --test project_bench_py -- --nocapture
+cargo test -p electro-hive --test project_bench_py -- --nocapture
 
 # Execution time benchmark
-cargo test -p temm1e-hive --test live_ab_bench execution_time_benchmark -- --nocapture
+cargo test -p electro-hive --test live_ab_bench execution_time_benchmark -- --nocapture
 ```
 
 ---

@@ -92,7 +92,7 @@ Let's get technical for a moment, because this isn't just philosophy — there's
 
 **Context windows are finite.** Every token you spend on persona description — "You are a meticulous senior engineer who values clean code and always considers edge cases" — is a token you can't spend on actual work context. A 200K context window sounds enormous until you realize that a real task needs: the codebase, the error logs, the conversation history, the tool outputs, the memory recall, and the execution plan. Your 500-token personality preamble just stole space from something useful.
 
-We think about this at TEMM1E as the **Finite Brain Model**. A language model's context window isn't a buffer you dump stuff into. It's working memory. It's the agent's *skull*. Everything inside has to earn its place. When we inject a blueprint (a concrete procedure the agent learned from past tasks), we compute its token cost at authoring time and the agent sees a live budget dashboard:
+We think about this at ELECTRO as the **Finite Brain Model**. A language model's context window isn't a buffer you dump stuff into. It's working memory. It's the agent's *skull*. Everything inside has to earn its place. When we inject a blueprint (a concrete procedure the agent learned from past tasks), we compute its token cost at authoring time and the agent sees a live budget dashboard:
 
 ```
 === CONTEXT BUDGET ===
@@ -109,11 +109,11 @@ The agent makes *resource-aware decisions*. "I have 165K tokens — I can afford
 
 ---
 
-## The TEMM1E Philosophy: Build the Engine, Paint the Car Later
+## The ELECTRO Philosophy: Build the Engine, Paint the Car Later
 
-This is what we're doing with TEMM1E, and honestly, it's what I wish the rest of the industry would do.
+This is what we're doing with ELECTRO, and honestly, it's what I wish the rest of the industry would do.
 
-TEMM1E is an autonomous agent runtime. Not a chatbot platform. Not a persona factory. A runtime — like a JVM, like a container runtime, like an operating system for AI agents. And we built it with five non-negotiable principles, none of which mention personality:
+ELECTRO is an autonomous agent runtime. Not a chatbot platform. Not a persona factory. A runtime — like a JVM, like a container runtime, like an operating system for AI agents. And we built it with five non-negotiable principles, none of which mention personality:
 
 **Autonomy.** Accept every order. Decompose complexity. Sequence tasks. Never hand work back that the agent can resolve itself. Failed attempts are new information, not reasons to stop.
 
@@ -131,11 +131,11 @@ Not because we're against those things. But because they're not *foundational*. 
 
 ---
 
-## What TEMM1E Actually Does (Instead of Roleplaying)
+## What ELECTRO Actually Does (Instead of Roleplaying)
 
 Let me make this concrete.
 
-When a message arrives at TEMM1E, here's what happens:
+When a message arrives at ELECTRO, here's what happens:
 
 1. **Channel intake.** The message comes from Telegram, Discord, Slack, or CLI. Not through a web chat widget — through the messaging apps people already live in.
 
@@ -208,4 +208,4 @@ You've found a very expensive costume shop.
 
 ---
 
-*Tem is the AI agent runtime at the core of [TEMM1E](https://github.com/nagisanzenin/temm1e) — an open-source, cloud-native autonomous agent built in Rust. It focuses on doing things, not talking about doing things. Sometimes it does both, but only because it earned the right.*
+*Tem is the AI agent runtime at the core of [ELECTRO](https://github.com/nagisanzenin/electro) — an open-source, cloud-native autonomous agent built in Rust. It focuses on doing things, not talking about doing things. Sometimes it does both, but only because it earned the right.*

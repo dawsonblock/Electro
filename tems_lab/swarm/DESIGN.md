@@ -1,4 +1,4 @@
-# TEMM1E Hive: Stigmergic Swarm Intelligence Runtime
+# ELECTRO Hive: Stigmergic Swarm Intelligence Runtime
 
 ## Zero-Risk Design Document v1.0
 
@@ -10,11 +10,11 @@
 
 ## 0. Design Philosophy
 
-This document adapts the TEMM1E Hive Swarm Spec into a zero-risk implementation plan grounded in the actual TEMM1E codebase (v2.8.1, 16 crates, 1312 tests).
+This document adapts the ELECTRO Hive Swarm Spec into a zero-risk implementation plan grounded in the actual ELECTRO codebase (v2.8.1, 16 crates, 1312 tests).
 
-**Core principle:** The Hive is a new leaf crate (`temm1e-hive`) that depends only on `temm1e-core`. It does not modify any existing crate. Integration with the agent runtime and dispatcher happens through feature-gated, opt-in code paths. When `[hive] enabled = false` (the default), the system is byte-identical to pre-Hive TEMM1E.
+**Core principle:** The Hive is a new leaf crate (`electro-hive`) that depends only on `electro-core`. It does not modify any existing crate. Integration with the agent runtime and dispatcher happens through feature-gated, opt-in code paths. When `[hive] enabled = false` (the default), the system is byte-identical to pre-Hive ELECTRO.
 
-**What we're building:** A coordination layer that lets multiple TEMM1E agent workers process subtasks of a complex order in parallel, communicating through a shared SQLite blackboard and a pheromone signal field — not through LLM-to-LLM chat.
+**What we're building:** A coordination layer that lets multiple ELECTRO agent workers process subtasks of a complex order in parallel, communicating through a shared SQLite blackboard and a pheromone signal field — not through LLM-to-LLM chat.
 
 **What we're NOT building (yet):**
 - Distributed multi-machine swarm (single-process, multi-task for v1)
@@ -23,7 +23,7 @@ This document adapts the TEMM1E Hive Swarm Spec into a zero-risk implementation 
 
 ---
 
-## 1. System Axioms (Adapted for TEMM1E)
+## 1. System Axioms (Adapted for ELECTRO)
 
 These five invariants are non-negotiable. Every mechanism must preserve all five.
 
@@ -31,20 +31,20 @@ These five invariants are non-negotiable. Every mechanism must preserve all five
 Every accepted order reaches SUCCESS or ESCALATE. No ABANDONED state. If the swarm cannot solve a task after bounded retries, it produces a failure report and falls back to single-agent mode (not silence).
 
 **A2 — Budget Boundedness.**
-Total token expenditure: `Σ C(wᵢ, tⱼ) ≤ Ω`. The Hive inherits TEMM1E's existing `BudgetTracker` (atomic USD tracking, per-model pricing). No new budget mechanism needed — the Hive respects the same `max_spend_usd` cap.
+Total token expenditure: `Σ C(wᵢ, tⱼ) ≤ Ω`. The Hive inherits ELECTRO's existing `BudgetTracker` (atomic USD tracking, per-model pricing). No new budget mechanism needed — the Hive respects the same `max_spend_usd` cap.
 
 **A3 — Monotonic Progress.**
 `P(t) = |completed tasks| / |total tasks|` is non-decreasing. Completed tasks are never reverted. If downstream work invalidates an earlier result, a NEW correction task is created.
 
 **A4 — Graceful Degradation.**
-All state lives on the Blackboard (SQLite). If N-1 workers panic, the surviving worker reads state from SQLite and continues. This leverages TEMM1E's existing resilience: `panic = "unwind"`, `catch_unwind()` wrappers, dead worker detection.
+All state lives on the Blackboard (SQLite). If N-1 workers panic, the surviving worker reads state from SQLite and continues. This leverages ELECTRO's existing resilience: `panic = "unwind"`, `catch_unwind()` wrappers, dead worker detection.
 
 **A5 — Cost Dominance.**
 `C_swarm(order) ≤ 1.15 × C_single(order)`. The swarm activates only when parallelism is worth it. Simple tasks use single-agent mode with zero overhead.
 
 ---
 
-## 2. Architecture: How Hive Fits Into TEMM1E
+## 2. Architecture: How Hive Fits Into ELECTRO
 
 ### 2.1 Current Architecture (unchanged)
 
@@ -76,15 +76,15 @@ Channel → mpsc → Dispatcher → ChatSlot → HiveOrchestrator (NEW)
 
 | File | Change | Risk |
 |------|--------|------|
-| `Cargo.toml` (workspace) | Add `temm1e-hive` to members | ZERO — additive |
-| `crates/temm1e-core/src/types/config.rs` | Add `HiveConfig` struct (serde default) | ZERO — new field with Default, existing configs parse unchanged |
+| `Cargo.toml` (workspace) | Add `electro-hive` to members | ZERO — additive |
+| `crates/electro-core/src/types/config.rs` | Add `HiveConfig` struct (serde default) | ZERO — new field with Default, existing configs parse unchanged |
 | `src/main.rs` | Feature-gated Hive initialization in dispatcher | LOW — behind `if config.hive.enabled` |
 
 ### 2.4 Dependency Graph
 
 ```
-temm1e-hive
-├── temm1e-core (traits, types, errors)
+electro-hive
+├── electro-core (traits, types, errors)
 ├── sqlx (SQLite — already a workspace dep)
 ├── serde + serde_json (already workspace deps)
 ├── tokio (already workspace dep)
@@ -339,7 +339,7 @@ Scores within 5% of each other → random selection (prevents herding).
 ### 7.1 Scoped Context (The Cost Savings)
 
 Each worker gets a **task-scoped** AgentRuntime context:
-- System prompt (standard TEMM1E system prompt)
+- System prompt (standard ELECTRO system prompt)
 - Task description
 - Results from dependency tasks (NOT full conversation history)
 - Tools relevant to the task (subset of all tools)
@@ -461,13 +461,13 @@ max_task_duration_secs = 300
 
 | Threat | Mitigation |
 |--------|-----------|
-| Worker panic | `catch_unwind()` wrapper (inherits TEMM1E resilience). Dead worker → task returns to READY. |
+| Worker panic | `catch_unwind()` wrapper (inherits ELECTRO resilience). Dead worker → task returns to READY. |
 | SQLite corruption | WAL mode + connection pooling (inherits from TaskQueue pattern) |
 | Budget runaway | BudgetTracker cap enforced per-worker. Hive total = sum of worker costs. |
 | Infinite retry loop | Hard cap: max_retries=3, max ESCALATE depth=1 (v1) |
 | Queen produces bad DAG | Cycle detection (Kahn's algorithm). Reject + single-agent fallback. |
 | All workers stuck | Urgency pheromone grows → forces any idle worker to take waiting tasks |
-| UTF-8 panic | All string truncation uses `char_indices()` (existing TEMM1E rule) |
+| UTF-8 panic | All string truncation uses `char_indices()` (existing ELECTRO rule) |
 | Pheromone field bloat | GC every 10s. Bounded: max 50MB at N=10 workers (§3.3 of spec) |
 
 ---
@@ -530,7 +530,7 @@ These omissions are safe because:
 
 | Component | Risk Level | Justification |
 |-----------|-----------|---------------|
-| New crate `temm1e-hive` | ZERO | Leaf crate, no existing code touched |
+| New crate `electro-hive` | ZERO | Leaf crate, no existing code touched |
 | `HiveConfig` in config.rs | ZERO | New field with `#[serde(default)]`, existing TOML files parse unchanged |
 | Hive integration in main.rs | LOW | Behind `if config.hive.enabled`, feature-gated |
 | Pheromone GC thread | ZERO | Runs only when hive enabled, no shared state with non-hive paths |

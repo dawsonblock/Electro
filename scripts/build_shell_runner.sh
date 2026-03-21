@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${1:-temm1e-shell-runner:local}"
+IMAGE_TAG="${1:-electro-shell-runner:local}"
 ENGINE="${CONTAINER_ENGINE:-docker}"
 
 if ! command -v "$ENGINE" >/dev/null 2>&1; then

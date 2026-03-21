@@ -1,6 +1,6 @@
 # Operations Guide: Monitoring
 
-TEMM1E provides structured logging, metrics collection, health endpoints, and optional OpenTelemetry export for production observability.
+ELECTRO provides structured logging, metrics collection, health endpoints, and optional OpenTelemetry export for production observability.
 
 ## Health Check Endpoint
 
@@ -34,7 +34,7 @@ The health endpoint is used by:
 
 ## Structured Logging
 
-TEMM1E uses the `tracing` crate for structured, async-aware logging. All logs are emitted as JSON.
+ELECTRO uses the `tracing` crate for structured, async-aware logging. All logs are emitted as JSON.
 
 ### Configuration
 
@@ -47,8 +47,8 @@ Or via environment variable:
 
 ```bash
 RUST_LOG=info              # Global level
-RUST_LOG=temm1e=debug     # Debug for TEMM1E only
-RUST_LOG=temm1e_agent=trace,temm1e_gateway=debug,info  # Per-module
+RUST_LOG=electro=debug     # Debug for ELECTRO only
+RUST_LOG=electro_agent=trace,electro_gateway=debug,info  # Per-module
 ```
 
 ### Log Levels
@@ -69,7 +69,7 @@ Logs are emitted as JSON lines (one JSON object per line):
 {
   "timestamp": "2025-01-15T10:30:00.123Z",
   "level": "INFO",
-  "target": "temm1e_gateway::router",
+  "target": "electro_gateway::router",
   "message": "Message routed",
   "channel": "telegram",
   "chat_id": "123456",
@@ -96,37 +96,37 @@ Use the correlation ID to trace a single message through the entire pipeline.
 
 ## Metrics
 
-TEMM1E collects the following metrics via the `Observable` trait:
+ELECTRO collects the following metrics via the `Observable` trait:
 
 ### Counters
 
 | Metric | Labels | Description |
 |--------|--------|-------------|
-| `temm1e_messages_total` | `channel`, `direction` (inbound/outbound) | Total messages processed |
-| `temm1e_tool_calls_total` | `tool_name`, `status` (success/error) | Total tool executions |
-| `temm1e_vault_access_total` | `operation` (read/write/delete) | Vault operations |
-| `temm1e_file_transfers_total` | `channel`, `direction` | File transfers |
-| `temm1e_auth_attempts_total` | `channel`, `result` (allowed/denied) | Authentication attempts |
+| `electro_messages_total` | `channel`, `direction` (inbound/outbound) | Total messages processed |
+| `electro_tool_calls_total` | `tool_name`, `status` (success/error) | Total tool executions |
+| `electro_vault_access_total` | `operation` (read/write/delete) | Vault operations |
+| `electro_file_transfers_total` | `channel`, `direction` | File transfers |
+| `electro_auth_attempts_total` | `channel`, `result` (allowed/denied) | Authentication attempts |
 
 ### Histograms
 
 | Metric | Labels | Description |
 |--------|--------|-------------|
-| `temm1e_provider_latency_seconds` | `provider`, `model` | AI provider response latency |
-| `temm1e_message_processing_seconds` | `channel` | End-to-end message processing time |
-| `temm1e_tool_execution_seconds` | `tool_name` | Tool execution duration |
-| `temm1e_memory_search_seconds` | `backend` | Memory search latency |
+| `electro_provider_latency_seconds` | `provider`, `model` | AI provider response latency |
+| `electro_message_processing_seconds` | `channel` | End-to-end message processing time |
+| `electro_tool_execution_seconds` | `tool_name` | Tool execution duration |
+| `electro_memory_search_seconds` | `backend` | Memory search latency |
 
 ### Gauges
 
 | Metric | Labels | Description |
 |--------|--------|-------------|
-| `temm1e_active_sessions` | `channel` | Currently active sessions |
-| `temm1e_channel_connected` | `channel` | Channel connection status (1 = connected) |
+| `electro_active_sessions` | `channel` | Currently active sessions |
+| `electro_channel_connected` | `channel` | Channel connection status (1 = connected) |
 
 ## OpenTelemetry Integration
 
-TEMM1E supports exporting traces and metrics via OpenTelemetry.
+ELECTRO supports exporting traces and metrics via OpenTelemetry.
 
 ### Configuration
 
@@ -141,7 +141,7 @@ The endpoint expects an OpenTelemetry Collector running gRPC on port 4317.
 
 ### Traces
 
-When OpenTelemetry is enabled, TEMM1E exports distributed traces covering:
+When OpenTelemetry is enabled, ELECTRO exports distributed traces covering:
 
 - Message receipt and routing
 - Context assembly (memory search, skill loading)
@@ -190,11 +190,11 @@ Docker Compose with collector:
 
 ```yaml
 services:
-  temm1e:
-    image: ghcr.io/temm1e/temm1e:latest
+  electro:
+    image: ghcr.io/electro/electro:latest
     environment:
-      TEMM1E_OBSERVABILITY__OTEL_ENABLED: "true"
-      TEMM1E_OBSERVABILITY__OTEL_ENDPOINT: "http://otel-collector:4317"
+      ELECTRO_OBSERVABILITY__OTEL_ENABLED: "true"
+      ELECTRO_OBSERVABILITY__OTEL_ENDPOINT: "http://otel-collector:4317"
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -208,24 +208,24 @@ services:
 
 ### Grafana
 
-Recommended panels for a TEMM1E Grafana dashboard:
+Recommended panels for a ELECTRO Grafana dashboard:
 
-1. **Message throughput** -- `rate(temm1e_messages_total[5m])` by channel and direction
-2. **Provider latency (p50/p95/p99)** -- `histogram_quantile(0.95, temm1e_provider_latency_seconds)`
-3. **Tool execution rate** -- `rate(temm1e_tool_calls_total[5m])` by tool name
-4. **Error rate** -- `rate(temm1e_tool_calls_total{status="error"}[5m]) / rate(temm1e_tool_calls_total[5m])`
-5. **Active sessions** -- `temm1e_active_sessions` by channel
-6. **Memory search latency** -- `histogram_quantile(0.95, temm1e_memory_search_seconds)`
+1. **Message throughput** -- `rate(electro_messages_total[5m])` by channel and direction
+2. **Provider latency (p50/p95/p99)** -- `histogram_quantile(0.95, electro_provider_latency_seconds)`
+3. **Tool execution rate** -- `rate(electro_tool_calls_total[5m])` by tool name
+4. **Error rate** -- `rate(electro_tool_calls_total{status="error"}[5m]) / rate(electro_tool_calls_total[5m])`
+5. **Active sessions** -- `electro_active_sessions` by channel
+6. **Memory search latency** -- `histogram_quantile(0.95, electro_memory_search_seconds)`
 7. **Health status** -- poll `/health` endpoint, alert on non-Healthy
 
 ### Key SLIs
 
 | SLI | Target | Measurement |
 |-----|--------|-------------|
-| Message processing latency (excl. model) | < 100 ms p95 | `temm1e_message_processing_seconds` |
-| Memory search latency | < 50 ms p95 | `temm1e_memory_search_seconds` |
-| Tool execution success rate | > 99% | `temm1e_tool_calls_total` success/total |
-| Channel availability | > 99.9% | `temm1e_channel_connected` |
+| Message processing latency (excl. model) | < 100 ms p95 | `electro_message_processing_seconds` |
+| Memory search latency | < 50 ms p95 | `electro_memory_search_seconds` |
+| Tool execution success rate | > 99% | `electro_tool_calls_total` success/total |
+| Channel availability | > 99.9% | `electro_channel_connected` |
 | Cold start time | < 50 ms | Measure time from process start to first health check pass |
 
 ## Alert Rules
@@ -236,7 +236,7 @@ Recommended panels for a TEMM1E Grafana dashboard:
 |-------|-----------|--------|
 | Gateway down | `/health` returns non-200 for > 1 min | Restart container, check logs |
 | Provider unreachable | `health_check()` fails for > 5 min | Verify API key, check provider status page |
-| Vault access failure | `temm1e_vault_access_total{status="error"}` > 0 | Check vault key file, disk space |
+| Vault access failure | `electro_vault_access_total{status="error"}` > 0 | Check vault key file, disk space |
 | Sandbox violation | Any `SandboxViolation` error in logs | Investigate the triggering request |
 
 ### Warning
@@ -244,7 +244,7 @@ Recommended panels for a TEMM1E Grafana dashboard:
 | Alert | Condition | Action |
 |-------|-----------|--------|
 | High provider latency | `provider_latency_seconds` p95 > 30s | Check provider status, consider switching models |
-| Rate limiting active | `temm1e_auth_attempts_total{result="denied"}` increasing | Adjust rate limits or investigate abuse |
+| Rate limiting active | `electro_auth_attempts_total{result="denied"}` increasing | Adjust rate limits or investigate abuse |
 | Memory search slow | `memory_search_seconds` p95 > 500ms | Consider vacuuming SQLite or indexing |
 | Disk usage high | Volume usage > 80% | Rotate logs, clean up old files |
 
@@ -255,13 +255,13 @@ Recommended panels for a TEMM1E Grafana dashboard:
 View logs from a running container:
 
 ```bash
-docker logs temm1e --follow --tail 100
+docker logs electro --follow --tail 100
 ```
 
 ### Fly.io
 
 ```bash
-fly logs --app temm1e
+fly logs --app electro
 ```
 
 ### Centralized Logging
@@ -271,7 +271,7 @@ For production, forward JSON logs to a log aggregation service:
 ```yaml
 # Docker Compose with Loki
 services:
-  temm1e:
+  electro:
     logging:
       driver: loki
       options:
@@ -283,7 +283,7 @@ Or use any log shipper that reads JSON lines from stdout (Fluentd, Filebeat, Vec
 
 ## Audit Log
 
-When `security.audit_log = true` (default), TEMM1E logs all security-relevant events:
+When `security.audit_log = true` (default), ELECTRO logs all security-relevant events:
 
 - Tool executions (tool name, arguments, workspace path)
 - Vault access (key name, operation type)
@@ -301,7 +301,7 @@ Audit entries are emitted at `INFO` level with an `"audit": true` field in the J
   "event": "tool_execution",
   "tool": "shell",
   "command": "ls -la",
-  "workspace": "/var/lib/temm1e/workspaces/default",
+  "workspace": "/var/lib/electro/workspaces/default",
   "session_id": "sess-abc-123",
   "user_id": "telegram:456"
 }

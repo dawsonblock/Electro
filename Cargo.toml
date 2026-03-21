@@ -2,31 +2,31 @@
 resolver = "2"
 exclude = ["docs/swarm/experiment_artifacts"]
 members = [
-    "crates/temm1e-core",
-    "crates/temm1e-gateway",
-    "crates/temm1e-agent",
-    "crates/temm1e-providers",
-    "crates/temm1e-channels",
-    "crates/temm1e-memory",
-    "crates/temm1e-vault",
-    "crates/temm1e-tools",
-    "crates/temm1e-skills",
-    "crates/temm1e-automation",
-    "crates/temm1e-observable",
-    "crates/temm1e-filestore",
-    "crates/temm1e-test-utils",
-    "crates/temm1e-mcp",
-    "crates/temm1e-codex-oauth",
-    "crates/temm1e-tui",
-    "crates/temm1e-hive",
-    "crates/temm1e-distill",
+    "crates/electro-core",
+    "crates/electro-gateway",
+    "crates/electro-agent",
+    "crates/electro-providers",
+    "crates/electro-channels",
+    "crates/electro-memory",
+    "crates/electro-vault",
+    "crates/electro-tools",
+    "crates/electro-skills",
+    "crates/electro-automation",
+    "crates/electro-observable",
+    "crates/electro-filestore",
+    "crates/electro-test-utils",
+    "crates/electro-mcp",
+    "crates/electro-codex-oauth",
+    "crates/electro-tui",
+    "crates/electro-hive",
+    "crates/electro-distill",
 ]
 
 [workspace.package]
 version = "3.2.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/nagisanzenin/temm1e"
+repository = "https://github.com/nagisanzenin/electro"
 rust-version = "1.82"
 
 [workspace.dependencies]
@@ -105,27 +105,27 @@ tokio-stream = "0.1"
 tokio-util = { version = "0.7", features = ["rt"] }
 
 # Internal crates
-temm1e-core = { path = "crates/temm1e-core" }
-temm1e-gateway = { path = "crates/temm1e-gateway" }
-temm1e-agent = { path = "crates/temm1e-agent" }
-temm1e-providers = { path = "crates/temm1e-providers" }
-temm1e-channels = { path = "crates/temm1e-channels" }
-temm1e-memory = { path = "crates/temm1e-memory" }
-temm1e-vault = { path = "crates/temm1e-vault" }
-temm1e-tools = { path = "crates/temm1e-tools" }
-temm1e-skills = { path = "crates/temm1e-skills" }
-temm1e-automation = { path = "crates/temm1e-automation" }
-temm1e-observable = { path = "crates/temm1e-observable" }
-temm1e-filestore = { path = "crates/temm1e-filestore" }
-temm1e-test-utils = { path = "crates/temm1e-test-utils" }
-temm1e-mcp = { path = "crates/temm1e-mcp" }
-temm1e-codex-oauth = { path = "crates/temm1e-codex-oauth" }
-temm1e-tui = { path = "crates/temm1e-tui" }
-temm1e-hive = { path = "crates/temm1e-hive" }
-temm1e-distill = { path = "crates/temm1e-distill" }
+electro-core = { path = "crates/electro-core" }
+electro-gateway = { path = "crates/electro-gateway" }
+electro-agent = { path = "crates/electro-agent" }
+electro-providers = { path = "crates/electro-providers" }
+electro-channels = { path = "crates/electro-channels" }
+electro-memory = { path = "crates/electro-memory" }
+electro-vault = { path = "crates/electro-vault" }
+electro-tools = { path = "crates/electro-tools" }
+electro-skills = { path = "crates/electro-skills" }
+electro-automation = { path = "crates/electro-automation" }
+electro-observable = { path = "crates/electro-observable" }
+electro-filestore = { path = "crates/electro-filestore" }
+electro-test-utils = { path = "crates/electro-test-utils" }
+electro-mcp = { path = "crates/electro-mcp" }
+electro-codex-oauth = { path = "crates/electro-codex-oauth" }
+electro-tui = { path = "crates/electro-tui" }
+electro-hive = { path = "crates/electro-hive" }
+electro-distill = { path = "crates/electro-distill" }
 
 [package]
-name = "temm1e"
+name = "electro"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -133,26 +133,26 @@ rust-version.workspace = true
 description = "Cloud-native Rust AI agent runtime"
 
 [[bin]]
-name = "temm1e"
+name = "electro"
 path = "src/main.rs"
 
 [dependencies]
-temm1e-core.workspace = true
-temm1e-gateway.workspace = true
-temm1e-agent.workspace = true
-temm1e-providers.workspace = true
-temm1e-channels.workspace = true
-temm1e-memory.workspace = true
-temm1e-vault.workspace = true
-temm1e-tools.workspace = true
-temm1e-skills.workspace = true
-temm1e-automation.workspace = true
-temm1e-observable.workspace = true
-temm1e-filestore.workspace = true
-temm1e-mcp = { workspace = true, optional = true }
-temm1e-codex-oauth = { workspace = true, optional = true }
-temm1e-tui = { workspace = true, optional = true }
-temm1e-hive.workspace = true
+electro-core.workspace = true
+electro-gateway.workspace = true
+electro-agent.workspace = true
+electro-providers.workspace = true
+electro-channels.workspace = true
+electro-memory.workspace = true
+electro-vault.workspace = true
+electro-tools.workspace = true
+electro-skills.workspace = true
+electro-automation.workspace = true
+electro-observable.workspace = true
+electro-filestore.workspace = true
+electro-mcp = { workspace = true, optional = true }
+electro-codex-oauth = { workspace = true, optional = true }
+electro-tui = { workspace = true, optional = true }
+electro-hive.workspace = true
 tokio.workspace = true
 clap.workspace = true
 dirs.workspace = true
@@ -174,14 +174,14 @@ tokio-util.workspace = true
 
 [features]
 default = ["telegram", "browser", "mcp", "codex-oauth"]
-telegram = ["temm1e-channels/telegram"]
-discord = ["temm1e-channels/discord"]
-slack = ["temm1e-channels/slack"]
-browser = ["temm1e-tools/browser"]
-postgres = ["temm1e-memory/postgres"]
-mcp = ["dep:temm1e-mcp"]
-codex-oauth = ["dep:temm1e-codex-oauth"]
-tui = ["dep:temm1e-tui"]
+telegram = ["electro-channels/telegram"]
+discord = ["electro-channels/discord"]
+slack = ["electro-channels/slack"]
+browser = ["electro-tools/browser"]
+postgres = ["electro-memory/postgres"]
+mcp = ["dep:electro-mcp"]
+codex-oauth = ["dep:electro-codex-oauth"]
+tui = ["dep:electro-tui"]
 
 [profile.release]
 opt-level = "z"

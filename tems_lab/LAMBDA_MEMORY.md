@@ -4,7 +4,7 @@
 
 **Status:** Implemented
 **Branch:** `gradient_memory`
-**Author:** TEMM1E's Lab
+**Author:** ELECTRO's Lab
 **Date:** 2026-03-15
 
 ---
@@ -110,7 +110,7 @@ enum LambdaMemoryType {
 
 ### 5.2 Storage Schema (SQLite)
 
-Extends the existing `temm1e-memory` SQLite backend. New table alongside `memory_entries`:
+Extends the existing `electro-memory` SQLite backend. New table alongside `memory_entries`:
 
 ```sql
 CREATE TABLE lambda_memories (
@@ -523,7 +523,7 @@ const CANDIDATE_LIMIT: usize = 500;   // max memories to score per turn
 const MIN_ENTRY_TOKENS: usize = 10;   // minimum to fit a faded entry
 ```
 
-These can be exposed in `temm1e.toml` for per-deployment tuning:
+These can be exposed in `electro.toml` for per-deployment tuning:
 
 ```toml
 [memory.gradient]
@@ -917,11 +917,11 @@ Same memories, same algorithm. But the small skull **compresses more aggressivel
 |-----------|----------------|
 | `context.rs` | `build_context()` calls `assemble_lambda_context()` instead of separate Category 5/5b/6 logic |
 | `model_registry.rs` | `ModelLimits.context_window` drives skull size |
-| `temm1e-memory/sqlite.rs` | New `lambda_memories` table alongside existing `memory_entries` |
+| `electro-memory/sqlite.rs` | New `lambda_memories` table alongside existing `memory_entries` |
 | `runtime.rs` | Parses `<memory>` block from LLM responses, writes to gradient store |
 | `learning.rs` | Learnings written as `LambdaMemoryType::Learning` with importance 3.0 |
 | Tools | New `lambda_recall` tool registered in tool definitions |
-| `temm1e.toml` | `[memory.gradient]` section for tuning constants |
+| `electro.toml` | `[memory.gradient]` section for tuning constants |
 
 ## 17. Open Questions
 

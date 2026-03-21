@@ -1,6 +1,6 @@
-# TEMM1E Tem's Mind Architecture
+# ELECTRO Tem's Mind Architecture
 
-> The cognitive engine behind TEMM1E's autonomous execution.
+> The cognitive engine behind ELECTRO's autonomous execution.
 
 ---
 
@@ -33,7 +33,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           temm1e-agent crate                                   │
+│                           electro-agent crate                                   │
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
 │  │                         RUNTIME (runtime.rs)                            │    │
@@ -464,7 +464,7 @@ User sends "Deploy the app, run migrations, and verify health"
                                │
                      ┌─────────▼──────────┐
                      │   AGENT RUNTIME    │
-                     │   (temm1e-agent)  │
+                     │   (electro-agent)  │
                      └─────────┬──────────┘
                                │
         ┌──────────────────────┼─────────────────────────┐

@@ -1,4 +1,4 @@
-# TEMM1E Features
+# ELECTRO Features
 
 > Everything I'm made of. Every module, every capability. 905 tests. 0 clippy warnings. Here's the full inventory.
 
@@ -9,75 +9,75 @@
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
 | 0.1 | Graceful Shutdown | `src/main.rs` | Done |
-| 0.2 | Provider Circuit Breaker | `temm1e-agent/src/circuit_breaker.rs` | Done |
-| 0.3 | Channel Reconnection with Backoff | `temm1e-channels/src/telegram.rs` | Done |
-| 0.4 | Streaming Responses | `temm1e-agent/src/streaming.rs` | Done |
-| 0.5 | Raised max_turns/max_tool_rounds | `temm1e-agent/src/runtime.rs` | Done |
+| 0.2 | Provider Circuit Breaker | `electro-agent/src/circuit_breaker.rs` | Done |
+| 0.3 | Channel Reconnection with Backoff | `electro-channels/src/telegram.rs` | Done |
+| 0.4 | Streaming Responses | `electro-agent/src/streaming.rs` | Done |
+| 0.5 | Raised max_turns/max_tool_rounds | `electro-agent/src/runtime.rs` | Done |
 
 ## Phase 1 — My Brain
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 1.1 | Verification Engine | `temm1e-agent/src/runtime.rs` | Done |
-| 1.2 | Task Decomposition | `temm1e-agent/src/task_decomposition.rs` | Done |
-| 1.3 | Persistent Task Queue with Checkpointing | `temm1e-agent/src/task_queue.rs` | Done |
-| 1.4 | Context Manager — Surgical Token Budgeting | `temm1e-agent/src/context.rs` | Done |
-| 1.5 | Self-Correction Engine | `temm1e-agent/src/self_correction.rs` | Done |
-| 1.6 | DONE Definition Engine | `temm1e-agent/src/done_criteria.rs` | Done |
-| 1.7 | Cross-Task Learning | `temm1e-agent/src/learning.rs` | Done |
+| 1.1 | Verification Engine | `electro-agent/src/runtime.rs` | Done |
+| 1.2 | Task Decomposition | `electro-agent/src/task_decomposition.rs` | Done |
+| 1.3 | Persistent Task Queue with Checkpointing | `electro-agent/src/task_queue.rs` | Done |
+| 1.4 | Context Manager — Surgical Token Budgeting | `electro-agent/src/context.rs` | Done |
+| 1.5 | Self-Correction Engine | `electro-agent/src/self_correction.rs` | Done |
+| 1.6 | DONE Definition Engine | `electro-agent/src/done_criteria.rs` | Done |
+| 1.7 | Cross-Task Learning | `electro-agent/src/learning.rs` | Done |
 
 ## Phase 2 — I Keep Myself Alive
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 2.1 | Watchdog | `temm1e-agent/src/watchdog.rs` | Done |
-| 2.2 | State Recovery | `temm1e-agent/src/recovery.rs` | Done |
-| 2.3 | Health-Aware Heartbeat | `temm1e-automation/src/heartbeat.rs` | Done |
-| 2.4 | Memory Backend Failover | `temm1e-memory/src/lib.rs` | Done |
+| 2.1 | Watchdog | `electro-agent/src/watchdog.rs` | Done |
+| 2.2 | State Recovery | `electro-agent/src/recovery.rs` | Done |
+| 2.3 | Health-Aware Heartbeat | `electro-automation/src/heartbeat.rs` | Done |
+| 2.4 | Memory Backend Failover | `electro-memory/src/lib.rs` | Done |
 
 ## Phase 3 — Doing More with Less
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 3.1 | Output Compression | `temm1e-agent/src/output_compression.rs` | Done |
-| 3.2 | System Prompt Optimization | `temm1e-agent/src/prompt_optimizer.rs` | Done |
-| 3.3 | Tiered Model Routing | `temm1e-agent/src/model_router.rs` | Done |
-| 3.4 | History Pruning with Semantic Importance | `temm1e-agent/src/history_pruning.rs` | Done |
+| 3.1 | Output Compression | `electro-agent/src/output_compression.rs` | Done |
+| 3.2 | System Prompt Optimization | `electro-agent/src/prompt_optimizer.rs` | Done |
+| 3.3 | Tiered Model Routing | `electro-agent/src/model_router.rs` | Done |
+| 3.4 | History Pruning with Semantic Importance | `electro-agent/src/history_pruning.rs` | Done |
 
 ## Phase 4 — My Reach
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 4.1 | Discord Channel | `temm1e-channels/src/discord.rs` | Done |
-| 4.2 | Git Tool | `temm1e-tools/` | Done |
-| 4.3 | Skill Registry (TemHub v1) | `temm1e-skills/src/lib.rs` | Done |
-| 4.4 | Slack Channel | `temm1e-channels/src/slack.rs` | Done |
-| 4.5 | Web Dashboard (Minimal) | `temm1e-gateway/src/dashboard.rs` | Done |
+| 4.1 | Discord Channel | `electro-channels/src/discord.rs` | Done |
+| 4.2 | Git Tool | `electro-tools/` | Done |
+| 4.3 | Skill Registry (TemHub v1) | `electro-skills/src/lib.rs` | Done |
+| 4.4 | Slack Channel | `electro-channels/src/slack.rs` | Done |
+| 4.5 | Web Dashboard (Minimal) | `electro-gateway/src/dashboard.rs` | Done |
 
 ## Phase 5 — Cloud Scale
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 5.1 | S3/R2 FileStore Backend | `temm1e-filestore/src/s3.rs` | Done |
-| 5.2 | OpenTelemetry Observability | `temm1e-observable/src/` | Done |
-| 5.3 | Multi-Tenancy with Workspace Isolation | `temm1e-core/src/tenant_impl.rs` | Done |
-| 5.4 | OAuth Identity Flows | `temm1e-gateway/src/identity.rs` | Done |
-| 5.5 | Horizontal Scaling via Orchestrator | `temm1e-core/src/orchestrator_impl.rs` | Done |
+| 5.1 | S3/R2 FileStore Backend | `electro-filestore/src/s3.rs` | Done |
+| 5.2 | OpenTelemetry Observability | `electro-observable/src/` | Done |
+| 5.3 | Multi-Tenancy with Workspace Isolation | `electro-core/src/tenant_impl.rs` | Done |
+| 5.4 | OAuth Identity Flows | `electro-gateway/src/identity.rs` | Done |
+| 5.5 | Horizontal Scaling via Orchestrator | `electro-core/src/orchestrator_impl.rs` | Done |
 
 ## Phase 6 — The Advanced Tem's Mind (where it gets interesting >:3)
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 6.1 | Parallel Tool Execution | `temm1e-agent/src/executor.rs` | Done |
-| 6.2 | Agent-to-Agent Delegation | `temm1e-agent/src/delegation.rs` | Done |
-| 6.3 | Proactive Task Initiation | `temm1e-agent/src/proactive.rs` | Done |
-| 6.4 | Adaptive System Prompt — Self-Tuning | `temm1e-agent/src/prompt_patches.rs` | Done |
+| 6.1 | Parallel Tool Execution | `electro-agent/src/executor.rs` | Done |
+| 6.2 | Agent-to-Agent Delegation | `electro-agent/src/delegation.rs` | Done |
+| 6.3 | Proactive Task Initiation | `electro-agent/src/proactive.rs` | Done |
+| 6.4 | Adaptive System Prompt — Self-Tuning | `electro-agent/src/prompt_patches.rs` | Done |
 
 ## Phase 7 — I Can See
 
 | # | Feature | Module | Status |
 |---|---------|--------|--------|
-| 7.1 | Vision / Image Understanding | `temm1e-core/src/types/message.rs`, `temm1e-providers/`, `temm1e-agent/src/runtime.rs` | Done |
+| 7.1 | Vision / Image Understanding | `electro-core/src/types/message.rs`, `electro-providers/`, `electro-agent/src/runtime.rs` | Done |
 
 ---
 
@@ -150,7 +150,7 @@ Full `Channel` + `FileTransfer` implementation via serenity/poise. I handle slas
 I perform typed git operations: clone, pull, push, commit, branch, diff, log. Safety: I block force-push by default and require explicit confirmation for destructive operations.
 
 ### 4.3 Skill Registry
-My `SkillRegistry` scans `~/.temm1e/skills/` and the workspace `skills/` directory. I parse YAML frontmatter from Markdown and do keyword-based relevance matching. When a skill is relevant, I inject its instructions into my system prompt.
+My `SkillRegistry` scans `~/.electro/skills/` and the workspace `skills/` directory. I parse YAML frontmatter from Markdown and do keyword-based relevance matching. When a skill is relevant, I inject its instructions into my system prompt.
 
 ### 4.4 Slack Channel
 `SlackChannel` implementing Channel + FileTransfer. I poll via conversations.list + conversations.history every 2s. I use chat.postMessage and files.upload. Message splitting at 4000 chars, allowlist enforcement, rate limiting. Behind the `slack` feature flag.

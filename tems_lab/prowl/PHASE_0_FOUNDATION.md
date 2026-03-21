@@ -19,7 +19,7 @@ Playwright MCP server returns this exact format for screenshots.
 
 ### Implementation
 
-**File:** `crates/temm1e-mcp/src/client.rs`
+**File:** `crates/electro-mcp/src/client.rs`
 
 Current `call_tool()` extracts only `content[].text` entries and joins them. Change to preserve content block types:
 
@@ -59,7 +59,7 @@ for block in content_array {
 }
 ```
 
-**File:** `crates/temm1e-mcp/src/bridge.rs`
+**File:** `crates/electro-mcp/src/bridge.rs`
 
 Add `last_image` field to `McpBridgeTool`:
 ```rust
@@ -108,7 +108,7 @@ Token cost reality check (from measured data):
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 New action handler in `execute()` match:
 
@@ -119,7 +119,7 @@ New action handler in `execute()` match:
     // CDP call
     use chromiumoxide::cdp::browser_protocol::accessibility::*;
     let result = page.execute(GetFullAxTreeParams::default()).await
-        .map_err(|e| Temm1eError::Tool(format!("Accessibility tree: {e}")))?;
+        .map_err(|e| ElectroError::Tool(format!("Accessibility tree: {e}")))?;
 
     let formatted = format_ax_tree(&result.result.nodes);
     Ok(ToolOutput { content: formatted, is_error: false })
@@ -213,7 +213,7 @@ chromiumoxide `Element` has `screenshot(format: CaptureScreenshotFormat) -> Resu
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 Extend the existing `screenshot` action:
 
@@ -224,16 +224,16 @@ Extend the existing `screenshot` action:
     let png_data = if let Some(selector) = input.arguments.get("selector").and_then(|v| v.as_str()) {
         // Element-scoped screenshot
         let element = page.find_element(selector).await
-            .map_err(|e| Temm1eError::Tool(format!("Element not found '{}': {e}", selector)))?;
+            .map_err(|e| ElectroError::Tool(format!("Element not found '{}': {e}", selector)))?;
         element.screenshot(CaptureScreenshotFormat::Png).await
-            .map_err(|e| Temm1eError::Tool(format!("Element screenshot: {e}")))?
+            .map_err(|e| ElectroError::Tool(format!("Element screenshot: {e}")))?
     } else {
         // Full viewport (existing behavior)
         page.screenshot(ScreenshotParams::builder()
             .format(CaptureScreenshotFormat::Png)
             .build())
             .await
-            .map_err(|e| Temm1eError::Tool(format!("Screenshot: {e}")))?
+            .map_err(|e| ElectroError::Tool(format!("Screenshot: {e}")))?
     };
 
     let b64 = base64::engine::general_purpose::STANDARD.encode(&png_data);

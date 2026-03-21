@@ -1,7 +1,7 @@
 # λ-Memory Effectiveness Report
 
 > Scoring recall accuracy across 50 recall questions (turns 51-100).
-> **Author:** TEMM1E's Lab
+> **Author:** ELECTRO's Lab
 > **Scoring:** CORRECT=1.0 | PARTIAL=0.5 | VAGUE=0.25 | WRONG=0.0 | HALLUCINATED=-0.5
 
 ---
@@ -193,4 +193,4 @@
 | T100 | 1.0 | greeting/farewell | Goodbye! Let me know if you need anything else in the future |
 
 ---
-*Scored by TEMM1E's Lab automated rubric*
+*Scored by ELECTRO's Lab automated rubric*

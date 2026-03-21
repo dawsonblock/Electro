@@ -1,6 +1,6 @@
 # λ-Memory Benchmark — Final Report
 
-> **Author:** TEMM1E's Lab
+> **Author:** ELECTRO's Lab
 > **Date:** 2026-03-15
 > **Model:** Gemini 2.0 Flash
 > **Total API calls:** ~900 (300 per run × 3 runs)
@@ -92,4 +92,4 @@ To properly test λ-Memory's value:
 
 ---
 
-*TEMM1E's Lab — λ-Memory Benchmark Suite*
+*ELECTRO's Lab — λ-Memory Benchmark Suite*

@@ -7,7 +7,7 @@
 
 ## 4.1 Design
 
-Web Blueprints are standard TEMM1E blueprints stored as `MemoryEntry` with `MemoryEntryType::Blueprint`. They use the existing blueprint system — no new infrastructure. The classifier's `blueprint_hint` routes web tasks to these blueprints via `semantic_tags`.
+Web Blueprints are standard ELECTRO blueprints stored as `MemoryEntry` with `MemoryEntryType::Blueprint`. They use the existing blueprint system — no new infrastructure. The classifier's `blueprint_hint` routes web tasks to these blueprints via `semantic_tags`.
 
 ---
 
@@ -196,7 +196,7 @@ For each target site:
 
 ## 4.3 Blueprint Seeding
 
-**File:** `crates/temm1e-agent/src/blueprint.rs` (or initialization code)
+**File:** `crates/electro-agent/src/blueprint.rs` (or initialization code)
 
 ```rust
 const WEB_BLUEPRINTS: &[&str] = &[
@@ -206,7 +206,7 @@ const WEB_BLUEPRINTS: &[&str] = &[
     include_str!("../../tems_lab/prowl/blueprints/web_compare.md"),
 ];
 
-pub async fn seed_web_blueprints(memory: &dyn Memory) -> Result<(), Temm1eError> {
+pub async fn seed_web_blueprints(memory: &dyn Memory) -> Result<(), ElectroError> {
     for bp_content in WEB_BLUEPRINTS {
         let bp = parse_blueprint(bp_content)?;
         // Check if already exists (by id)

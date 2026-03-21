@@ -1,6 +1,6 @@
-# TEMM1E Incident Response Playbook
+# ELECTRO Incident Response Playbook
 
-> Incident response procedures for the TEMM1E AI agent runtime.
+> Incident response procedures for the ELECTRO AI agent runtime.
 > Owner: SRE | Last updated: 2026-03-08
 > Review cadence: quarterly
 
@@ -134,7 +134,7 @@
    git diff HEAD~5 config/
 
    # Check deployment history
-   kubectl rollout history deployment/temm1e
+   kubectl rollout history deployment/electro
    ```
 
 4. **Narrow the blast radius:**
@@ -151,7 +151,7 @@
 2. **If the cause is a recent deployment, rollback:**
    ```bash
    # Kubernetes
-   kubectl rollout undo deployment/temm1e
+   kubectl rollout undo deployment/electro
 
    # Docker
    docker run -d <previous-image-tag>
@@ -163,8 +163,8 @@
 
 3. **If the cause is a configuration change, revert:**
    ```bash
-   git checkout HEAD~1 -- config/temm1e.toml
-   systemctl restart temm1e
+   git checkout HEAD~1 -- config/electro.toml
+   systemctl restart electro
    ```
 
 4. **If the cause is external (provider outage, network issue):**
@@ -400,16 +400,16 @@ Post-incident reviews are required for all SEV1 and SEV2 incidents, and recommen
 
 ```bash
 # Restart the service
-systemctl restart temm1e
+systemctl restart electro
 
 # Rollback deployment (Kubernetes)
-kubectl rollout undo deployment/temm1e
+kubectl rollout undo deployment/electro
 
 # Check process status
-systemctl status temm1e
+systemctl status electro
 
 # View recent logs
-journalctl -u temm1e --since "10 minutes ago" -f
+journalctl -u electro --since "10 minutes ago" -f
 
 # Health check
 curl http://localhost:8080/health
@@ -428,19 +428,19 @@ curl http://localhost:8080/metrics | grep -E "error|total" | head -20
 
 | File | Path | Purpose |
 |------|------|---------|
-| Configuration | `~/.temm1e/temm1e.toml` or `/etc/temm1e/temm1e.toml` | Runtime configuration |
-| Vault key | `~/.temm1e/vault.key` | 32-byte encryption key (permissions: 0600) |
-| Vault data | `~/.temm1e/vault.enc` | Encrypted secrets (JSON) |
-| Memory DB | `~/.temm1e/memory.db` | SQLite memory store |
-| Logs | `journalctl -u temm1e` or container logs | Structured JSON logs |
+| Configuration | `~/.electro/electro.toml` or `/etc/electro/electro.toml` | Runtime configuration |
+| Vault key | `~/.electro/vault.key` | 32-byte encryption key (permissions: 0600) |
+| Vault data | `~/.electro/vault.enc` | Encrypted secrets (JSON) |
+| Memory DB | `~/.electro/memory.db` | SQLite memory store |
+| Logs | `journalctl -u electro` or container logs | Structured JSON logs |
 
 ### Key Metrics for Triage
 
 | Metric | Healthy Value | Check Command |
 |--------|--------------|---------------|
-| `up{job="temm1e"}` | 1 | `curl -s localhost:8080/metrics \| grep ^up` |
-| `temm1e_gateway_up` | 1 | Health endpoint returns 200 |
-| `temm1e_provider_health_check_success` | 1 | Provider health passing |
-| `process_resident_memory_bytes` | < 20 MB (idle) | `ps -o rss= -p $(pgrep temm1e)` |
-| `temm1e_active_sessions` | < 50 | Session count within limits |
-| `temm1e_vault_decryption_failures_total` | 0 | No decryption failures ever |
+| `up{job="electro"}` | 1 | `curl -s localhost:8080/metrics \| grep ^up` |
+| `electro_gateway_up` | 1 | Health endpoint returns 200 |
+| `electro_provider_health_check_success` | 1 | Provider health passing |
+| `process_resident_memory_bytes` | < 20 MB (idle) | `ps -o rss= -p $(pgrep electro)` |
+| `electro_active_sessions` | < 50 | Session count within limits |
+| `electro_vault_decryption_failures_total` | 0 | No decryption failures ever |

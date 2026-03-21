@@ -1,16 +1,16 @@
-# TEMM1E Hive — Final Report
+# ELECTRO Hive — Final Report
 
 ## Stigmergic Swarm Intelligence Runtime v1.0
 
 **Date:** 2026-03-18
 **Branch:** `many-tems`
-**Crate:** `temm1e-hive` (17th crate in the TEMM1E workspace)
+**Crate:** `electro-hive` (17th crate in the ELECTRO workspace)
 
 ---
 
 ## 1. What Was Built
 
-A complete swarm intelligence coordination layer for TEMM1E — new crate, wired into the live runtime, benchmarked with real API calls, and verified with compilable + tested output.
+A complete swarm intelligence coordination layer for ELECTRO — new crate, wired into the live runtime, benchmarked with real API calls, and verified with compilable + tested output.
 
 ### Architecture
 
@@ -42,12 +42,12 @@ User Message → Queen Decomposition → Task DAG → Worker Selection → Paral
 
 ```
 ✅ cargo check --workspace             — PASS
-✅ cargo clippy -p temm1e-hive -- -D warnings  — PASS (0 warnings)
+✅ cargo clippy -p electro-hive -- -D warnings  — PASS (0 warnings)
 ✅ cargo fmt --all -- --check           — PASS
 ✅ cargo test --workspace               — 1,531 passed, 0 failed
 ```
 
-- 70 new tests in temm1e-hive (including 2 parallel execution proofs)
+- 70 new tests in electro-hive (including 2 parallel execution proofs)
 - 0 existing tests broken
 - Integration into main.rs: feature-gated behind `[hive] enabled = true`
 
@@ -118,10 +118,10 @@ Speedup = parallelism width. More independent work = more speedup. Token overhea
 
 ## 4. Runtime Integration
 
-The Hive is wired into the live TEMM1E dispatcher (`src/main.rs`):
+The Hive is wired into the live ELECTRO dispatcher (`src/main.rs`):
 
 1. **Config** — `[hive]` section parsed from TOML. Default: `enabled = false`.
-2. **Init** — When enabled, creates `~/.temm1e/hive.db`, starts pheromone GC.
+2. **Init** — When enabled, creates `~/.electro/hive.db`, starts pheromone GC.
 3. **Intercept** — Before `agent.process_message()`, checks `Queen::should_decompose()`.
 4. **Execution** — If swarm activates: decomposes → spawns parallel workers → each runs a fresh `AgentRuntime` with task-scoped context → aggregates results → sends reply.
 5. **Fallback** — If decomposition fails or speedup < threshold → falls through to normal single-agent. Always safe.
@@ -175,7 +175,7 @@ max_workers = 4
 ## 8. Files Delivered
 
 ```
-crates/temm1e-hive/                    # New crate (17th in workspace)
+crates/electro-hive/                    # New crate (17th in workspace)
 ├── Cargo.toml
 ├── src/
 │   ├── lib.rs                         # Hive orchestrator, parallel worker spawning
@@ -211,7 +211,7 @@ docs/swarm/experiment_artifacts/       # Verified project artifacts
     └── tests/integration.rs
 
 src/main.rs                            # Hive integration (feature-gated)
-Cargo.toml                             # Workspace: +temm1e-hive, +exclude
+Cargo.toml                             # Workspace: +electro-hive, +exclude
 ```
 
 ---
@@ -220,7 +220,7 @@ Cargo.toml                             # Workspace: +temm1e-hive, +exclude
 
 | Metric | Value |
 |--------|-------|
-| New crate | `temm1e-hive` |
+| New crate | `electro-hive` |
 | Source lines | ~2,490 |
 | New tests | 70 |
 | Tests broken | 0 |

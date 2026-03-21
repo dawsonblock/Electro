@@ -1,14 +1,14 @@
 #!/bin/bash
 # λ-Memory 100-Turn Self-Test with GPT-5.2
-# This script pipes 100 turns of conversation to TEMM1E CLI
+# This script pipes 100 turns of conversation to ELECTRO CLI
 # and captures full output for analysis.
 
 set -euo pipefail
 
 export OPENAI_API_KEY="$1"
-BINARY="$(dirname "$0")/../target/release/temm1e"
+BINARY="$(dirname "$0")/../target/release/electro"
 LOG="$(dirname "$0")/lambda_test_100turns_log.txt"
-DB="$HOME/.temm1e/memory.db"
+DB="$HOME/.electro/memory.db"
 
 echo "=== λ-Memory 100-Turn Test ===" | tee "$LOG"
 echo "Date: $(date)" | tee -a "$LOG"
@@ -141,12 +141,12 @@ echo "==========================================" | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 
 # Create a FIFO for piping
-PIPE="/tmp/temm1e_test_pipe_$$"
+PIPE="/tmp/electro_test_pipe_$$"
 mkfifo "$PIPE"
 
-# Start TEMM1E in background, reading from pipe
+# Start ELECTRO in background, reading from pipe
 "$BINARY" chat < "$PIPE" >> "$LOG" 2>&1 &
-TEMM1E_PID=$!
+ELECTRO_PID=$!
 
 # Small delay for startup
 sleep 3
@@ -174,7 +174,7 @@ done
 
 # Clean up
 rm -f "$PIPE"
-wait "$TEMM1E_PID" 2>/dev/null || true
+wait "$ELECTRO_PID" 2>/dev/null || true
 
 echo "" | tee -a "$LOG"
 echo "==========================================" | tee -a "$LOG"

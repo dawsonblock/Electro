@@ -2,7 +2,7 @@
 
 > Every LLM call is a labeled training example being thrown away. We built a system that catches them.
 
-**Author:** TEMM1E's Lab
+**Author:** ELECTRO's Lab
 **Date:** 2026-03-18
 **Status:** Implemented & Self-Tested
 **Repository:** `skyclaw` branch `self-tuning`
@@ -294,10 +294,10 @@ For users who want stronger evaluation guarantees, Teacher Mode enables a premiu
 
 ### Crate Structure
 
-Eigen-Tune is implemented as `temm1e-distill`, a leaf crate in the TEMM1E workspace. It depends only on `temm1e-core` (shared traits and error types) and standard ecosystem crates (sqlx, tokio, serde, chrono, rand).
+Eigen-Tune is implemented as `electro-distill`, a leaf crate in the ELECTRO workspace. It depends only on `electro-core` (shared traits and error types) and standard ecosystem crates (sqlx, tokio, serde, chrono, rand).
 
 ```
-crates/temm1e-distill/
+crates/electro-distill/
 ├── Cargo.toml
 ├── src/
 │   ├── lib.rs              EigenTuneEngine — public API (5 hooks + status)
@@ -374,7 +374,7 @@ The store uses in-memory SQLite for tests (`sqlite::memory:`), ensuring integrat
 
 ### Ollama Serving
 
-Fine-tuned models are served through Ollama's OpenAI-compatible API (`/v1/chat/completions`). This means the existing `OpenAICompatProvider` in TEMM1E can route to a local model by simply changing the base URL to `http://localhost:11434/v1` — no new provider implementation needed.
+Fine-tuned models are served through Ollama's OpenAI-compatible API (`/v1/chat/completions`). This means the existing `OpenAICompatProvider` in ELECTRO can route to a local model by simply changing the base URL to `http://localhost:11434/v1` — no new provider implementation needed.
 
 The pipeline: Unsloth/MLX produces a LoRA adapter, which is merged with the base model, quantized to GGUF (Q4_K_M by default), and imported into Ollama via the `/api/create` endpoint with a Modelfile.
 
@@ -382,7 +382,7 @@ The pipeline: Unsloth/MLX produces a LoRA adapter, which is merged with the base
 
 ## 6. Resilience Architecture
 
-Eigen-Tune follows the same philosophy as TEMM1E's core resilience system: **every failure degrades to cloud, never to silence.**
+Eigen-Tune follows the same philosophy as ELECTRO's core resilience system: **every failure degrades to cloud, never to silence.**
 
 ### Layer 1: Default Cloud Routing
 
@@ -597,7 +597,7 @@ The pipeline itself adds zero ongoing cost. Training is a one-time event per tie
 
 **Tool-use fine-tuning is hard.** Training a model to generate correct tool calls (function names, parameter schemas, multi-step tool chains) requires more than (input, output) pairs — it requires understanding the tool's semantics. Current LoRA fine-tuning often breaks tool-calling capabilities that were present in the base model. This is a known limitation of the distillation approach.
 
-**Training requires hardware.** QLoRA on a 7B model needs 12GB VRAM (NVIDIA) or 16GB unified memory (Apple Silicon). Users running TEMM1E on a 4GB VPS cannot train locally. Cloud training services (RunPod, Lambda, Vast.ai) are an option but add cost and complexity.
+**Training requires hardware.** QLoRA on a 7B model needs 12GB VRAM (NVIDIA) or 16GB unified memory (Apple Silicon). Users running ELECTRO on a 4GB VPS cannot train locally. Cloud training services (RunPod, Lambda, Vast.ai) are an option but add cost and complexity.
 
 **Behavioral signals are noisy.** A user might continue after a mediocre response (false positive) or retry for reasons unrelated to quality (false negative). SPRT handles noise through statistical accumulation, but individual observations are unreliable. The signal-to-noise ratio improves with volume.
 
@@ -605,9 +605,9 @@ The pipeline itself adds zero ongoing cost. Training is a one-time event per tie
 
 **DPO Pipeline (v2).** Direct Preference Optimization uses (chosen, rejected) pairs to train the model on user preferences. Eigen-Tune already collects the signals needed: a response followed by UserContinued is "chosen"; a response followed by UserRetried is "rejected". The DPO training backend is a natural extension.
 
-**Federated Learning (v3).** If multiple TEMM1E instances share an Eigen-Tune model, training data from all instances can be aggregated (with privacy preservation) to produce a better model faster. This is particularly relevant for team deployments where all users interact with the same domain.
+**Federated Learning (v3).** If multiple ELECTRO instances share an Eigen-Tune model, training data from all instances can be aggregated (with privacy preservation) to produce a better model faster. This is particularly relevant for team deployments where all users interact with the same domain.
 
-**Blueprint-Aware Augmentation.** Using TEMM1E's Blueprint system to generate synthetic training data in underrepresented categories, improving diversity without waiting for organic user queries.
+**Blueprint-Aware Augmentation.** Using ELECTRO's Blueprint system to generate synthetic training data in underrepresented categories, improving diversity without waiting for organic user queries.
 
 **Multi-Model Routing.** Instead of one local model per tier, maintain a pool of specialized models (code model, conversation model, analysis model) and route based on domain category. Thompson sampling already supports this — it is a multi-armed bandit problem.
 
@@ -643,18 +643,18 @@ The user does not need to know it exists. The model will find its own eigenvalue
 ### Implementation
 | File | Description |
 |------|-------------|
-| `crates/temm1e-distill/src/lib.rs` | EigenTuneEngine — 5 hooks + status |
-| `crates/temm1e-distill/src/stats/` | 7 pure math modules (SPRT, CUSUM, Wilson, entropy, beta, Thompson, power) |
-| `crates/temm1e-distill/src/engine/` | 5 orchestration modules (state machine, graduation, shadow, monitor, router) |
-| `crates/temm1e-distill/src/judge/` | 2 evaluation judges (embedding, behavior) |
-| `crates/temm1e-distill/src/collector.rs` | Fire-and-forget pair capture + domain classification |
-| `crates/temm1e-distill/src/store.rs` | SQLite storage (4 tables, full CRUD) |
+| `crates/electro-distill/src/lib.rs` | EigenTuneEngine — 5 hooks + status |
+| `crates/electro-distill/src/stats/` | 7 pure math modules (SPRT, CUSUM, Wilson, entropy, beta, Thompson, power) |
+| `crates/electro-distill/src/engine/` | 5 orchestration modules (state machine, graduation, shadow, monitor, router) |
+| `crates/electro-distill/src/judge/` | 2 evaluation judges (embedding, behavior) |
+| `crates/electro-distill/src/collector.rs` | Fire-and-forget pair capture + domain classification |
+| `crates/electro-distill/src/store.rs` | SQLite storage (4 tables, full CRUD) |
 
 ### Tests
 | File | Description |
 |------|-------------|
-| `crates/temm1e-distill/tests/bench_eigentune.rs` | **Full pipeline integration suite (11 tests)** |
-| `crates/temm1e-distill/tests/proof_of_pipeline.rs` | **End-to-end proof (5 tests): real SQLite, JSONL export, quality scoring** |
+| `crates/electro-distill/tests/bench_eigentune.rs` | **Full pipeline integration suite (11 tests)** |
+| `crates/electro-distill/tests/proof_of_pipeline.rs` | **End-to-end proof (5 tests): real SQLite, JSONL export, quality scoring** |
 | Unit tests (112) | Embedded in each source module |
 
 ---
@@ -692,4 +692,4 @@ The base model computed `(72-32) × 5/9 = 30 × 5/9 = 150°C` — a fundamental 
 
 ---
 
-*TEMM1E's Lab -- Eigen-Tune Research, 2026*
+*ELECTRO's Lab -- Eigen-Tune Research, 2026*

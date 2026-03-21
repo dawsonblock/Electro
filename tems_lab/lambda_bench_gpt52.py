@@ -439,7 +439,7 @@ def main():
         w()
         w(f"> **Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         w(f"> **Model:** {MODEL}")
-        w(f"> **Author:** TEMM1E's Lab")
+        w(f"> **Author:** ELECTRO's Lab")
         w(f"> **Elapsed:** {elapsed:.0f}s ({elapsed/60:.1f}min)")
         w()
         w("---")
@@ -510,7 +510,7 @@ def main():
                 w()
 
         w("---")
-        w("*TEMM1E's Lab*")
+        w("*ELECTRO's Lab*")
 
     # Save metrics
     out = {}

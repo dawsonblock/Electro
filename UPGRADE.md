@@ -1,6 +1,6 @@
 Full Engineering Upgrade Blueprint
 
-Project: temm1e hardened agent runtime
+Project: electro hardened agent runtime
 
 This blueprint assumes the current branch includes the hardening work already added:
 	•	host shell locked down and runner-preferred
@@ -18,7 +18,7 @@ It does not assume the system has been compiled, tested, or proven end-to-end. I
 
 1. Executive summary
 
-temm1e is now in the right direction, but it is still between two states:
+electro is now in the right direction, but it is still between two states:
 	•	past state: powerful local agent with soft guardrails
 	•	target state: bounded operator-controlled agent platform with enforceable execution policy
 
@@ -427,9 +427,9 @@ Acceptance criteria
 
 A cleaner product shape:
 
-temm1e/
+electro/
   crates/
-    temm1e-core/
+    electro-core/
       src/
         policy/
         runtime/
@@ -437,7 +437,7 @@ temm1e/
         audit/
         recovery/
         config/
-    temm1e-tools/
+    electro-tools/
       src/
         file/
         shell/
@@ -445,9 +445,9 @@ temm1e/
         network/
         extensions/
         common/
-    temm1e-observable/
-    temm1e-channels/
-    temm1e-agent/
+    electro-observable/
+    electro-channels/
+    electro-agent/
   docker/
     shell-runner/
     browser-sandbox/
@@ -480,13 +480,13 @@ src/main.rs should become a thin entrypoint only.
 Default security posture
 
 Recommended defaults:
-	•	TEMM1E_SHELL_BACKEND=container
-	•	TEMM1E_ENABLE_HOST_SHELL=0
-	•	TEMM1E_BROWSER_ISOLATION_MODE=remote
-	•	TEMM1E_INHERIT_BROWSER_SESSION=0
-	•	TEMM1E_BROWSER_ALLOW_EVAL=0
-	•	TEMM1E_PUBLIC_WEB_ALLOWLIST= empty means public-web only, not unrestricted internal access
-	•	TEMM1E_ENABLE_SELF_CREATE_TOOL=0
+	•	ELECTRO_SHELL_BACKEND=container
+	•	ELECTRO_ENABLE_HOST_SHELL=0
+	•	ELECTRO_BROWSER_ISOLATION_MODE=remote
+	•	ELECTRO_INHERIT_BROWSER_SESSION=0
+	•	ELECTRO_BROWSER_ALLOW_EVAL=0
+	•	ELECTRO_PUBLIC_WEB_ALLOWLIST= empty means public-web only, not unrestricted internal access
+	•	ELECTRO_ENABLE_SELF_CREATE_TOOL=0
 	•	explicit admin/channel allowlists required
 
 Config classes
@@ -748,29 +748,29 @@ Gate:
 
 Highest-priority file groups
 
-crates/temm1e-tools/src/shell*
+crates/electro-tools/src/shell*
 	•	finalize runner abstraction
 	•	remove fragile legacy paths
 	•	improve structured exec model
 
-crates/temm1e-tools/src/browser*
+crates/electro-tools/src/browser*
 	•	unify remote browser path
 	•	quarantine downloads
 	•	remove local implicit fallbacks
 
-crates/temm1e-agent/src/executor*
+crates/electro-agent/src/executor*
 	•	centralize policy evaluation
 	•	remove scattered special-case validation
 
-crates/temm1e-channels/src/*
+crates/electro-channels/src/*
 	•	role enforcement
 	•	explicit admin bootstrap
 
-crates/temm1e-core/src/orchestrator_impl.rs
+crates/electro-core/src/orchestrator_impl.rs
 	•	either complete it or narrow the claim
 	•	do not ship placeholder orchestration as if it were real
 
-crates/temm1e-observable/src/otel.rs
+crates/electro-observable/src/otel.rs
 	•	complete exporter or relabel behavior clearly
 
 src/main.rs

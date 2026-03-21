@@ -1771,6 +1771,408 @@ dependencies = [
 ]
 
 [[package]]
+name = "electro"
+version = "3.2.0"
+dependencies = [
+ "aes-gcm",
+ "anyhow",
+ "async-trait",
+ "base64",
+ "chrono",
+ "clap",
+ "dirs",
+ "electro-agent",
+ "electro-automation",
+ "electro-channels",
+ "electro-codex-oauth",
+ "electro-core",
+ "electro-filestore",
+ "electro-gateway",
+ "electro-hive",
+ "electro-mcp",
+ "electro-memory",
+ "electro-observable",
+ "electro-providers",
+ "electro-skills",
+ "electro-tools",
+ "electro-tui",
+ "electro-vault",
+ "futures",
+ "hex",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "electro-agent"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "chrono",
+ "electro-core",
+ "electro-test-utils",
+ "electro-vault",
+ "futures",
+ "hex",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+ "sqlx",
+ "tempfile",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "electro-automation"
+version = "3.2.0"
+dependencies = [
+ "chrono",
+ "electro-core",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "electro-channels"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "dirs",
+ "electro-core",
+ "electro-test-utils",
+ "futures",
+ "poise",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serenity",
+ "teloxide",
+ "tempfile",
+ "tokio",
+ "toml",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "electro-codex-oauth"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "base64",
+ "dirs",
+ "electro-core",
+ "electro-test-utils",
+ "futures",
+ "rand 0.8.5",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "electro-core"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "dirs",
+ "futures",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "toml",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "electro-distill"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "electro-core",
+ "rand 0.8.5",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "tokio",
+ "toml",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "electro-filestore"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-sdk-s3",
+ "bytes",
+ "electro-core",
+ "electro-test-utils",
+ "futures",
+ "serde",
+ "tempfile",
+ "tokio",
+ "toml",
+ "tracing",
+]
+
+[[package]]
+name = "electro-gateway"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "base64",
+ "chrono",
+ "electro-agent",
+ "electro-core",
+ "electro-test-utils",
+ "hex",
+ "rand 0.8.5",
+ "reqwest",
+ "rustls 0.23.37",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tokio-rustls 0.26.4",
+ "tower",
+ "tower-http",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "electro-hive"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "electro-core",
+ "electro-providers",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "electro-mcp"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "dirs",
+ "electro-core",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "toml",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "electro-memory"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "electro-core",
+ "electro-test-utils",
+ "regex",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "electro-observable"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "electro-core",
+ "opentelemetry",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "electro-providers"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "electro-core",
+ "electro-test-utils",
+ "futures",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "electro-skills"
+version = "3.2.0"
+dependencies = [
+ "dirs",
+ "electro-core",
+ "serde",
+ "serde_yaml",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "electro-test-utils"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "electro-core",
+ "futures",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "electro-tools"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "chromiumoxide",
+ "chrono",
+ "dirs",
+ "electro-core",
+ "electro-test-utils",
+ "futures",
+ "htmd",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "url",
+ "zeroize",
+]
+
+[[package]]
+name = "electro-tui"
+version = "3.2.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bytes",
+ "chrono",
+ "crossterm",
+ "dirs",
+ "electro-agent",
+ "electro-codex-oauth",
+ "electro-core",
+ "electro-mcp",
+ "electro-memory",
+ "electro-providers",
+ "electro-test-utils",
+ "electro-tools",
+ "electro-vault",
+ "futures",
+ "insta",
+ "nucleo",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "syntect",
+ "textwrap",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "toml",
+ "tracing",
+ "unicode-width 0.2.0",
+ "uuid",
+]
+
+[[package]]
+name = "electro-vault"
+version = "3.2.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "chacha20poly1305",
+ "chrono",
+ "dirs",
+ "electro-core",
+ "rand 0.8.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "zeroize",
+]
+
+[[package]]
 name = "elliptic-curve"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5058,408 +5460,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "temm1e"
-version = "3.2.0"
-dependencies = [
- "aes-gcm",
- "anyhow",
- "async-trait",
- "base64",
- "chrono",
- "clap",
- "dirs",
- "futures",
- "hex",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "temm1e-agent",
- "temm1e-automation",
- "temm1e-channels",
- "temm1e-codex-oauth",
- "temm1e-core",
- "temm1e-filestore",
- "temm1e-gateway",
- "temm1e-hive",
- "temm1e-mcp",
- "temm1e-memory",
- "temm1e-observable",
- "temm1e-providers",
- "temm1e-skills",
- "temm1e-tools",
- "temm1e-tui",
- "temm1e-vault",
- "tokio",
- "tokio-util",
- "toml",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-agent"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "base64",
- "chrono",
- "futures",
- "hex",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha2",
- "sqlx",
- "temm1e-core",
- "temm1e-test-utils",
- "temm1e-vault",
- "tempfile",
- "tokio",
- "tokio-util",
- "toml",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-automation"
-version = "3.2.0"
-dependencies = [
- "chrono",
- "temm1e-core",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "temm1e-channels"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "dirs",
- "futures",
- "poise",
- "reqwest",
- "serde",
- "serde_json",
- "serenity",
- "teloxide",
- "temm1e-core",
- "temm1e-test-utils",
- "tempfile",
- "tokio",
- "toml",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-codex-oauth"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "axum",
- "base64",
- "dirs",
- "futures",
- "rand 0.8.5",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "temm1e-core",
- "temm1e-test-utils",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "temm1e-core"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "dirs",
- "futures",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-stream",
- "toml",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-distill"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "chrono",
- "rand 0.8.5",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "temm1e-core",
- "tokio",
- "toml",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-filestore"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-sdk-s3",
- "bytes",
- "futures",
- "serde",
- "temm1e-core",
- "temm1e-test-utils",
- "tempfile",
- "tokio",
- "toml",
- "tracing",
-]
-
-[[package]]
-name = "temm1e-gateway"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "axum",
- "base64",
- "chrono",
- "hex",
- "rand 0.8.5",
- "reqwest",
- "rustls 0.23.37",
- "serde",
- "serde_json",
- "sha2",
- "temm1e-agent",
- "temm1e-core",
- "temm1e-test-utils",
- "tokio",
- "tokio-rustls 0.26.4",
- "tower",
- "tower-http",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-hive"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "chrono",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sqlx",
- "temm1e-core",
- "temm1e-providers",
- "tokio",
- "tokio-util",
- "toml",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-mcp"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "dirs",
- "reqwest",
- "serde",
- "serde_json",
- "temm1e-core",
- "tokio",
- "toml",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-memory"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "chrono",
- "regex",
- "serde",
- "serde_json",
- "sqlx",
- "temm1e-core",
- "temm1e-test-utils",
- "tempfile",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-observable"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "opentelemetry",
- "serde_json",
- "temm1e-core",
- "tokio",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "temm1e-providers"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "futures",
- "reqwest",
- "serde",
- "serde_json",
- "temm1e-core",
- "temm1e-test-utils",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-skills"
-version = "3.2.0"
-dependencies = [
- "dirs",
- "serde",
- "serde_yaml",
- "temm1e-core",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "temm1e-test-utils"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "futures",
- "serde",
- "serde_json",
- "temm1e-core",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-tools"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "base64",
- "bytes",
- "chromiumoxide",
- "chrono",
- "dirs",
- "futures",
- "htmd",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "temm1e-core",
- "temm1e-test-utils",
- "tempfile",
- "tokio",
- "tracing",
- "url",
- "zeroize",
-]
-
-[[package]]
-name = "temm1e-tui"
-version = "3.2.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bytes",
- "chrono",
- "crossterm",
- "dirs",
- "futures",
- "insta",
- "nucleo",
- "ratatui",
- "serde",
- "serde_json",
- "syntect",
- "temm1e-agent",
- "temm1e-codex-oauth",
- "temm1e-core",
- "temm1e-mcp",
- "temm1e-memory",
- "temm1e-providers",
- "temm1e-test-utils",
- "temm1e-tools",
- "temm1e-vault",
- "textwrap",
- "thiserror 2.0.18",
- "tokio",
- "tokio-stream",
- "toml",
- "tracing",
- "unicode-width 0.2.0",
- "uuid",
-]
-
-[[package]]
-name = "temm1e-vault"
-version = "3.2.0"
-dependencies = [
- "async-trait",
- "base64",
- "chacha20poly1305",
- "chrono",
- "dirs",
- "rand 0.8.5",
- "regex",
- "serde",
- "serde_json",
- "temm1e-core",
- "tempfile",
- "tokio",
- "tracing",
- "zeroize",
 ]
 
 [[package]]

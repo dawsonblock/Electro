@@ -29,7 +29,7 @@ Current Hive: user gets exactly two messages — "Pack activated" ack and final 
 
 ## 5.1 Browser Pool
 
-**File:** `crates/temm1e-tools/src/browser_pool.rs` (new)
+**File:** `crates/electro-tools/src/browser_pool.rs` (new)
 
 ```rust
 use chromiumoxide::{Browser, BrowserConfig, Page};
@@ -51,7 +51,7 @@ struct PooledContext {
 }
 
 impl BrowserPool {
-    pub async fn new(max_size: usize) -> Result<Self, Temm1eError> {
+    pub async fn new(max_size: usize) -> Result<Self, ElectroError> {
         assert!(max_size <= 64, "Pool size limited to 64 (bitset)");
 
         let config = BrowserConfig::builder()
@@ -63,10 +63,10 @@ impl BrowserPool {
             // ... same stealth args as existing BrowserTool ...
             .window_size(1920, 1080)
             .build()
-            .map_err(|e| Temm1eError::Tool(format!("BrowserPool config: {e}")))?;
+            .map_err(|e| ElectroError::Tool(format!("BrowserPool config: {e}")))?;
 
         let (browser, mut handler) = Browser::launch(config).await
-            .map_err(|e| Temm1eError::Tool(format!("BrowserPool launch: {e}")))?;
+            .map_err(|e| ElectroError::Tool(format!("BrowserPool launch: {e}")))?;
 
         // Spawn CDP handler
         tokio::spawn(async move { while handler.next().await.is_some() {} });
@@ -79,7 +79,7 @@ impl BrowserPool {
             let ctx_id = browser.create_browser_context(
                 CreateBrowserContextParams::default()
             ).await
-                .map_err(|e| Temm1eError::Tool(format!("BrowserPool context {i}: {e}")))?;
+                .map_err(|e| ElectroError::Tool(format!("BrowserPool context {i}: {e}")))?;
 
             contexts.push(Arc::new(Mutex::new(PooledContext {
                 context_id: ctx_id,
@@ -115,7 +115,7 @@ impl BrowserPool {
     }
 
     /// Get a Page for the claimed slot. Creates one if needed.
-    pub async fn get_page(&self, slot: usize) -> Result<Page, Temm1eError> {
+    pub async fn get_page(&self, slot: usize) -> Result<Page, ElectroError> {
         let mut ctx = self.contexts[slot].lock().await;
         if let Some(ref page) = ctx.page {
             return Ok(page.clone());
@@ -129,14 +129,14 @@ impl BrowserPool {
                 .browser_context_id(ctx.context_id.clone())
                 .build()
         ).await
-            .map_err(|e| Temm1eError::Tool(format!("Pool page create: {e}")))?;
+            .map_err(|e| ElectroError::Tool(format!("Pool page create: {e}")))?;
 
         ctx.page = Some(page.clone());
         Ok(page)
     }
 
     /// Release a context back to the pool. Clears cookies and storage.
-    pub async fn release(&self, slot: usize) -> Result<(), Temm1eError> {
+    pub async fn release(&self, slot: usize) -> Result<(), ElectroError> {
         {
             let mut ctx = self.contexts[slot].lock().await;
 
@@ -153,7 +153,7 @@ impl BrowserPool {
             let new_ctx_id = browser.create_browser_context(
                 CreateBrowserContextParams::default()
             ).await
-                .map_err(|e| Temm1eError::Tool(format!("Pool release: {e}")))?;
+                .map_err(|e| ElectroError::Tool(format!("Pool release: {e}")))?;
             ctx.context_id = new_ctx_id;
         }
 
@@ -163,7 +163,7 @@ impl BrowserPool {
     }
 
     /// Load a stored session into a pool slot.
-    pub async fn load_session(&self, slot: usize, state: &SessionState) -> Result<(), Temm1eError> {
+    pub async fn load_session(&self, slot: usize, state: &SessionState) -> Result<(), ElectroError> {
         let page = self.get_page(slot).await?;
 
         // Restore cookies
@@ -192,7 +192,7 @@ impl BrowserPool {
 ### The Solution
 For browse-tagged tasks, create a per-worker `BrowserTool` variant that holds a pool slot instead of its own browser.
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 Add a pool-aware constructor:
 
@@ -214,7 +214,7 @@ impl BrowserTool {
 
 In `ensure_browser()`, check pool binding first:
 ```rust
-async fn ensure_browser(&self) -> Result<Page, Temm1eError> {
+async fn ensure_browser(&self) -> Result<Page, ElectroError> {
     if let Some((ref pool, slot)) = self.pool_binding {
         return pool.get_page(slot).await;
     }
@@ -231,7 +231,7 @@ let execute_fn = move |task: HiveTask, deps: Vec<(String, String)>| {
     let tools = if task.context_tags.contains(&"browse".to_string()) {
         // Acquire a pool slot for this browse task
         let slot = browser_pool.try_acquire()
-            .ok_or(Temm1eError::Tool("No browser slots available".into()))?;
+            .ok_or(ElectroError::Tool("No browser slots available".into()))?;
 
         // Create per-worker tool vec with pool-bound BrowserTool
         let mut worker_tools = tools_template.clone();
@@ -266,7 +266,7 @@ let execute_fn = move |task: HiveTask, deps: Vec<(String, String)>| {
 
 ## 5.3 Browse-Specific Pheromone Signals
 
-**File:** `crates/temm1e-hive/src/types.rs`
+**File:** `crates/electro-hive/src/types.rs`
 
 Extend `SignalType` enum:
 
@@ -364,7 +364,7 @@ if response_status == 429 {
 
 Add a watcher task in the Hive `execute_order()` that polls the Blackboard:
 
-**File:** `crates/temm1e-hive/src/lib.rs`
+**File:** `crates/electro-hive/src/lib.rs`
 
 ```rust
 // In execute_order(), after spawning workers:
@@ -435,7 +435,7 @@ Searching 4 sites for Tokyo flights...
 
 ## 5.5 Queen Web Decomposition
 
-**File:** `crates/temm1e-hive/src/queen.rs`
+**File:** `crates/electro-hive/src/queen.rs`
 
 Add web-specific guidance to the Queen's decomposition prompt:
 

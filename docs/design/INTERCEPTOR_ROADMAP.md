@@ -1,8 +1,8 @@
 # Interceptor Architecture — Full Roadmap
 
-**TEMM1E v2.4+**
+**ELECTRO v2.4+**
 
-The Interceptor is TEMM1E's real-time task observation and control layer. It sits between
+The Interceptor is ELECTRO's real-time task observation and control layer. It sits between
 the agent runtime and the messaging channel, giving users and operators visibility into
 what the agent is doing and the ability to intervene mid-task.
 
@@ -16,7 +16,7 @@ Two primitives that are prerequisites for everything that follows.
 
 ### Delivered
 
-1. **AgentTaskStatus + AgentTaskPhase** (`crates/temm1e-agent/src/agent_task_status.rs`)
+1. **AgentTaskStatus + AgentTaskPhase** (`crates/electro-agent/src/agent_task_status.rs`)
    - `AgentTaskPhase` enum: `Preparing`, `Classifying`, `CallingProvider`, `ExecutingTool`,
      `Finishing`, `Done`, `Interrupted`
    - `AgentTaskStatus` struct: phase, started_at, rounds_completed, tools_executed,
@@ -41,13 +41,13 @@ Two primitives that are prerequisites for everything that follows.
 
 | File | Status |
 |------|--------|
-| `crates/temm1e-agent/src/agent_task_status.rs` | NEW |
-| `crates/temm1e-agent/src/prompted_tool_calling.rs` | NEW |
-| `crates/temm1e-agent/src/runtime.rs` | MODIFIED — status emission, cancel param, prompted fallback |
-| `crates/temm1e-agent/src/lib.rs` | MODIFIED — new module exports |
-| `crates/temm1e-agent/Cargo.toml` | MODIFIED — tokio-util dependency |
+| `crates/electro-agent/src/agent_task_status.rs` | NEW |
+| `crates/electro-agent/src/prompted_tool_calling.rs` | NEW |
+| `crates/electro-agent/src/runtime.rs` | MODIFIED — status emission, cancel param, prompted fallback |
+| `crates/electro-agent/src/lib.rs` | MODIFIED — new module exports |
+| `crates/electro-agent/Cargo.toml` | MODIFIED — tokio-util dependency |
 | `src/main.rs` | MODIFIED — ChatSlot, watch channel, format_user_error |
-| `crates/temm1e-gateway/src/router.rs` | MODIFIED — updated call signature |
+| `crates/electro-gateway/src/router.rs` | MODIFIED — updated call signature |
 
 ---
 
@@ -165,10 +165,10 @@ Outbound Reply
 
 | File | Purpose |
 |------|---------|
-| `crates/temm1e-agent/src/interceptor.rs` | InterceptorConfig, StatusObserver |
-| `crates/temm1e-agent/src/interceptor/guards.rs` | BudgetGuard, TimeoutGuard, StallGuard |
-| `crates/temm1e-agent/src/interceptor/notifier.rs` | User-facing progress messages |
-| `crates/temm1e-agent/src/interceptor/audit.rs` | Audit logging |
+| `crates/electro-agent/src/interceptor.rs` | InterceptorConfig, StatusObserver |
+| `crates/electro-agent/src/interceptor/guards.rs` | BudgetGuard, TimeoutGuard, StallGuard |
+| `crates/electro-agent/src/interceptor/notifier.rs` | User-facing progress messages |
+| `crates/electro-agent/src/interceptor/audit.rs` | Audit logging |
 
 ### Risk
 

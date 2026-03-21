@@ -31,7 +31,7 @@
 ### Observable Symptoms
 
 - PagerDuty incident fires with `severity=critical, service=agent`.
-- `temm1e_message_processing_duration_seconds_count{status="error"}` incrementing.
+- `electro_message_processing_duration_seconds_count{status="error"}` incrementing.
 - Users report agent failures, error responses, or complete silence.
 - Dashboard shows error rate spike across one or more channels.
 - Message Processing SLO (99.5% success) error budget burning rapidly.
@@ -55,10 +55,10 @@
 
 ```bash
 # Check error rates per channel
-curl http://localhost:8080/metrics | grep 'temm1e_message_processing_duration_seconds_count{.*status="error"}'
+curl http://localhost:8080/metrics | grep 'electro_message_processing_duration_seconds_count{.*status="error"}'
 
 # Compare with total request counts per channel
-curl http://localhost:8080/metrics | grep 'temm1e_message_processing_duration_seconds_count'
+curl http://localhost:8080/metrics | grep 'electro_message_processing_duration_seconds_count'
 ```
 
 - If all channels have elevated errors: systemic issue (provider, memory, vault, or agent runtime).
@@ -68,24 +68,24 @@ curl http://localhost:8080/metrics | grep 'temm1e_message_processing_duration_se
 
 ```bash
 # Recent error logs
-journalctl -u temm1e --since "15 minutes ago" --priority err
+journalctl -u electro --since "15 minutes ago" --priority err
 
 # Filter by error variants
-journalctl -u temm1e --since "15 minutes ago" | grep -oP 'Temm1eError::\w+'  | sort | uniq -c | sort -rn
+journalctl -u electro --since "15 minutes ago" | grep -oP 'ElectroError::\w+'  | sort | uniq -c | sort -rn
 ```
 
-Map `Temm1eError` variants to root causes:
+Map `ElectroError` variants to root causes:
 
 | Error Variant | Root Cause | Next Step |
 |---------------|-----------|-----------|
-| `Temm1eError::Provider(...)` | AI provider failure | See [provider-unreachable.md](./provider-unreachable.md) |
-| `Temm1eError::Memory(...)` | Memory backend failure | Step 4 below |
-| `Temm1eError::Vault(...)` | Vault operation failure | See [vault-failure.md](./vault-failure.md) |
-| `Temm1eError::Channel(...)` | Channel adapter failure | Step 5 below |
-| `Temm1eError::Tool(...)` | Tool execution failure | Step 6 below |
-| `Temm1eError::Auth(...)` | Authentication failure | Check API key in vault |
-| `Temm1eError::SandboxViolation(...)` | Tool sandbox breach | Check tool declarations |
-| `Temm1eError::Internal(...)` | Runtime bug | Collect logs and escalate |
+| `ElectroError::Provider(...)` | AI provider failure | See [provider-unreachable.md](./provider-unreachable.md) |
+| `ElectroError::Memory(...)` | Memory backend failure | Step 4 below |
+| `ElectroError::Vault(...)` | Vault operation failure | See [vault-failure.md](./vault-failure.md) |
+| `ElectroError::Channel(...)` | Channel adapter failure | Step 5 below |
+| `ElectroError::Tool(...)` | Tool execution failure | Step 6 below |
+| `ElectroError::Auth(...)` | Authentication failure | Check API key in vault |
+| `ElectroError::SandboxViolation(...)` | Tool sandbox breach | Check tool declarations |
+| `ElectroError::Internal(...)` | Runtime bug | Collect logs and escalate |
 
 ### Step 3: Check if processing is stalled (MessageProcessingStalled)
 
@@ -96,11 +96,11 @@ If the `MessageProcessingStalled` alert fired (zero messages for 10 minutes whil
 curl http://localhost:8080/health
 
 # Check if messages are being received at the gateway level
-curl http://localhost:8080/metrics | grep temm1e_gateway_http_requests_total
+curl http://localhost:8080/metrics | grep electro_gateway_http_requests_total
 
 # Check for deadlocks or stuck tasks
 # Look for tasks that have been running for an unusually long time
-journalctl -u temm1e --since "15 minutes ago" | grep -i "timeout\|deadlock\|stuck"
+journalctl -u electro --since "15 minutes ago" | grep -i "timeout\|deadlock\|stuck"
 ```
 
 Possible causes:
@@ -113,14 +113,14 @@ Possible causes:
 
 ```bash
 # Check memory operation metrics
-curl http://localhost:8080/metrics | grep temm1e_memory_operation_total
+curl http://localhost:8080/metrics | grep electro_memory_operation_total
 
 # Check SQLite file health
-sqlite3 ~/.temm1e/memory.db "PRAGMA integrity_check;"
-sqlite3 ~/.temm1e/memory.db "PRAGMA journal_mode;"  # Should be "wal"
+sqlite3 ~/.electro/memory.db "PRAGMA integrity_check;"
+sqlite3 ~/.electro/memory.db "PRAGMA journal_mode;"  # Should be "wal"
 
 # Check pool saturation
-curl http://localhost:8080/metrics | grep temm1e_memory_pool_active_connections
+curl http://localhost:8080/metrics | grep electro_memory_pool_active_connections
 ```
 
 If the memory backend error rate is > 10% (`MemoryBackendDown`), the database may be corrupted or the connection pool exhausted.
@@ -129,7 +129,7 @@ If the memory backend error rate is > 10% (`MemoryBackendDown`), the database ma
 
 ```bash
 # Check channel health per channel
-curl http://localhost:8080/metrics | grep 'temm1e_message_processing.*channel='
+curl http://localhost:8080/metrics | grep 'electro_message_processing.*channel='
 
 # For Telegram: check webhook/long-poll status
 # For Discord: check WebSocket connection
@@ -146,21 +146,21 @@ Channel-specific issues:
 
 ```bash
 # Check tool failure rates
-curl http://localhost:8080/metrics | grep temm1e_tool_execution_total
+curl http://localhost:8080/metrics | grep electro_tool_execution_total
 
 # Check for sandbox violations
 curl http://localhost:8080/metrics | grep sandbox_violation
 
 # Check specific tool errors
-journalctl -u temm1e --since "15 minutes ago" | grep -i "tool.*error\|sandbox\|execute_tool"
+journalctl -u electro --since "15 minutes ago" | grep -i "tool.*error\|sandbox\|execute_tool"
 ```
 
 ### Step 7: Check overall system health
 
 ```bash
 # Process health
-ps aux | grep temm1e
-cat /proc/$(pgrep temm1e)/status | grep -E "VmRSS|Threads"
+ps aux | grep electro
+cat /proc/$(pgrep electro)/status | grep -E "VmRSS|Threads"
 
 # System resources
 free -m
@@ -174,24 +174,24 @@ df -h
 
 ### Remediation A: Provider-Caused Errors
 
-If the dominant error type is `Temm1eError::Provider`:
+If the dominant error type is `ElectroError::Provider`:
 
 1. Follow the [Provider Unreachable](./provider-unreachable.md) runbook.
 2. Enable fallback provider if available.
-3. Provider errors are partially outside TEMM1E's control -- the provider SLO (99.0%) has a separate, larger error budget.
+3. Provider errors are partially outside ELECTRO's control -- the provider SLO (99.0%) has a separate, larger error budget.
 
 ### Remediation B: Memory Backend Failure
 
 1. If SQLite integrity check fails:
    ```bash
    # Back up corrupted database
-   cp ~/.temm1e/memory.db ~/.temm1e/memory.db.corrupted
+   cp ~/.electro/memory.db ~/.electro/memory.db.corrupted
 
    # Attempt recovery
-   sqlite3 ~/.temm1e/memory.db ".recover" | sqlite3 ~/.temm1e/memory_recovered.db
-   mv ~/.temm1e/memory_recovered.db ~/.temm1e/memory.db
+   sqlite3 ~/.electro/memory.db ".recover" | sqlite3 ~/.electro/memory_recovered.db
+   mv ~/.electro/memory_recovered.db ~/.electro/memory.db
 
-   systemctl restart temm1e
+   systemctl restart electro
    ```
 
 2. If connection pool is saturated (5/5 connections active):
@@ -205,7 +205,7 @@ If the dominant error type is `Temm1eError::Provider`:
 1. Collect diagnostic information:
    ```bash
    # Thread dump (if supported)
-   kill -USR1 $(pgrep temm1e)  # If signal handler is configured
+   kill -USR1 $(pgrep electro)  # If signal handler is configured
 
    # Check tokio runtime state via metrics
    curl http://localhost:8080/metrics | grep tokio
@@ -213,7 +213,7 @@ If the dominant error type is `Temm1eError::Provider`:
 
 2. Restart the service:
    ```bash
-   systemctl restart temm1e
+   systemctl restart electro
    ```
 
 3. If stall recurs, it indicates a bug. Collect core dump and escalate:
@@ -229,7 +229,7 @@ If the dominant error type is `Temm1eError::Provider`:
 
 2. Check channel-specific credentials and configuration:
    ```bash
-   temm1e config show | grep -A5 "\[channel\]"
+   electro config show | grep -A5 "\[channel\]"
    ```
 
 3. For webhook-based channels, verify the webhook endpoint is reachable from the external service.
@@ -257,7 +257,7 @@ If error rate is burning through SLO budget rapidly:
 
 ## Prevention Measures
 
-1. **Error categorization:** Ensure all `Temm1eError` variants are properly instrumented with labels in metrics to enable fast triage.
+1. **Error categorization:** Ensure all `ElectroError` variants are properly instrumented with labels in metrics to enable fast triage.
 
 2. **Canary deployments:** Deploy to a single channel first and monitor error rates before rolling out to all channels.
 
@@ -271,7 +271,7 @@ If error rate is burning through SLO budget rapidly:
 
 6. **Timeout enforcement:** Verify that all external calls (provider, channel APIs) have timeouts configured. Provider timeout is 60s per the SLO definitions.
 
-7. **Note on RateLimited:** `Temm1eError::RateLimited` is intentionally excluded from SLO error counting. Do not treat rate limiting as an error for SLO purposes, but do investigate if it impacts user experience.
+7. **Note on RateLimited:** `ElectroError::RateLimited` is intentionally excluded from SLO error counting. Do not treat rate limiting as an error for SLO purposes, but do investigate if it impacts user experience.
 
 ---
 

@@ -71,7 +71,7 @@ The interaction is direct: user → channel → browser control code → browser
 
 ## 3.2 Interactive Browser Session Handler
 
-**File:** `crates/temm1e-tools/src/browser_session.rs` (new)
+**File:** `crates/electro-tools/src/browser_session.rs` (new)
 
 ```rust
 use chromiumoxide::cdp::browser_protocol::accessibility::*;
@@ -85,7 +85,7 @@ pub struct InteractiveBrowseSession {
 }
 
 impl InteractiveBrowseSession {
-    pub async fn new(browser: &Browser, service: &str, url: &str) -> Result<Self, Temm1eError> {
+    pub async fn new(browser: &Browser, service: &str, url: &str) -> Result<Self, ElectroError> {
         let page = browser.new_page(url).await?;
         tokio::time::sleep(Duration::from_secs(2)).await;  // Wait for page load
         Ok(Self {
@@ -97,7 +97,7 @@ impl InteractiveBrowseSession {
     }
 
     /// Take annotated screenshot. Returns (png_bytes, text_description).
-    pub async fn capture_annotated(&mut self) -> Result<(Vec<u8>, String), Temm1eError> {
+    pub async fn capture_annotated(&mut self) -> Result<(Vec<u8>, String), ElectroError> {
         // 1. Get accessibility tree
         let ax = self.page.execute(GetFullAxTreeParams::default()).await?;
 
@@ -143,7 +143,7 @@ impl InteractiveBrowseSession {
     }
 
     /// Handle user input: number (click element) or text (type into focused element).
-    pub async fn handle_input(&mut self, input: &str) -> Result<SessionAction, Temm1eError> {
+    pub async fn handle_input(&mut self, input: &str) -> Result<SessionAction, ElectroError> {
         let trimmed = input.trim();
 
         if trimmed.eq_ignore_ascii_case("done") {
@@ -159,7 +159,7 @@ impl InteractiveBrowseSession {
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 return Ok(SessionAction::Continue);
             }
-            return Err(Temm1eError::Tool(format!("Element [{}] not found", num)));
+            return Err(ElectroError::Tool(format!("Element [{}] not found", num)));
         }
 
         // Text input: type into currently focused element
@@ -189,11 +189,11 @@ impl InteractiveBrowseSession {
             return Ok(SessionAction::Continue);
         }
 
-        Err(Temm1eError::Tool("No element is focused. Tap a number first.".into()))
+        Err(ElectroError::Tool("No element is focused. Tap a number first.".into()))
     }
 
     /// Capture session state and encrypt to vault.
-    pub async fn capture_session(&self, vault: &dyn Vault) -> Result<(), Temm1eError> {
+    pub async fn capture_session(&self, vault: &dyn Vault) -> Result<(), ElectroError> {
         // Cookies via CDP
         use chromiumoxide::cdp::browser_protocol::network::*;
         let cookies = self.page.execute(GetCookiesParams::default()).await?;
@@ -324,7 +324,7 @@ loop {
 
 ## 3.4 Session Restore
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 New action `restore_session`:
 ```rust
@@ -333,7 +333,7 @@ New action `restore_session`:
     let vault = self.vault.as_ref()?;
 
     let bytes = vault.get_secret(&format!("web_session:{}", service)).await?
-        .ok_or(Temm1eError::Tool(format!("No session for '{}'", service)))?;
+        .ok_or(ElectroError::Tool(format!("No session for '{}'", service)))?;
     let state: SessionState = serde_json::from_slice(&bytes)?;
 
     let page = self.ensure_browser().await?;

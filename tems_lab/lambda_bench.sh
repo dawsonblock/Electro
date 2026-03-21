@@ -5,7 +5,7 @@ set -euo pipefail
 
 API_KEY="${OPENAI_API_KEY:?Set OPENAI_API_KEY}"
 MODEL="gpt-5.2"
-DB="$HOME/.temm1e/memory.db"
+DB="$HOME/.electro/memory.db"
 LOG="$(cd "$(dirname "$0")" && pwd)/lambda_bench_100turns_log.txt"
 SYSTEM_PROMPT='You are Tem, a helpful AI assistant with λ-Memory.
 

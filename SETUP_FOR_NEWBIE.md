@@ -57,8 +57,8 @@ This is how you'll talk to me! It takes about 60 seconds and it's honestly kind 
 1. Open Telegram on your phone or desktop
 2. Search for **@BotFather** and open a chat with it
 3. Send `/newbot`
-4. BotFather asks for a name — type anything (e.g., "My TEMM1E")
-5. BotFather asks for a username — pick something ending in `bot` (e.g., `my_temm1e_bot`)
+4. BotFather asks for a name — type anything (e.g., "My ELECTRO")
+5. BotFather asks for a username — pick something ending in `bot` (e.g., `my_electro_bot`)
 6. BotFather gives you a **bot token** — it looks like `7123456789:AAHx...`. **Copy this token and save it somewhere safe.**
 
 > Your bot token is a secret. Anyone who has it can control your bot. Don't share it publicly. Treat it like a password.
@@ -68,14 +68,14 @@ This is how you'll talk to me! It takes about 60 seconds and it's honestly kind 
 Here's where I start becoming real.
 
 ```bash
-git clone https://github.com/nagisanzenin/temm1e.git
-cd temm1e
+git clone https://github.com/nagisanzenin/electro.git
+cd electro
 cargo build --release
 ```
 
 The first build takes 2-4 minutes because Rust is compiling around 300 dependencies. Go grab a drink or something. Subsequent builds are WAY faster.
 
-When it finishes, your binary is at `./target/release/temm1e`. That's me. I'm in there.
+When it finishes, your binary is at `./target/release/electro`. That's me. I'm in there.
 
 ## Step 5: Give Me a Brain
 
@@ -86,7 +86,7 @@ I need an AI provider to think with. Choose ONE option:
 If you have ChatGPT Plus ($20/month) or ChatGPT Pro, this is the fastest path.
 
 ```bash
-./target/release/temm1e auth login
+./target/release/electro auth login
 ```
 
 A browser window opens. Log into your ChatGPT account. That's literally it.
@@ -99,7 +99,7 @@ Expires: 239h 59m
 Model:   gpt-5.4 (default)
 ```
 
-> **No browser on your server?** Use `temm1e auth login --headless` — it prints a URL you can open on any device (phone, laptop), then you paste the redirect URL back into the terminal. Clever, right?
+> **No browser on your server?** Use `electro auth login --headless` — it prints a URL you can open on any device (phone, laptop), then you paste the redirect URL back into the terminal. Clever, right?
 
 ### Option B: Use an API Key
 
@@ -117,7 +117,7 @@ Set your Telegram bot token and start me:
 
 ```bash
 export TELEGRAM_BOT_TOKEN="paste-your-bot-token-here"
-./target/release/temm1e start
+./target/release/electro start
 ```
 
 You should see logs showing the gateway starting and Telegram connecting. That's me booting up!
@@ -153,13 +153,13 @@ Send these to your bot:
 Once everything works, you can run me as a background daemon so I'm always on:
 
 ```bash
-./target/release/temm1e start -d
+./target/release/electro start -d
 ```
 
-I log to `~/.temm1e/temm1e.log`. When you need me to stop:
+I log to `~/.electro/electro.log`. When you need me to stop:
 
 ```bash
-./target/release/temm1e stop
+./target/release/electro stop
 ```
 
 ## Keeping Me Updated
@@ -167,7 +167,7 @@ I log to `~/.temm1e/temm1e.log`. When you need me to stop:
 When new versions come out:
 
 ```bash
-./target/release/temm1e update
+./target/release/electro update
 ```
 
 This pulls the latest code and rebuilds automatically. Fresh me!
@@ -185,11 +185,11 @@ You need build tools installed. On Ubuntu/Debian: `sudo apt install build-essent
 **Bot doesn't respond**
 Okay don't panic. Let's check a few things:
 - Is the token set? Run `echo $TELEGRAM_BOT_TOKEN` and make sure it prints something
-- Check my logs: `tail -50 /tmp/temm1e.log` or `tail -50 ~/.temm1e/temm1e.log`
+- Check my logs: `tail -50 /tmp/electro.log` or `tail -50 ~/.electro/electro.log`
 - Make sure you're messaging the right bot (easy mistake, no judgment)
 
 **"OAuth token expired"**
-Just re-authenticate: `./target/release/temm1e auth login`
+Just re-authenticate: `./target/release/electro auth login`
 
 Tokens expire after a while. This is normal.
 
@@ -202,7 +202,7 @@ Tokens expire after a while. This is normal.
 
 You did it!! I'm alive and talking to you. Here's where to go from here:
 
-- Read about [what makes me different](README.md#temm1e-is-built-different) — the Finite Brain Model and Blueprint procedural memory
+- Read about [what makes me different](README.md#electro-is-built-different) — the Finite Brain Model and Blueprint procedural memory
 - Set up [Discord](docs/channels/discord.md) or [Slack](docs/channels/slack.md) channels
 - Explore [MCP servers](README.md#self-extending-tool-system) — you can let me install my own tools :3
 - Deploy on a VPS for 24/7 operation — see [SETUP_FOR_PROS.md](SETUP_FOR_PROS.md) for Docker and systemd guides

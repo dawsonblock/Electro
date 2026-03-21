@@ -2,7 +2,7 @@
 
 ## Problem
 
-TEMM1E users configure API keys by pasting them directly into messaging channels (Telegram, Discord, Slack). This exposes raw keys to:
+ELECTRO users configure API keys by pasting them directly into messaging channels (Telegram, Discord, Slack). This exposes raw keys to:
 
 1. **Messaging platform servers** — Telegram/Discord/Slack store message content; bot chats lack E2E encryption
 2. **Chat history** — keys persist in scrollback until manually deleted
@@ -18,7 +18,7 @@ A static HTML page hosted on GitHub Pages acts as a client-side encryption bridg
 
 ```
 ┌──────────┐       ┌──────────────┐       ┌──────────────────┐
-│  User    │       │  Messaging   │       │    TEMM1E       │
+│  User    │       │  Messaging   │       │    ELECTRO       │
 │  Phone   │       │  Platform    │       │  (user's server) │
 └────┬─────┘       └──────┬───────┘       └────────┬─────────┘
      │                    │                        │
@@ -97,7 +97,7 @@ A static HTML page hosted on GitHub Pages acts as a client-side encryption bridg
 | Network observers | TLS-encrypted HTTPS traffic | No |
 | Chat history (if not deleted) | A link + encrypted blob; OTK expired/consumed | No |
 | The LLM (Anthropic/OpenAI/etc) | Nothing — intercepted before agent loop | No |
-| TEMM1E process (user's server) | Decrypted key in memory (required for API calls) | Yes — by design |
+| ELECTRO process (user's server) | Decrypted key in memory (required for API calls) | Yes — by design |
 | User's browser (user's device) | OTK + raw key (user typed it) | Yes — it's their device |
 
 ### Why the URL fragment is safe
@@ -221,11 +221,11 @@ git checkout --orphan gh-pages
 mkdir setup && cp setup.html setup/index.html
 git add . && git commit -m "OTK setup page"
 git push origin gh-pages
-# → https://nagisanzenin.github.io/temm1e/setup
+# → https://nagisanzenin.github.io/electro/setup
 
 # Option B: Dedicated repo
-# Create nagisanzenin/temm1e-setup, push index.html
-# → https://nagisanzenin.github.io/temm1e-setup/
+# Create nagisanzenin/electro-setup, push index.html
+# → https://nagisanzenin.github.io/electro-setup/
 ```
 
 ### Scale
@@ -238,7 +238,7 @@ The page is a single static HTML file (~5KB). GitHub Pages is backed by Fastly C
 | 10,000/day | 50 MB | 100 GB/month |
 | 1,000,000/day | 5 GB | Would need own CDN |
 
-Key setup is a **one-time event per user** (occasionally repeated for key rotation). Even with millions of TEMM1E deployments, the actual setup traffic is negligible.
+Key setup is a **one-time event per user** (occasionally repeated for key rotation). Even with millions of ELECTRO deployments, the actual setup traffic is negligible.
 
 ### No server-side processing
 
@@ -264,7 +264,7 @@ Every messaging platform supports this. No platform-specific APIs, webhooks, or 
 | IRC | ✓ (user copies URL) | ✓ | Yes |
 | CLI | N/A (local) | N/A | Direct input |
 
-Adding a new messaging channel to TEMM1E requires **zero changes** to the key setup flow.
+Adding a new messaging channel to ELECTRO requires **zero changes** to the key setup flow.
 
 ## Fallback Modes
 
@@ -272,20 +272,20 @@ Adding a new messaging channel to TEMM1E requires **zero changes** to the key se
 |----------------|--------|---------------|
 | Can open a browser | OTK secure flow | Key never in plaintext on any channel |
 | Can't open browser / prefers speed | `/addkey unsafe` + paste | Key visible in chat briefly; auto-deleted |
-| Config-savvy / CI/CD | `temm1e.toml` or env vars | Key never touches any channel |
+| Config-savvy / CI/CD | `electro.toml` or env vars | Key never touches any channel |
 | Existing users (backwards compat) | Auto-detect raw key in message | Same as current behavior |
 
 ## Implementation Scope (v1.5.0 — Implemented)
 
 ### New files
-- `crates/temm1e-gateway/src/setup_tokens.rs` — OTK store with `SetupLinkGenerator` trait impl
-- `crates/temm1e-core/src/traits/setup.rs` — `SetupLinkGenerator` trait (cross-crate OTK link generation)
-- `crates/temm1e-tools/src/key_manage.rs` — `KeyManageTool` — agent generates OTK setup links in natural language
+- `crates/electro-gateway/src/setup_tokens.rs` — OTK store with `SetupLinkGenerator` trait impl
+- `crates/electro-core/src/traits/setup.rs` — `SetupLinkGenerator` trait (cross-crate OTK link generation)
+- `crates/electro-tools/src/key_manage.rs` — `KeyManageTool` — agent generates OTK setup links in natural language
 - `docs/setup/index.html` — static setup page for GitHub Pages (WebCrypto AES-256-GCM)
 
 ### Modified files
 - `src/main.rs` — command interception (`/addkey`, `/keys`, `/removekey`), `enc:v1:` detection and decryption, `SecretCensorChannel` wrapper, `censor_secrets()` output filter, proactive onboarding with auto-generated setup links
-- `crates/temm1e-tools/src/lib.rs` — `create_tools()` accepts `SetupLinkGenerator`, registers `KeyManageTool`
+- `crates/electro-tools/src/lib.rs` — `create_tools()` accepts `SetupLinkGenerator`, registers `KeyManageTool`
 - `Cargo.toml` — added `aes-gcm`, `hex`, `async-trait` dependencies
 
 ### Security hardening
@@ -310,7 +310,7 @@ Adding a new messaging channel to TEMM1E requires **zero changes** to the key se
 
 ## Future Considerations
 
-- **Custom domain**: Replace `nagisanzenin.github.io` with `setup.temm1e.dev` when the project warrants it
+- **Custom domain**: Replace `nagisanzenin.github.io` with `setup.electro.dev` when the project warrants it
 - **Telegram Mini Apps**: Native in-app WebView for seamless UX (Telegram-specific enhancement, not a replacement)
 - **Key rotation alerts**: Notify users when keys approach expiry (for providers that support this)
 - **Multi-key confirmation**: Show diff of provider changes before hot-reload ("You're adding OpenAI. Continue?")

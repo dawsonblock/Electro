@@ -1,6 +1,6 @@
 # API Reference: Key Types
 
-All shared types are defined in `crates/temm1e-core/src/types/`. They are re-exported from `temm1e_core::types`.
+All shared types are defined in `crates/electro-core/src/types/`. They are re-exported from `electro_core::types`.
 
 ---
 
@@ -261,13 +261,13 @@ pub struct SessionInfo {
 
 ## Configuration (`types/config.rs`)
 
-### Temm1eConfig
+### ElectroConfig
 
 Top-level configuration struct. Deserialized from TOML.
 
 ```rust
-pub struct Temm1eConfig {
-    pub temm1e: Temm1eSection,
+pub struct ElectroConfig {
+    pub electro: ElectroSection,
     pub gateway: GatewayConfig,
     pub provider: ProviderConfig,
     pub memory: MemoryConfig,
@@ -316,12 +316,12 @@ pub struct ProviderConfig {
 
 ## Errors (`types/error.rs`)
 
-### Temm1eError
+### ElectroError
 
 Central error enum used across all crates. Built with `thiserror`.
 
 ```rust
-pub enum Temm1eError {
+pub enum ElectroError {
     Config(String),           // Configuration errors
     Provider(String),         // AI provider errors
     Channel(String),          // Channel connection/communication errors
@@ -345,4 +345,4 @@ All variants implement `Display` via `thiserror` with descriptive prefixes (e.g.
 
 The `Serialization` and `Io` variants have `From` implementations for automatic conversion from `serde_json::Error` and `std::io::Error` respectively.
 
-At the binary level, `anyhow::Result` wraps `Temm1eError` for ergonomic error propagation with backtraces.
+At the binary level, `anyhow::Result` wraps `ElectroError` for ergonomic error propagation with backtraces.

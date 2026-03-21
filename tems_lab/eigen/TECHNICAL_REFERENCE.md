@@ -45,7 +45,7 @@ async fn ollama_create_model(
     name: &str,
     gguf_path: &str,
     system_prompt: &str,
-) -> Result<(), Temm1eError> {
+) -> Result<(), ElectroError> {
     let body = serde_json::json!({
         "model": name,
         "modelfile": format!(
@@ -60,11 +60,11 @@ async fn ollama_create_model(
         .json(&body)
         .send()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Ollama create failed: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Ollama create failed: {}", e)))?;
 
     if !resp.status().is_success() {
         let err = resp.text().await.unwrap_or_default();
-        return Err(Temm1eError::Tool(format!("Ollama create error: {}", err)));
+        return Err(ElectroError::Tool(format!("Ollama create error: {}", err)));
     }
     Ok(())
 }
@@ -106,15 +106,15 @@ struct OllamaModelDetails {
     quantization_level: Option<String>,
 }
 
-async fn ollama_list_models(client: &reqwest::Client) -> Result<Vec<OllamaModel>, Temm1eError> {
+async fn ollama_list_models(client: &reqwest::Client) -> Result<Vec<OllamaModel>, ElectroError> {
     let resp: OllamaModelList = client
         .get("http://localhost:11434/api/tags")
         .send()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Ollama list failed: {}", e)))?
+        .map_err(|e| ElectroError::Tool(format!("Ollama list failed: {}", e)))?
         .json()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Ollama parse failed: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Ollama parse failed: {}", e)))?;
     Ok(resp.models)
 }
 ```
@@ -122,19 +122,19 @@ async fn ollama_list_models(client: &reqwest::Client) -> Result<Vec<OllamaModel>
 ### 1.6 Delete Model
 
 ```rust
-async fn ollama_delete_model(client: &reqwest::Client, name: &str) -> Result<(), Temm1eError> {
+async fn ollama_delete_model(client: &reqwest::Client, name: &str) -> Result<(), ElectroError> {
     client
         .delete(&format!("http://localhost:11434/api/delete?model={}", name))
         .send()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Ollama delete failed: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Ollama delete failed: {}", e)))?;
     Ok(())
 }
 ```
 
 ### 1.7 Serving via OpenAI-Compatible Endpoint
 
-**TEMM1E already supports this with zero code changes.**
+**ELECTRO already supports this with zero code changes.**
 
 ```rust
 // Create a provider pointing to local Ollama
@@ -145,7 +145,7 @@ let local_provider = OpenAICompatProvider::new("ollama".to_string())
 let response = local_provider.complete(request).await?;
 ```
 
-The existing `OpenAICompatProvider` (in `crates/temm1e-providers/src/openai_compat.rs`) connects to any OpenAI-compatible endpoint via `with_base_url()`. Ollama's `/v1/chat/completions` is fully compatible.
+The existing `OpenAICompatProvider` (in `crates/electro-providers/src/openai_compat.rs`) connects to any OpenAI-compatible endpoint via `with_base_url()`. Ollama's `/v1/chat/completions` is fully compatible.
 
 ### 1.8 Quantization Reference
 
@@ -178,7 +178,7 @@ use tokio::process::Command;
 async fn run_training_script(
     script_path: &str,
     args: &[(&str, &str)],
-) -> Result<TrainResult, Temm1eError> {
+) -> Result<TrainResult, ElectroError> {
     let mut cmd = Command::new("python3");
     cmd.arg(script_path);
     for (key, value) in args {
@@ -190,17 +190,17 @@ async fn run_training_script(
         .stderr(std::process::Stdio::piped())
         .output()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Training script failed: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Training script failed: {}", e)))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(Temm1eError::Tool(format!("Training failed: {}", stderr)));
+        return Err(ElectroError::Tool(format!("Training failed: {}", stderr)));
     }
 
     // Parse result from stdout (JSON)
     let stdout = String::from_utf8_lossy(&output.stdout);
     let result: TrainResult = serde_json::from_str(&stdout)
-        .map_err(|e| Temm1eError::Tool(format!("Parse training result: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Parse training result: {}", e)))?;
     Ok(result)
 }
 ```
@@ -435,8 +435,8 @@ async fn train_and_deploy(
     dataset_path: &str,
     model_name: &str, // e.g., "eigentune-v3"
     config: &EigenTuneConfig,
-) -> Result<ModelEndpoint, Temm1eError> {
-    let output_dir = format!("{}/.temm1e/eigentune/runs/{}", home_dir(), model_name);
+) -> Result<ModelEndpoint, ElectroError> {
+    let output_dir = format!("{}/.electro/eigentune/runs/{}", home_dir(), model_name);
 
     // 1. Run training
     let result = match backend {
@@ -456,7 +456,7 @@ async fn train_and_deploy(
             ("output", &output_dir),
             ("iters", "600"),
         ]).await?,
-        _ => return Err(Temm1eError::Config("Unknown backend".into())),
+        _ => return Err(ElectroError::Config("Unknown backend".into())),
     };
 
     // 2. Quantize if not already (MLX exports F16, need Q4_K_M)
@@ -476,7 +476,7 @@ async fn train_and_deploy(
     // 4. Verify model is serving
     let models = ollama_list_models(&client).await?;
     if !models.iter().any(|m| m.name.starts_with(model_name)) {
-        return Err(Temm1eError::Tool("Model not found after create".into()));
+        return Err(ElectroError::Tool("Model not found after create".into()));
     }
 
     Ok(ModelEndpoint {
@@ -521,7 +521,7 @@ This is a lightweight, high-quality embedding model that runs locally via Ollama
 If the embedding model is not already available locally, pull it automatically before first use:
 
 ```rust
-async fn ensure_embedding_model(client: &reqwest::Client) -> Result<(), Temm1eError> {
+async fn ensure_embedding_model(client: &reqwest::Client) -> Result<(), ElectroError> {
     // Check if nomic-embed-text is already available
     let models = ollama_list_models(client).await?;
     let has_model = models.iter().any(|m| m.name.starts_with("nomic-embed-text"));
@@ -538,11 +538,11 @@ async fn ensure_embedding_model(client: &reqwest::Client) -> Result<(), Temm1eEr
             .json(&body)
             .send()
             .await
-            .map_err(|e| Temm1eError::Tool(format!("Ollama pull failed: {}", e)))?;
+            .map_err(|e| ElectroError::Tool(format!("Ollama pull failed: {}", e)))?;
 
         if !resp.status().is_success() {
             let err = resp.text().await.unwrap_or_default();
-            return Err(Temm1eError::Tool(format!("Ollama pull error: {}", err)));
+            return Err(ElectroError::Tool(format!("Ollama pull error: {}", err)));
         }
         tracing::info!("Eigen-Tune: nomic-embed-text ready");
     }
@@ -579,7 +579,7 @@ async fn embedding_judge(
     client: &reqwest::Client,
     local_response: &str,
     cloud_response: &str,
-) -> Result<bool, Temm1eError> {
+) -> Result<bool, ElectroError> {
     // Ensure the embedding model is available (auto-pulls on first use)
     ensure_embedding_model(client).await?;
 
@@ -603,7 +603,7 @@ async fn embedding_judge(
 async fn get_embedding(
     client: &reqwest::Client,
     text: &str,
-) -> Result<Vec<f64>, Temm1eError> {
+) -> Result<Vec<f64>, ElectroError> {
     let body = serde_json::json!({
         "model": "nomic-embed-text",
         "input": text
@@ -614,18 +614,18 @@ async fn get_embedding(
         .json(&body)
         .send()
         .await
-        .map_err(|e| Temm1eError::Tool(format!("Ollama embed failed: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Ollama embed failed: {}", e)))?;
 
     if !resp.status().is_success() {
         let err = resp.text().await.unwrap_or_default();
-        return Err(Temm1eError::Tool(format!("Ollama embed error: {}", err)));
+        return Err(ElectroError::Tool(format!("Ollama embed error: {}", err)));
     }
 
     let parsed: OllamaEmbedResponse = resp.json().await
-        .map_err(|e| Temm1eError::Tool(format!("Parse embed response: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Parse embed response: {}", e)))?;
 
     parsed.embeddings.into_iter().next()
-        .ok_or_else(|| Temm1eError::Tool("Empty embedding response".into()))
+        .ok_or_else(|| ElectroError::Tool("Empty embedding response".into()))
 }
 ```
 
@@ -838,7 +838,7 @@ async fn judge_with_debiasing(
     input: &CompletionRequest,
     local_response: &str,
     cloud_response: &str,
-) -> Result<JudgeVerdict, Temm1eError> {
+) -> Result<JudgeVerdict, ElectroError> {
     // Forward evaluation: (local=A, cloud=B)
     let forward = judge_single(judge, judge_model, input, local_response, cloud_response).await?;
 
@@ -876,7 +876,7 @@ async fn evaluate_pair(
     cloud_response: &str,
     input: &CompletionRequest,
     judge: &dyn Provider,
-) -> Result<bool, Temm1eError> {
+) -> Result<bool, ElectroError> {
     // Tier 0: Exact match (free)
     let local_trimmed = local_response.trim();
     let cloud_trimmed = cloud_response.trim();
@@ -942,7 +942,7 @@ One conversation per line. Works with Unsloth, MLX, TRL, Axolotl natively.
 {"tools": [{"type": "function", "function": {"name": "get_weather", "description": "Get current weather", "parameters": {"type": "object", "properties": {"location": {"type": "string"}}, "required": ["location"]}}}], "messages": [{"role": "user", "content": "Weather in Tokyo?"}, {"role": "assistant", "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "get_weather", "arguments": "{\"location\": \"Tokyo\"}"}}]}, {"role": "tool", "tool_call_id": "call_1", "content": "{\"temp\": 22, \"condition\": \"sunny\"}"}, {"role": "assistant", "content": "It's 22°C and sunny in Tokyo."}]}
 ```
 
-### 4.3 Converting TEMM1E Types to ChatML
+### 4.3 Converting ELECTRO Types to ChatML
 
 ```rust
 fn to_chatml(request: &CompletionRequest, response: &CompletionResponse) -> serde_json::Value {
@@ -994,15 +994,15 @@ fn to_chatml(request: &CompletionRequest, response: &CompletionResponse) -> serd
 ### 4.4 Export Function
 
 ```rust
-fn export_dataset(pairs: &[TrainingPair], path: &std::path::Path) -> Result<(), Temm1eError> {
+fn export_dataset(pairs: &[TrainingPair], path: &std::path::Path) -> Result<(), ElectroError> {
     let file = std::fs::File::create(path)
-        .map_err(|e| Temm1eError::Tool(format!("Create dataset file: {}", e)))?;
+        .map_err(|e| ElectroError::Tool(format!("Create dataset file: {}", e)))?;
     let mut writer = std::io::BufWriter::new(file);
 
     for pair in pairs {
         // Parse stored messages_json back to value
         let messages: serde_json::Value = serde_json::from_str(&pair.messages_json)
-            .map_err(|e| Temm1eError::Tool(format!("Parse messages: {}", e)))?;
+            .map_err(|e| ElectroError::Tool(format!("Parse messages: {}", e)))?;
 
         let mut row = serde_json::json!({"messages": messages});
         if let Some(ref tools) = pair.tools_json {
@@ -1012,9 +1012,9 @@ fn export_dataset(pairs: &[TrainingPair], path: &std::path::Path) -> Result<(), 
         }
 
         serde_json::to_writer(&mut writer, &row)
-            .map_err(|e| Temm1eError::Tool(format!("Write row: {}", e)))?;
+            .map_err(|e| ElectroError::Tool(format!("Write row: {}", e)))?;
         std::io::Write::write_all(&mut writer, b"\n")
-            .map_err(|e| Temm1eError::Tool(format!("Write newline: {}", e)))?;
+            .map_err(|e| ElectroError::Tool(format!("Write newline: {}", e)))?;
     }
 
     Ok(())
@@ -1027,7 +1027,7 @@ fn export_dataset(pairs: &[TrainingPair], path: &std::path::Path) -> Result<(), 
 
 ### 5.1 Collector Hook — Post-Provider Response
 
-**File:** `crates/temm1e-agent/src/runtime.rs`
+**File:** `crates/electro-agent/src/runtime.rs`
 **Insert at:** Line ~885 (after `let response = match self.provider.complete(request).await { ... };`)
 
 **Variables available:**
@@ -1064,7 +1064,7 @@ if let Some(ref eigentune) = self.eigentune_engine {
 
 ### 5.2 Quality Signal — Tool Result
 
-**File:** `crates/temm1e-agent/src/runtime.rs`
+**File:** `crates/electro-agent/src/runtime.rs`
 **Location:** Lines 1332-1420 (tool execution)
 **Signal point:** After line 1401 (`failure_tracker.record_success(tool_name)`) or line 1380 (`failure_tracker.record_failure`)
 
@@ -1118,19 +1118,19 @@ if cmd_lower == "/eigentune" || cmd_lower.starts_with("/eigentune ") {
 
 ### 5.4 Config Addition
 
-**File:** `crates/temm1e-core/src/types/config.rs`
-**Add to `Temm1eConfig` struct (around line 66):**
+**File:** `crates/electro-core/src/types/config.rs`
+**Add to `ElectroConfig` struct (around line 66):**
 
 ```rust
 #[serde(default)]
 pub eigentune: EigenTuneConfig,
 ```
 
-`EigenTuneConfig` defined in `temm1e-distill` and re-exported, or defined directly in core (simpler for serde).
+`EigenTuneConfig` defined in `electro-distill` and re-exported, or defined directly in core (simpler for serde).
 
 ### 5.5 OpenAI-Compat Provider for Local Serving
 
-**File:** `crates/temm1e-providers/src/openai_compat.rs`
+**File:** `crates/electro-providers/src/openai_compat.rs`
 **Constructor (lines 29-58):**
 
 ```rust
@@ -1154,7 +1154,7 @@ This reuses the existing provider with zero modifications. Ollama's `/v1/chat/co
 - If retry detected, record `observation: 0` for the previous turn
 
 **Where to detect tool failure:**
-- **File:** `crates/temm1e-agent/src/runtime.rs`, lines 1332-1420 (tool execution block)
+- **File:** `crates/electro-agent/src/runtime.rs`, lines 1332-1420 (tool execution block)
 - After `failure_tracker.record_failure` (line ~1380), emit `observation: 0`
 - After `failure_tracker.record_success` (line ~1401), do NOT emit a signal (tool success alone does not confirm response quality)
 
@@ -1272,7 +1272,7 @@ fn mix_general_data(
 | Embedding judge | 75% | **95%** | Local Ollama embeddings with cosine similarity, zero cost, auto-pulls nomic-embed-text, 0.85 threshold tested |
 | Behavior judge | — | **90%** | Retry detection via edit distance + shared prefix, rejection keywords, tool failure signals, session timeout — all zero-cost pattern matching |
 | Ollama integration | 80% | **98%** | Full API documented, existing OpenAI-compat provider works with zero changes, health check trivial |
-| Training data format | 85% | **98%** | Universal ChatML JSONL works with all frameworks, conversion from TEMM1E types straightforward |
+| Training data format | 85% | **98%** | Universal ChatML JSONL works with all frameworks, conversion from ELECTRO types straightforward |
 | Codebase hooks | 85% | **98%** | Exact lines, exact variables, exact patterns documented |
 | Base model detection | 70% | **90%** | Unsloth/MLX pre-quantized model lists documented, VRAM-based selection logic clear |
 | Overall | 88% | **95%** | No remaining unknowns. Every component has implementation-level detail. |

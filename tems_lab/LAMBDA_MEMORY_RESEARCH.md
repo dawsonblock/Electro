@@ -3,7 +3,7 @@
 > What exists, what's novel, what we should steal, and what's ours.
 
 **Status:** Research Complete
-**Author:** TEMM1E's Lab
+**Author:** ELECTRO's Lab
 **Date:** 2026-03-15
 **Related:** [λ-Memory Design Doc](LAMBDA_MEMORY.md) | [Tem's Mind Architecture](TEMS_MIND_ARCHITECTURE.md)
 
@@ -98,7 +98,7 @@ Three representations (full/summary/essence) written at creation time, with the 
 
 ## 3. Retrieval Without Embeddings
 
-Embedding models would add 80MB-1.3GB of dependencies and require significant compute. TEMM1E is a lean Rust binary with zero ML model dependencies. We preserve this.
+Embedding models would add 80MB-1.3GB of dependencies and require significant compute. ELECTRO is a lean Rust binary with zero ML model dependencies. We preserve this.
 
 **Approach: SQLite FTS5 on LLM-generated semantic text.**
 
@@ -130,7 +130,7 @@ But ours uses BM25 on pre-extracted semantic text instead of embedding cosine si
 
 ## 4. Summary Comparison Table
 
-| Feature | ChatGPT | Gemini | Letta | Mem0 | Zep | FadeMem | **TEMM1E Gradient** |
+| Feature | ChatGPT | Gemini | Letta | Mem0 | Zep | FadeMem | **ELECTRO Gradient** |
 |---------|---------|--------|-------|------|-----|---------|---------------------|
 | Memory decay | - | - | - | - | Temporal invalidation | Exponential (dual-layer) | Exponential (single, with FTS5 relevance) |
 | Tiered storage | - | - | RAM/disk | Vector+Graph+KV | 3 node types | Dual-layer | **3 fidelity layers** (full/summary/essence) |

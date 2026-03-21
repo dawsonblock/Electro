@@ -1,7 +1,7 @@
-# TEMM1E Default Configuration
+# ELECTRO Default Configuration
 # Cloud-native Rust AI agent runtime — Telegram-native
 
-[temm1e]
+[electro]
 mode = "auto"  # "cloud" | "local" | "auto"
 tenant_isolation = false
 
@@ -47,9 +47,9 @@ storage = "sqlite"
 [tools]
 shell = true
 # Shell tool isolation is controlled by environment variables:
-# TEMM1E_SHELL_BACKEND=auto|docker|podman|host
-# TEMM1E_SHELL_CONTAINER_IMAGE=debian:bookworm-slim
-# TEMM1E_SHELL_ALLOW_NETWORK=0
+# ELECTRO_SHELL_BACKEND=auto|docker|podman|host
+# ELECTRO_SHELL_CONTAINER_IMAGE=debian:bookworm-slim
+# ELECTRO_SHELL_ALLOW_NETWORK=0
 browser = true
 file = true
 git = true

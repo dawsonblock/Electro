@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${1:-temm1e-shell-runner:local}"
+IMAGE_TAG="${1:-electro-shell-runner:local}"
 ENGINE="${CONTAINER_ENGINE:-docker}"
 WORKDIR="${2:-$ROOT_DIR}"
 

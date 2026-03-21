@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-13
 **Status:** Approved design, pending implementation
-**Affected crates:** `temm1e-agent` (context.rs, history_pruning.rs), `temm1e-providers` (openai_compat.rs)
+**Affected crates:** `electro-agent` (context.rs, history_pruning.rs), `electro-providers` (openai_compat.rs)
 
 ---
 
@@ -223,7 +223,7 @@ ChatMessage {
 
 ## Implementation Location
 
-**File:** `crates/temm1e-agent/src/context.rs`
+**File:** `crates/electro-agent/src/context.rs`
 **Insert point:** Between lines 402 and 417 (after `kept_older` is built, before chat digest)
 
 ```rust

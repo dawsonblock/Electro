@@ -1,8 +1,8 @@
-# TEMM1E -- Claude Code Project Guide
+# ELECTRO -- Claude Code Project Guide
 
 ## Project overview
 
-TEMM1E is a cloud-native Rust AI agent runtime. It connects to messaging channels (Telegram, Discord, Slack, CLI), routes messages through an agent loop that calls AI providers (Anthropic, OpenAI-compatible), executes tools (shell, browser, file ops), and persists conversation history to memory backends (SQLite, Markdown).
+ELECTRO is a cloud-native Rust AI agent runtime. It connects to messaging channels (Telegram, Discord, Slack, CLI), routes messages through an agent loop that calls AI providers (Anthropic, OpenAI-compatible), executes tools (shell, browser, file ops), and persists conversation history to memory backends (SQLite, Markdown).
 
 The codebase is a Cargo workspace with 18 crates plus a root binary.
 
@@ -19,7 +19,7 @@ cargo build --workspace
 cargo test --workspace
 
 # Run tests for a specific crate
-cargo test -p temm1e-<crate>
+cargo test -p electro-<crate>
 
 # Clippy lints (CI gate -- treats warnings as errors)
 cargo clippy --workspace --all-targets --all-features -- -D warnings
@@ -31,7 +31,7 @@ cargo fmt --all -- --check
 cargo fmt --all
 
 # Build release binary
-cargo build --release --bin temm1e
+cargo build --release --bin electro
 
 # Build with TUI feature
 cargo build --release --features tui
@@ -50,39 +50,39 @@ cargo run -- config validate
 
 ```
 crates/
-  temm1e-core        -- Shared traits, types, error enum, config loader
-  temm1e-gateway     -- HTTP/WebSocket server, routing, session management
-  temm1e-agent       -- Agent runtime loop, context, executor
-  temm1e-providers   -- AI provider integrations (Anthropic, OpenAI-compatible)
-  temm1e-codex-oauth -- ChatGPT Plus/Pro via OAuth PKCE
-  temm1e-tui         -- Interactive terminal UI (ratatui, syntect, crossterm)
-  temm1e-channels    -- Messaging channels (CLI, Telegram, Discord, Slack)
-  temm1e-memory      -- Persistent memory backends (SQLite, Markdown)
-  temm1e-tools       -- Agent tool implementations (shell, browser, Prowl, file ops)
+  electro-core        -- Shared traits, types, error enum, config loader
+  electro-gateway     -- HTTP/WebSocket server, routing, session management
+  electro-agent       -- Agent runtime loop, context, executor
+  electro-providers   -- AI provider integrations (Anthropic, OpenAI-compatible)
+  electro-codex-oauth -- ChatGPT Plus/Pro via OAuth PKCE
+  electro-tui         -- Interactive terminal UI (ratatui, syntect, crossterm)
+  electro-channels    -- Messaging channels (CLI, Telegram, Discord, Slack)
+  electro-memory      -- Persistent memory backends (SQLite, Markdown)
+  electro-tools       -- Agent tool implementations (shell, browser, Prowl, file ops)
     browser_session.rs     -- OTK interactive login with annotated screenshots
     browser_observation.rs -- Layered observation (tree → DOM → screenshot)
     browser_pool.rs        -- Lock-free browser context pool for swarm browsing
     credential_scrub.rs    -- Credential scrubber (LLM context isolation)
     prowl_blueprints.rs    -- Web-specific blueprints (login, search, extract, compare)
     prowl_blueprints/login_registry.rs -- 100+ service login URL registry
-  temm1e-vault       -- Secret storage with ChaCha20-Poly1305 encryption
-  temm1e-skills      -- Skill registry and execution
-  temm1e-hive        -- Many Tems: swarm intelligence, pack coordination, scent field
-  temm1e-distill     -- Eigen-Tune: self-tuning distillation engine
-  temm1e-mcp         -- MCP client (stdio + HTTP, 14-server registry)
-  temm1e-automation  -- Cron jobs and scheduled tasks
-  temm1e-observable  -- OpenTelemetry tracing and metrics
-  temm1e-filestore   -- File storage (local, S3)
-  temm1e-test-utils  -- Shared test utilities
+  electro-vault       -- Secret storage with ChaCha20-Poly1305 encryption
+  electro-skills      -- Skill registry and execution
+  electro-hive        -- Many Tems: swarm intelligence, pack coordination, scent field
+  electro-distill     -- Eigen-Tune: self-tuning distillation engine
+  electro-mcp         -- MCP client (stdio + HTTP, 14-server registry)
+  electro-automation  -- Cron jobs and scheduled tasks
+  electro-observable  -- OpenTelemetry tracing and metrics
+  electro-filestore   -- File storage (local, S3)
+  electro-test-utils  -- Shared test utilities
 src/
   main.rs             -- CLI entry point (clap)
 ```
 
 ### Architecture rules
 
-1. **Traits in core, implementations in crates**: All shared traits (`Channel`, `Provider`, `Memory`, `Tool`, `FileTransfer`, etc.) are defined in `temm1e-core/src/traits/`. Implementations go in their respective crates.
+1. **Traits in core, implementations in crates**: All shared traits (`Channel`, `Provider`, `Memory`, `Tool`, `FileTransfer`, etc.) are defined in `electro-core/src/traits/`. Implementations go in their respective crates.
 
-2. **No cross-implementation dependencies**: Leaf crates (providers, channels, tools, memory backends) must never depend on each other. Shared types live in `temm1e-core`.
+2. **No cross-implementation dependencies**: Leaf crates (providers, channels, tools, memory backends) must never depend on each other. Shared types live in `electro-core`.
 
 3. **Feature flags for optional dependencies**: Platform-specific channels (Telegram, Discord, Slack) and tools (browser) are behind Cargo feature flags. Never import their SDKs unconditionally.
 
@@ -107,7 +107,7 @@ Channel.start() -> inbound message via mpsc::channel
 - **Edition**: Rust 2021
 - **Minimum Rust version**: 1.82
 - **Async traits**: Use `#[async_trait]` from the `async_trait` crate for all async trait definitions and implementations
-- **Error handling**: All fallible operations return `Result<T, Temm1eError>`. The `Temm1eError` enum is in `crates/temm1e-core/src/types/error.rs`. Use the appropriate variant (`Config`, `Provider`, `Channel`, `Memory`, `Tool`, `FileTransfer`, etc.)
+- **Error handling**: All fallible operations return `Result<T, ElectroError>`. The `ElectroError` enum is in `crates/electro-core/src/types/error.rs`. Use the appropriate variant (`Config`, `Provider`, `Channel`, `Memory`, `Tool`, `FileTransfer`, etc.)
 - **Logging**: Use the `tracing` crate (`tracing::info!`, `tracing::debug!`, `tracing::error!`, `tracing::warn!`). Include structured fields (e.g., `tracing::info!(id = %entry.id, "Stored entry")`)
 - **Serialization**: Use `serde` with `derive` for all data types. JSON via `serde_json`, TOML via `toml` for config
 - **Naming**: Structs use PascalCase with the crate's domain prefix (e.g., `TelegramChannel`, `AnthropicProvider`, `SqliteMemory`). Trait names are bare (e.g., `Channel`, `Provider`, `Memory`, `Tool`)
@@ -115,7 +115,7 @@ Channel.start() -> inbound message via mpsc::channel
 
 ## Testing conventions
 
-- Tests use `temm1e-test-utils` for shared test helpers
+- Tests use `electro-test-utils` for shared test helpers
 - SQLite tests use in-memory databases: `SqliteMemory::new("sqlite::memory:")`
 - File-based tests use `tempfile::tempdir()` for temporary directories
 - All channels and providers have creation/configuration tests
@@ -133,7 +133,7 @@ Channel.start() -> inbound message via mpsc::channel
 
 ## Configuration
 
-Config is loaded from TOML files. See `crates/temm1e-core/src/types/config.rs` for the full schema. Key sections: `gateway`, `provider`, `memory`, `vault`, `channel.*`, `tools`, `security`, `observability`.
+Config is loaded from TOML files. See `crates/electro-core/src/types/config.rs` for the full schema. Key sections: `gateway`, `provider`, `memory`, `vault`, `channel.*`, `tools`, `security`, `observability`.
 
 ## Custom skills
 
@@ -142,4 +142,4 @@ Claude Code skills for common tasks are in `.claude/skills/`:
 - `add-provider.md` -- Add a new AI provider
 - `add-memory-backend.md` -- Add a new memory backend
 - `add-tool.md` -- Add a new agent tool
-- `debug-temm1e.md` -- Debug and troubleshoot issues
+- `debug-electro.md` -- Debug and troubleshoot issues

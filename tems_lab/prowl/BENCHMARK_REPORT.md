@@ -3,13 +3,13 @@
 > **Date:** 2026-03-19
 > **Branch:** `tem-browse`
 > **Tests:** 1,769 passed, 0 failed
-> **Codebase:** TEMM1E v3.0.0 + Tem Prowl (Phases 0-5)
+> **Codebase:** ELECTRO v3.0.0 + Tem Prowl (Phases 0-5)
 
 ---
 
 ## Executive Summary
 
-Tem Prowl adds a layered observation architecture, credential isolation protocol, OTK session capture, web blueprints, and stigmergic swarm browsing to TEMM1E's existing browser tool. This report benchmarks the architectural improvements against the pre-Prowl baseline and traditional AI agent browsing approaches.
+Tem Prowl adds a layered observation architecture, credential isolation protocol, OTK session capture, web blueprints, and stigmergic swarm browsing to ELECTRO's existing browser tool. This report benchmarks the architectural improvements against the pre-Prowl baseline and traditional AI agent browsing approaches.
 
 ---
 
@@ -122,7 +122,7 @@ T_swarm = T_alpha(2s) + max(30s) + T_aggregate(3s) = 35s
 | Unit tests | 23 (scrubber) + login detection tests |
 | Zeroize coverage | WebCredential (username, password zeroed on drop) |
 | Scrubber patterns | 3 regex classes (URL params, auth headers, API keys) + known values |
-| Vault integration | ChaCha20-Poly1305 encryption via existing temm1e-vault |
+| Vault integration | ChaCha20-Poly1305 encryption via existing electro-vault |
 | LLM exposure | **Zero** — credential bytes never in any string sent to provider |
 
 ### 2.4 Browser Pool
@@ -297,7 +297,7 @@ Path analysis:
 
 ## 7. Conclusion
 
-Tem Prowl transforms TEMM1E's browser capability from a basic screenshot-and-click tool into a **web-native agent architecture** with:
+Tem Prowl transforms ELECTRO's browser capability from a basic screenshot-and-click tool into a **web-native agent architecture** with:
 
 1. **5x token efficiency** via layered observation (AX tree default vs screenshot default)
 2. **Provably zero credential exposure** via vault + zeroize + DOM injection + scrubber
@@ -313,4 +313,4 @@ Every component is built on timeproof foundations: W3C WAI-ARIA for observation,
 
 ---
 
-*Benchmark report for Tem Prowl. 1,769 tests, 0 failures. March 2026. TEMM1E Labs.*
+*Benchmark report for Tem Prowl. 1,769 tests, 0 failures. March 2026. ELECTRO Labs.*

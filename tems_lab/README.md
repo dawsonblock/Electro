@@ -1,6 +1,6 @@
 # Tem's Lab
 
-Where TEMM1E's cognitive systems are researched, built, and proven.
+Where ELECTRO's cognitive systems are researched, built, and proven.
 
 Every feature in Tem's Mind starts here — as a theory, gets stress-tested against real models and real conversations, and only ships when the data says it works. No vaporware. Every claim has a benchmark behind it.
 
@@ -146,4 +146,4 @@ No feature ships without a benchmark. No benchmark ships without a scoring rubri
 
 ---
 
-*TEMM1E's Lab — where Tem's mind is built*
+*ELECTRO's Lab — where Tem's mind is built*

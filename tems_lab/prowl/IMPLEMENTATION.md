@@ -9,19 +9,19 @@
 
 ## 0. What Already Exists
 
-Before building anything, inventory what TEMM1E already has:
+Before building anything, inventory what ELECTRO already has:
 
 | Component | Status | Location | Notes |
 |-----------|--------|----------|-------|
-| **BrowserTool** | Fully implemented (1855 LOC) | `crates/temm1e-tools/src/browser.rs` | CDP via chromiumoxide, stealth mode, session persistence, vision pipeline |
-| **Vision pipeline** | Working | `crates/temm1e-agent/src/runtime.rs` | `take_last_image()` → `ContentPart::Image` injection into conversation |
-| **MCP bridge** | Fully implemented | `crates/temm1e-mcp/` | Playwright & Puppeteer in self-extend registry, hot-reload, resilient |
-| **Vault** | Fully implemented | `crates/temm1e-vault/` | ChaCha20-Poly1305, `vault://` URI scheme, zeroizing key material |
-| **Hive (Many Tems)** | Fully implemented (2490 LOC, 71 tests) | `crates/temm1e-hive/` | Blackboard, pheromones, DAG, worker pool, Queen decomposition |
-| **Blueprint system** | Fully implemented | `crates/temm1e-agent/src/blueprint.rs` | Phase DAG, category matching, procedural memory |
-| **Tool executor** | Working | `crates/temm1e-agent/src/executor.rs` | Parallel execution, sandbox enforcement |
+| **BrowserTool** | Fully implemented (1855 LOC) | `crates/electro-tools/src/browser.rs` | CDP via chromiumoxide, stealth mode, session persistence, vision pipeline |
+| **Vision pipeline** | Working | `crates/electro-agent/src/runtime.rs` | `take_last_image()` → `ContentPart::Image` injection into conversation |
+| **MCP bridge** | Fully implemented | `crates/electro-mcp/` | Playwright & Puppeteer in self-extend registry, hot-reload, resilient |
+| **Vault** | Fully implemented | `crates/electro-vault/` | ChaCha20-Poly1305, `vault://` URI scheme, zeroizing key material |
+| **Hive (Many Tems)** | Fully implemented (2490 LOC, 71 tests) | `crates/electro-hive/` | Blackboard, pheromones, DAG, worker pool, Queen decomposition |
+| **Blueprint system** | Fully implemented | `crates/electro-agent/src/blueprint.rs` | Phase DAG, category matching, procedural memory |
+| **Tool executor** | Working | `crates/electro-agent/src/executor.rs` | Parallel execution, sandbox enforcement |
 | **Stealth anti-detection** | Implemented in BrowserTool | `browser.rs` | navigator.webdriver, WebGL, plugins, permissions spoofing |
-| **Session save/restore** | Implemented in BrowserTool | `browser.rs` | Cookie save/load to `~/.temm1e/sessions/{name}.json` via CDP |
+| **Session save/restore** | Implemented in BrowserTool | `browser.rs` | Cookie save/load to `~/.electro/sessions/{name}.json` via CDP |
 
 **Key insight: Tem Prowl is NOT building a browser from scratch.** It's composing, extending, and formalizing existing pieces into the architecture described in the paper.
 
@@ -47,7 +47,7 @@ Each phase is independently shippable and testable. No phase depends on a later 
 
 **Problem:** MCP tool results containing screenshots are returned as JSON-serialized data strings, not as `ToolOutputImage` structs. The vision pipeline (`take_last_image()`) cannot process them. This means Playwright MCP screenshot results don't get injected as images for the LLM.
 
-**Fix location:** `crates/temm1e-mcp/src/bridge.rs`
+**Fix location:** `crates/electro-mcp/src/bridge.rs`
 
 **What to do:**
 1. In `McpBridgeTool::execute()`, after receiving `McpToolResult`, scan the raw MCP response `content` array
@@ -126,7 +126,7 @@ Each node: `[index] role "name" state=value`. Indentation reflects hierarchy. On
 
 **What:** A deterministic function that decides which observation tier to use, WITHOUT calling the LLM.
 
-**Where:** New module `crates/temm1e-tools/src/browser_observation.rs`
+**Where:** New module `crates/electro-tools/src/browser_observation.rs`
 
 **Design:**
 ```rust
@@ -158,7 +158,7 @@ pub fn select_tier(
 
 **What:** A unified observation action that returns the appropriate tier automatically.
 
-**Where:** `crates/temm1e-tools/src/browser.rs`
+**Where:** `crates/electro-tools/src/browser.rs`
 
 ```rust
 "observe" => {
@@ -200,7 +200,7 @@ pub fn select_tier(
 
 **What:** Convert HTML subtrees to Markdown for Tier 2 DOM extraction (5-10x compression vs raw HTML).
 
-**Where:** `crates/temm1e-tools/src/html_markdown.rs`
+**Where:** `crates/electro-tools/src/html_markdown.rs`
 
 **Options:**
 - Pure Rust: `html2text` crate (lightweight, no JS runtime)
@@ -212,7 +212,7 @@ pub fn select_tier(
 
 **What:** After the first full observation, subsequent observations send only the delta.
 
-**Where:** `crates/temm1e-tools/src/browser.rs` — internal state in `BrowserTool`
+**Where:** `crates/electro-tools/src/browser.rs` — internal state in `BrowserTool`
 
 **Design:**
 - `BrowserTool` holds `last_tree_hash: Option<u64>` and `last_tree: Option<String>`
@@ -231,9 +231,9 @@ pub fn select_tier(
 **The key rule:** Credential bytes never enter any string that reaches the LLM. The implementation enforces this through two execution domains separated at the Rust type level.
 
 **Where:**
-- Credential storage: existing `crates/temm1e-vault/` (no changes needed)
-- Credential injection: new code in `crates/temm1e-tools/src/browser.rs`
-- Credential scrubber: new module `crates/temm1e-tools/src/credential_scrub.rs`
+- Credential storage: existing `crates/electro-vault/` (no changes needed)
+- Credential injection: new code in `crates/electro-tools/src/browser.rs`
+- Credential scrubber: new module `crates/electro-tools/src/credential_scrub.rs`
 
 ### 2.2 Vault-Backed Credential Storage for Web Services
 
@@ -274,11 +274,11 @@ Tem:  [immediately deletes user's message via Telegram API]
 ```rust
 "authenticate" => {
     let service = input.arguments["service"].as_str()
-        .ok_or(Temm1eError::Tool("service name required".into()))?;
+        .ok_or(ElectroError::Tool("service name required".into()))?;
 
     // 1. Retrieve from vault (credential execution domain)
     let cred_bytes = vault.get_secret(&format!("web_cred:{}", service)).await?
-        .ok_or(Temm1eError::Tool(format!("No credentials stored for {}", service)))?;
+        .ok_or(ElectroError::Tool(format!("No credentials stored for {}", service)))?;
     let cred: WebCredential = serde_json::from_slice(&cred_bytes)?;
 
     // 2. Detect login form fields via accessibility tree
@@ -336,7 +336,7 @@ button[type="submit"], input[type="submit"]
 
 **What:** Post-login observation filter that redacts credential-like content before it reaches the LLM.
 
-**Where:** `crates/temm1e-tools/src/credential_scrub.rs`
+**Where:** `crates/electro-tools/src/credential_scrub.rs`
 
 **Design:**
 ```rust
@@ -368,13 +368,13 @@ pub fn scrub_credentials(text: &str, known_credentials: &[&str]) -> String {
 
 ### 3.1 Overview
 
-This extends the existing OTK infrastructure (used for API key onboarding — `crates/temm1e-gateway/src/setup_tokens.rs`) to web authentication.
+This extends the existing OTK infrastructure (used for API key onboarding — `crates/electro-gateway/src/setup_tokens.rs`) to web authentication.
 
 ### 3.2 Ephemeral Browser Session
 
 **What:** When the user needs to authenticate to a site, Tem creates an ephemeral browser session accessible via a one-time link.
 
-**Where:** New module `crates/temm1e-gateway/src/browse_session.rs`
+**Where:** New module `crates/electro-gateway/src/browse_session.rs`
 
 **Flow:**
 ```
@@ -384,7 +384,7 @@ This extends the existing OTK infrastructure (used for API key onboarding — `c
    a. Launches a browser, navigates to amazon.com
    b. Generates OTK (32 random bytes)
    c. Registers the browser session with the OTK in a session map
-   d. Returns link: "https://temm1e-labs.github.io/temm1e/browse#{otk_hex}"
+   d. Returns link: "https://electro-labs.github.io/electro/browse#{otk_hex}"
 4. Agent sends link to user via Telegram
 5. User taps link → sees the live browser (via noVNC or similar)
 6. User logs into Amazon normally
@@ -468,7 +468,7 @@ async fn check_session_health(page: &Page, service: &str) -> bool {
 
 ### 4.1 Blueprint Design
 
-Web Blueprints are standard TEMM1E blueprints (stored in memory as `MemoryEntryType::Blueprint`) that encode common web interaction patterns. They are NOT separate agents — they are procedural memory that Tem references when browsing.
+Web Blueprints are standard ELECTRO blueprints (stored in memory as `MemoryEntryType::Blueprint`) that encode common web interaction patterns. They are NOT separate agents — they are procedural memory that Tem references when browsing.
 
 ### 4.2 Core Web Blueprints
 
@@ -603,7 +603,7 @@ The classifier's `blueprint_hint` field will naturally match web tasks to these 
 
 **What:** A managed pool of browser contexts that Hive workers claim alongside tasks.
 
-**Where:** New module `crates/temm1e-tools/src/browser_pool.rs`
+**Where:** New module `crates/electro-tools/src/browser_pool.rs`
 
 **Design:**
 ```rust
@@ -616,19 +616,19 @@ pub struct BrowserPool {
 }
 
 impl BrowserPool {
-    pub async fn new(max_contexts: usize, config: BrowserPoolConfig) -> Result<Self, Temm1eError>;
+    pub async fn new(max_contexts: usize, config: BrowserPoolConfig) -> Result<Self, ElectroError>;
 
     /// Atomically claim a browser context. Returns slot index + context.
-    pub async fn acquire(&self) -> Result<(usize, BrowserContext), Temm1eError>;
+    pub async fn acquire(&self) -> Result<(usize, BrowserContext), ElectroError>;
 
     /// Release a context back to the pool. Clears cookies/storage.
-    pub async fn release(&self, slot: usize) -> Result<(), Temm1eError>;
+    pub async fn release(&self, slot: usize) -> Result<(), ElectroError>;
 
     /// Acquire a context with a pre-loaded session (for authenticated browsing).
     pub async fn acquire_with_session(
         &self,
         session: &SessionState,
-    ) -> Result<(usize, BrowserContext), Temm1eError>;
+    ) -> Result<(usize, BrowserContext), ElectroError>;
 }
 ```
 
@@ -644,7 +644,7 @@ stealth = true            # Apply anti-detection to all contexts
 
 **What:** When Hive decomposes a web task, each worker Tem gets its own browser context.
 
-**Where:** Extension in `crates/temm1e-hive/src/worker.rs`
+**Where:** Extension in `crates/electro-hive/src/worker.rs`
 
 **Current worker flow:**
 ```
@@ -668,7 +668,7 @@ The worker passes the claimed `BrowserContext` into the `ToolContext` so the `Br
 
 **What:** Four new signal types for the pheromone field.
 
-**Where:** `crates/temm1e-hive/src/types.rs` — extend `SignalType` enum
+**Where:** `crates/electro-hive/src/types.rs` — extend `SignalType` enum
 
 ```rust
 pub enum SignalType {
@@ -735,7 +735,7 @@ Updated in-place as each Tem completes.
 
 **What:** The Queen needs to understand how to decompose web tasks into parallelizable browse subtasks.
 
-**Where:** System prompt extension in `crates/temm1e-hive/src/queen.rs`
+**Where:** System prompt extension in `crates/electro-hive/src/queen.rs`
 
 Add web-specific decomposition guidance to the Queen's prompt:
 
@@ -759,7 +759,7 @@ The Queen already produces DAGs — this just teaches it web-specific patterns.
 **Where:** `tems_lab/prowl/bench/`
 
 **Design:** Python-based benchmarks (like the existing Lambda benchmarks) that:
-1. Start TEMM1E with browser tools enabled
+1. Start ELECTRO with browser tools enabled
 2. Send test messages via CLI chat
 3. Capture tool call logs, timing, token counts
 4. Verify results against expected outcomes
@@ -875,7 +875,7 @@ prowl = ["browser"]   # Tem Prowl: web-native browsing
                        #          browser pool, web blueprints
 ```
 
-All Prowl code gated behind `#[cfg(feature = "prowl")]`. When disabled, TEMM1E is byte-identical to pre-Prowl.
+All Prowl code gated behind `#[cfg(feature = "prowl")]`. When disabled, ELECTRO is byte-identical to pre-Prowl.
 
 ---
 
@@ -890,4 +890,4 @@ All Prowl code gated behind `#[cfg(feature = "prowl")]`. When disabled, TEMM1E i
 
 ---
 
-*Implementation plan for Tem Prowl. Grounded in the existing TEMM1E codebase (v3.0.0, 15 crates). March 2026.*
+*Implementation plan for Tem Prowl. Grounded in the existing ELECTRO codebase (v3.0.0, 15 crates). March 2026.*

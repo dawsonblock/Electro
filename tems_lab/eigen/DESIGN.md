@@ -12,7 +12,7 @@
 
 This document specifies Eigen-Tune — a closed-loop distillation pipeline that observes every LLM call, scores quality from user behavior signals, accumulates curated datasets, trains local models via pluggable backends, and graduates them into production through statistically rigorous gates.
 
-**Core principle:** Eigen-Tune is a new leaf crate (`temm1e-distill`) that depends only on `temm1e-core` and `temm1e-memory`. It does not modify any existing crate's logic. Integration with the agent runtime happens through a single `CollectorHook` trait call in the provider response path. When `[eigentune] enabled = false` (the default), the system is byte-identical to pre-Eigen-Tune TEMM1E.
+**Core principle:** Eigen-Tune is a new leaf crate (`electro-distill`) that depends only on `electro-core` and `electro-memory`. It does not modify any existing crate's logic. Integration with the agent runtime happens through a single `CollectorHook` trait call in the provider response path. When `[eigentune] enabled = false` (the default), the system is byte-identical to pre-Eigen-Tune ELECTRO.
 
 **What we're building:** A data flywheel that captures every LLM interaction, scores its quality using user behavior signals, curates training datasets, fine-tunes local models, and graduates them tier-by-tier through statistically rigorous gates — all with zero user intervention beyond `/eigentune on`.
 
@@ -23,7 +23,7 @@ This document specifies Eigen-Tune — a closed-loop distillation pipeline that 
 - Tool-use specialized fine-tuning / toolshim architecture (v2)
 - Distributed training across multiple machines (v2)
 - Blueprint-aware data augmentation (v2)
-- Federated learning across multiple TEMM1E instances (v3)
+- Federated learning across multiple ELECTRO instances (v3)
 
 **The bet:** Open-source models will continue to improve. Our job is to have the best domain-specific training data ready when they do. The data is the moat. The model is a commodity.
 
@@ -49,11 +49,11 @@ Training pairs are append-only. Quality scores are updated but pairs are never d
 The user can see exactly: how much data has been collected, what tier each complexity class is in, what accuracy the local model achieves, and how much money self-tuning has saved. High observability, zero required action.
 
 **A6 — Provider Agnosticism.**
-Eigen-Tune works with any TEMM1E provider. The collector captures (request, response) pairs regardless of whether the source is Anthropic, OpenAI, Gemini, Llama, or any future provider. The training pipeline produces models that serve through any OpenAI-compatible endpoint (Ollama).
+Eigen-Tune works with any ELECTRO provider. The collector captures (request, response) pairs regardless of whether the source is Anthropic, OpenAI, Gemini, Llama, or any future provider. The training pipeline produces models that serve through any OpenAI-compatible endpoint (Ollama).
 
 ---
 
-## 2. Architecture: How Eigen-Tune Fits Into TEMM1E
+## 2. Architecture: How Eigen-Tune Fits Into ELECTRO
 
 ### 2.1 Current Architecture (unchanged)
 
@@ -104,16 +104,16 @@ Channel → mpsc → Dispatcher → ChatSlot → AgentRuntime → Provider.compl
 
 | File | Change | Risk |
 |------|--------|------|
-| `Cargo.toml` (workspace) | Add `temm1e-distill` to members, feature flag `eigentune` | ZERO — additive |
-| `crates/temm1e-core/src/types/config.rs` | Add `EigenTuneConfig` struct (serde default) | ZERO — new field with Default |
-| `crates/temm1e-agent/src/runtime.rs` | Feature-gated collector hook after line ~885, router before provider call | LOW — behind `if eigentune_enabled` |
+| `Cargo.toml` (workspace) | Add `electro-distill` to members, feature flag `eigentune` | ZERO — additive |
+| `crates/electro-core/src/types/config.rs` | Add `EigenTuneConfig` struct (serde default) | ZERO — new field with Default |
+| `crates/electro-agent/src/runtime.rs` | Feature-gated collector hook after line ~885, router before provider call | LOW — behind `if eigentune_enabled` |
 
 ### 2.4 Dependency Graph
 
 ```
-temm1e-distill
-├── temm1e-core     (traits, types, errors)
-├── temm1e-memory   (SQLite storage)
+electro-distill
+├── electro-core     (traits, types, errors)
+├── electro-memory   (SQLite storage)
 ├── sqlx            (already a workspace dep)
 ├── serde + serde_json (already workspace deps)
 ├── tokio           (already workspace dep)
@@ -691,19 +691,19 @@ These components implement mathematical methods from statistics. They have no ex
 #[async_trait]
 pub trait TrainingBackend: Send + Sync {
     fn name(&self) -> &str;
-    async fn is_available(&self) -> Result<bool, Temm1eError>;
-    async fn detect_base_models(&self) -> Result<Vec<BaseModelInfo>, Temm1eError>;
-    async fn train(&self, config: TrainJobConfig) -> Result<TrainResult, Temm1eError>;
+    async fn is_available(&self) -> Result<bool, ElectroError>;
+    async fn detect_base_models(&self) -> Result<Vec<BaseModelInfo>, ElectroError>;
+    async fn train(&self, config: TrainJobConfig) -> Result<TrainResult, ElectroError>;
 }
 
 /// Model server — today Ollama, tomorrow whatever
 #[async_trait]
 pub trait ModelServer: Send + Sync {
     fn name(&self) -> &str;
-    async fn is_available(&self) -> Result<bool, Temm1eError>;
-    async fn deploy(&self, model_path: &str, name: &str) -> Result<ModelEndpoint, Temm1eError>;
-    async fn undeploy(&self, name: &str) -> Result<(), Temm1eError>;
-    async fn health_check(&self, name: &str) -> Result<bool, Temm1eError>;
+    async fn is_available(&self) -> Result<bool, ElectroError>;
+    async fn deploy(&self, model_path: &str, name: &str) -> Result<ModelEndpoint, ElectroError>;
+    async fn undeploy(&self, name: &str) -> Result<(), ElectroError>;
+    async fn health_check(&self, name: &str) -> Result<bool, ElectroError>;
 }
 
 /// Response evaluator — compares two responses for semantic equivalence
@@ -715,7 +715,7 @@ pub trait ResponseEvaluator: Send + Sync {
         input: &CompletionRequest,
         response_a: &CompletionResponse,
         response_b: &CompletionResponse,
-    ) -> Result<EvalVerdict, Temm1eError>;
+    ) -> Result<EvalVerdict, ElectroError>;
 }
 
 /// Optional teacher judge — LLM-as-judge for users who want stronger guarantees
@@ -728,13 +728,13 @@ pub trait TeacherJudge: Send + Sync {
         input: &CompletionRequest,
         response_a: &CompletionResponse,
         response_b: &CompletionResponse,
-    ) -> Result<JudgeVerdict, Temm1eError>;
+    ) -> Result<JudgeVerdict, ElectroError>;
 }
 
 /// Dataset exporter — today JSONL, tomorrow Parquet/Arrow
 pub trait DatasetExporter: Send + Sync {
     fn format(&self) -> &str;
-    fn export(&self, pairs: &[TrainingPair], path: &Path) -> Result<(), Temm1eError>;
+    fn export(&self, pairs: &[TrainingPair], path: &Path) -> Result<(), ElectroError>;
 }
 ```
 
@@ -794,7 +794,7 @@ pub trait DatasetExporter: Send + Sync {
 
 ### 7.3 Stage 3: CURATE (periodic cron, default 6h)
 
-**Trigger:** Cron job via `temm1e-automation` pattern.
+**Trigger:** Cron job via `electro-automation` pattern.
 
 **Action for each tier:**
 1. Query `eigentune_pairs WHERE complexity = {tier} AND quality_score >= 0.7`
@@ -1035,7 +1035,7 @@ Tem: [detailed architecture response]                  ☁ cloud
 | Process restart mid-training | Training run marked failed → tier returns to Collecting |
 | Disk full | Training aborts gracefully, collector pauses, cloud continues |
 | No training backend available | Collector keeps accumulating data. System tries again next cycle. |
-| UTF-8 in training data | All string handling uses `char_indices()` (existing TEMM1E rule) |
+| UTF-8 in training data | All string handling uses `char_indices()` (existing ELECTRO rule) |
 | Catastrophic forgetting | 5% general data mixed into every training run |
 
 ---
@@ -1047,7 +1047,7 @@ Tem: [detailed architecture response]                  ☁ cloud
 3. **Distributed training** — v1 is single-machine. No multi-GPU coordination.
 4. **Blueprint-aware augmentation** — v1 doesn't use blueprints to generate synthetic training data. v2 could use blueprint success patterns for data augmentation.
 5. **Model merging / ensemble** — v1 is one model per tier. v2 could merge multiple LoRA adapters.
-6. **Federated learning** — v1 is single-instance. v3 could aggregate learning across TEMM1E instances (with user consent).
+6. **Federated learning** — v1 is single-instance. v3 could aggregate learning across ELECTRO instances (with user consent).
 7. **Automated hyperparameter tuning** — v1 uses fixed QLoRA defaults. v2 could do Bayesian hyperparameter optimization.
 
 These omissions are safe because:
@@ -1062,7 +1062,7 @@ These omissions are safe because:
 
 | Component | Risk Level | Justification |
 |-----------|-----------|---------------|
-| New crate `temm1e-distill` | ZERO | Leaf crate, no existing code modified |
+| New crate `electro-distill` | ZERO | Leaf crate, no existing code modified |
 | `EigenTuneConfig` in config.rs | ZERO | New field with `#[serde(default)]`, existing TOML parses unchanged |
 | Collector hook in runtime.rs | LOW | Fire-and-forget spawn, behind `if eigentune_enabled`, zero latency impact |
 | Router hook in runtime.rs | LOW | Pre-provider decision, feature-gated, fallback to cloud on any error |

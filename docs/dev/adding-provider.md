@@ -1,20 +1,20 @@
 # Developer Guide: Adding a New AI Provider
 
-This tutorial walks through adding a new AI provider to TEMM1E. By the end, you will have a fully integrated provider that handles completion requests, streaming responses, and health checks.
+This tutorial walks through adding a new AI provider to ELECTRO. By the end, you will have a fully integrated provider that handles completion requests, streaming responses, and health checks.
 
 ## Overview
 
 Adding a provider requires:
 
 1. Implementing the `Provider` trait
-2. Mapping TEMM1E types to the provider's API format
+2. Mapping ELECTRO types to the provider's API format
 3. Handling streaming responses
 4. Wiring the provider into the agent runtime
 5. Adding configuration support
 
 ## Step 1: Understand the Trait
 
-The `Provider` trait is defined in `crates/temm1e-core/src/traits/provider.rs`:
+The `Provider` trait is defined in `crates/electro-core/src/traits/provider.rs`:
 
 ```rust
 #[async_trait]
@@ -23,16 +23,16 @@ pub trait Provider: Send + Sync {
     fn name(&self) -> &str;
 
     /// Send a completion request and get a full response
-    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, Temm1eError>;
+    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, ElectroError>;
 
     /// Send a completion request and get a streaming response
-    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, Temm1eError>>, Temm1eError>;
+    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, ElectroError>>, ElectroError>;
 
     /// Check if the provider is healthy and reachable
-    async fn health_check(&self) -> Result<bool, Temm1eError>;
+    async fn health_check(&self) -> Result<bool, ElectroError>;
 
     /// List available models for this provider
-    async fn list_models(&self) -> Result<Vec<String>, Temm1eError>;
+    async fn list_models(&self) -> Result<Vec<String>, ElectroError>;
 }
 ```
 
@@ -45,18 +45,18 @@ The key types:
 
 ## Step 2: Create the Provider Module
 
-Create a new file in `crates/temm1e-providers/src/`. For this example, we will add a hypothetical "Cohere" provider.
+Create a new file in `crates/electro-providers/src/`. For this example, we will add a hypothetical "Cohere" provider.
 
-**File**: `crates/temm1e-providers/src/cohere.rs`
+**File**: `crates/electro-providers/src/cohere.rs`
 
 ```rust
 use async_trait::async_trait;
 use futures::stream::BoxStream;
 use futures::StreamExt;
 use reqwest::Client;
-use temm1e_core::traits::Provider;
-use temm1e_core::types::error::Temm1eError;
-use temm1e_core::types::message::{
+use electro_core::traits::Provider;
+use electro_core::types::error::ElectroError;
+use electro_core::types::message::{
     ChatMessage, CompletionRequest, CompletionResponse, ContentPart,
     Role, StreamChunk, Usage,
 };
@@ -76,14 +76,14 @@ impl CohereProvider {
         }
     }
 
-    /// Convert TEMM1E messages to the Cohere API format
+    /// Convert ELECTRO messages to the Cohere API format
     fn convert_messages(&self, messages: &[ChatMessage]) -> serde_json::Value {
         // Map Role::User, Role::Assistant, etc. to Cohere's format
         // Map ContentPart::ToolUse/ToolResult to Cohere's tool calling format
         serde_json::json!([])  // placeholder
     }
 
-    /// Convert TEMM1E tool definitions to Cohere's format
+    /// Convert ELECTRO tool definitions to Cohere's format
     fn convert_tools(&self, request: &CompletionRequest) -> serde_json::Value {
         // Map ToolDefinition { name, description, parameters } to Cohere's schema
         serde_json::json!([])  // placeholder
@@ -96,7 +96,7 @@ impl Provider for CohereProvider {
         "cohere"
     }
 
-    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, Temm1eError> {
+    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse, ElectroError> {
         let body = serde_json::json!({
             "model": request.model,
             "messages": self.convert_messages(&request.messages),
@@ -112,20 +112,20 @@ impl Provider for CohereProvider {
             .json(&body)
             .send()
             .await
-            .map_err(|e| Temm1eError::Provider(format!("Cohere API error: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("Cohere API error: {}", e)))?;
 
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
-            return Err(Temm1eError::Provider(
+            return Err(ElectroError::Provider(
                 format!("Cohere API returned {}: {}", status, body)
             ));
         }
 
         let api_response: serde_json::Value = response.json().await
-            .map_err(|e| Temm1eError::Provider(format!("Failed to parse response: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("Failed to parse response: {}", e)))?;
 
-        // Convert the Cohere response to TEMM1E's CompletionResponse
+        // Convert the Cohere response to ELECTRO's CompletionResponse
         // Extract content, tool calls, stop reason, and usage
         Ok(CompletionResponse {
             id: api_response["id"].as_str().unwrap_or("").to_string(),
@@ -142,7 +142,7 @@ impl Provider for CohereProvider {
         })
     }
 
-    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, Temm1eError>>, Temm1eError> {
+    async fn stream(&self, request: CompletionRequest) -> Result<BoxStream<'_, Result<StreamChunk, ElectroError>>, ElectroError> {
         let body = serde_json::json!({
             "model": request.model,
             "messages": self.convert_messages(&request.messages),
@@ -157,7 +157,7 @@ impl Provider for CohereProvider {
             .json(&body)
             .send()
             .await
-            .map_err(|e| Temm1eError::Provider(format!("Cohere stream error: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("Cohere stream error: {}", e)))?;
 
         // Parse SSE (Server-Sent Events) stream
         let byte_stream = response.bytes_stream();
@@ -174,35 +174,35 @@ impl Provider for CohereProvider {
                         stop_reason: None,
                     })
                 }
-                Err(e) => Err(Temm1eError::Provider(format!("Stream error: {}", e))),
+                Err(e) => Err(ElectroError::Provider(format!("Stream error: {}", e))),
             }
         });
 
         Ok(Box::pin(chunk_stream))
     }
 
-    async fn health_check(&self) -> Result<bool, Temm1eError> {
+    async fn health_check(&self) -> Result<bool, ElectroError> {
         // Hit a lightweight endpoint to verify connectivity
         let response = self.client
             .get(format!("{}/models", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
             .await
-            .map_err(|e| Temm1eError::Provider(format!("Health check failed: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("Health check failed: {}", e)))?;
 
         Ok(response.status().is_success())
     }
 
-    async fn list_models(&self) -> Result<Vec<String>, Temm1eError> {
+    async fn list_models(&self) -> Result<Vec<String>, ElectroError> {
         let response = self.client
             .get(format!("{}/models", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
             .await
-            .map_err(|e| Temm1eError::Provider(format!("List models failed: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("List models failed: {}", e)))?;
 
         let body: serde_json::Value = response.json().await
-            .map_err(|e| Temm1eError::Provider(format!("Parse error: {}", e)))?;
+            .map_err(|e| ElectroError::Provider(format!("Parse error: {}", e)))?;
 
         let models = body["models"]
             .as_array()
@@ -220,7 +220,7 @@ impl Provider for CohereProvider {
 
 ## Step 3: Register the Module
 
-Edit `crates/temm1e-providers/src/lib.rs`:
+Edit `crates/electro-providers/src/lib.rs`:
 
 ```rust
 pub mod anthropic;
@@ -233,11 +233,11 @@ pub mod cohere;  // <-- Add this
 
 ## Step 4: Add Dependencies
 
-If needed, add provider-specific dependencies to `crates/temm1e-providers/Cargo.toml`:
+If needed, add provider-specific dependencies to `crates/electro-providers/Cargo.toml`:
 
 ```toml
 [dependencies]
-temm1e-core.workspace = true
+electro-core.workspace = true
 async-trait.workspace = true
 reqwest.workspace = true
 futures.workspace = true
@@ -253,7 +253,7 @@ Most providers use the standard HTTP API via `reqwest`, so no additional depende
 In the code that creates the provider from configuration (typically in the binary crate or gateway initialization), add a match arm:
 
 ```rust
-fn create_provider(config: &ProviderConfig) -> Result<Box<dyn Provider>, Temm1eError> {
+fn create_provider(config: &ProviderConfig) -> Result<Box<dyn Provider>, ElectroError> {
     match config.name.as_deref() {
         Some("anthropic") => Ok(Box::new(AnthropicProvider::new(
             config.api_key.clone().unwrap_or_default(),
@@ -265,10 +265,10 @@ fn create_provider(config: &ProviderConfig) -> Result<Box<dyn Provider>, Temm1eE
         Some("cohere") => Ok(Box::new(CohereProvider::new(   // <-- Add this
             config.api_key.clone().unwrap_or_default(),
         ))),
-        Some(other) => Err(Temm1eError::Config(
+        Some(other) => Err(ElectroError::Config(
             format!("Unknown provider: {}", other)
         )),
-        None => Err(Temm1eError::Config(
+        None => Err(ElectroError::Config(
             "No provider configured".to_string()
         )),
     }
@@ -290,7 +290,7 @@ model = "command-r-plus"
 
 Most modern AI providers support tool/function calling. The key mapping is:
 
-| TEMM1E Type | Maps To |
+| ELECTRO Type | Maps To |
 |-------------|---------|
 | `ToolDefinition { name, description, parameters }` | Provider's tool schema format |
 | `ContentPart::ToolUse { id, name, input }` | Provider's tool call response |
@@ -303,7 +303,7 @@ When the model's response contains tool calls:
 3. Creates a `ContentPart::ToolResult` with the output
 4. Sends the result back to the provider in a follow-up request
 
-Your provider must correctly map between TEMM1E's format and the provider's native format in both directions.
+Your provider must correctly map between ELECTRO's format and the provider's native format in both directions.
 
 ## Step 8: Implement Retry Logic
 
@@ -314,7 +314,7 @@ async fn complete_with_retry(
     &self,
     request: CompletionRequest,
     max_retries: u32,
-) -> Result<CompletionResponse, Temm1eError> {
+) -> Result<CompletionResponse, ElectroError> {
     let mut last_error = None;
     for attempt in 0..=max_retries {
         if attempt > 0 {
@@ -378,7 +378,7 @@ mod tests {
 - [ ] Response mapping: provider's response -> `CompletionResponse` / `StreamChunk`
 - [ ] Tool calling: `ToolDefinition` -> provider format; provider tool calls -> `ContentPart::ToolUse`
 - [ ] Streaming: SSE parsing with proper chunk-to-`StreamChunk` conversion
-- [ ] Error handling: HTTP errors mapped to `Temm1eError::Provider(...)`
+- [ ] Error handling: HTTP errors mapped to `ElectroError::Provider(...)`
 - [ ] Retry logic with exponential backoff for transient failures
 - [ ] Health check hits a lightweight endpoint
 - [ ] Provider wired into the creation function with config matching

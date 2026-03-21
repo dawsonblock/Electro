@@ -12,10 +12,10 @@
 ## 1. Experiment Setup
 
 ### Environment
-- Binary: `./target/release/temm1e` (v3.0.0 + Tem Prowl Phases 0-5)
+- Binary: `./target/release/electro` (v3.0.0 + Tem Prowl Phases 0-5)
 - Provider: Gemini 3 Flash Preview via Gemini API
 - Browser: Headless Chromium via chromiumoxide (CDP)
-- Interface: CLI chat (`temm1e chat`) with piped stdin
+- Interface: CLI chat (`electro chat`) with piped stdin
 - Each test: fresh memory DB, cold browser launch, killed Chrome between tests
 
 ### Two experiment rounds
@@ -140,7 +140,7 @@ With swarm (4 sites parallel), multiply the observation savings by 4.
 | Issue | Root Cause | Fix | Status |
 |-------|-----------|-----|--------|
 | AX tree "uninteresting" error | chromiumoxide 0.7.0 can't deserialize `Accessibility.getFullAXTree` CDP response | Replaced with JavaScript DOM walking | **Fixed, verified** |
-| Chrome zombie processes | Headless Chrome child processes persist after temm1e exits | Need explicit process tree kill in Drop handler | **Known issue** |
+| Chrome zombie processes | Headless Chrome child processes persist after electro exits | Need explicit process tree kill in Drop handler | **Known issue** |
 | get_text overflow on dense pages | HN full text exceeds Gemini context window | observe mode avoids this by filtering to interactive elements only | **observe is the solution** |
 
 ---
@@ -172,4 +172,4 @@ With swarm (4 sites parallel), multiply the observation savings by 4.
 
 ---
 
-*Final experiment report for Tem Prowl. 11 live tests, 100% success, $0.071 total cost. March 2026. TEMM1E Labs.*
+*Final experiment report for Tem Prowl. 11 live tests, 100% success, $0.071 total cost. March 2026. ELECTRO Labs.*

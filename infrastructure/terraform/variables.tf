@@ -1,5 +1,5 @@
 # ================================================
-# TEMM1E Terraform Variables
+# ELECTRO Terraform Variables
 # ================================================
 
 # ------------------------------------------------
@@ -78,7 +78,7 @@ variable "allowed_cidrs" {
 variable "docker_image" {
   description = "Docker image name (without tag)"
   type        = string
-  default     = "ghcr.io/temm1e/temm1e"
+  default     = "ghcr.io/electro/electro"
 }
 
 variable "docker_tag" {
@@ -87,13 +87,13 @@ variable "docker_tag" {
   default     = "latest"
 }
 
-variable "temm1e_mode" {
-  description = "TEMM1E operating mode (auto, cloud, local)"
+variable "electro_mode" {
+  description = "ELECTRO operating mode (auto, cloud, local)"
   type        = string
   default     = "auto"
 
   validation {
-    condition     = contains(["auto", "cloud", "local"], var.temm1e_mode)
+    condition     = contains(["auto", "cloud", "local"], var.electro_mode)
     error_message = "Mode must be one of: auto, cloud, local."
   }
 }

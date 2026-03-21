@@ -1,22 +1,22 @@
 version: "3.9"
 
 services:
-  temm1e:
+  electro:
     build:
       context: .
       dockerfile: Dockerfile
-    image: temm1e:latest
-    container_name: temm1e
+    image: electro:latest
+    container_name: electro
     ports:
       - "8080:8080"
     environment:
-      - TEMM1E_MODE=auto
+      - ELECTRO_MODE=auto
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - RUST_LOG=info
     volumes:
-      - temm1e-data:/var/lib/temm1e
-      - ${HOME}/.temm1e:/home/temm1e/.temm1e
+      - electro-data:/var/lib/electro
+      - ${HOME}/.electro:/home/electro/.electro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -31,21 +31,21 @@ services:
   # -----------------------------------------------
   # postgres:
   #   image: postgres:16-alpine
-  #   container_name: temm1e-postgres
+  #   container_name: electro-postgres
   #   environment:
-  #     POSTGRES_DB: temm1e
-  #     POSTGRES_USER: temm1e
+  #     POSTGRES_DB: electro
+  #     POSTGRES_USER: electro
   #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
   #   ports:
   #     - "5432:5432"
   #   volumes:
   #     - pgdata:/var/lib/postgresql/data
   #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U temm1e"]
+  #     test: ["CMD-SHELL", "pg_isready -U electro"]
   #     interval: 10s
   #     timeout: 5s
   #     retries: 5
 
 volumes:
-  temm1e-data:
+  electro-data:
   # pgdata:

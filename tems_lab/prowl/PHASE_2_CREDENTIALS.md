@@ -16,7 +16,7 @@ Vault key:   "web_cred:{service_name}"
 Vault value: JSON bytes of WebCredential struct
 ```
 
-**File:** `crates/temm1e-tools/src/browser.rs` (or new `credential_types.rs`)
+**File:** `crates/electro-tools/src/browser.rs` (or new `credential_types.rs`)
 
 ```rust
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -30,7 +30,7 @@ pub struct WebCredential {
 }
 ```
 
-**Cargo.toml** (temm1e-tools):
+**Cargo.toml** (electro-tools):
 ```toml
 zeroize = { version = "1", features = ["zeroize_derive"] }
 ```
@@ -68,7 +68,7 @@ Password fields in accessibility tree: `role: "textbox"` with `protected` state 
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 ```rust
 /// Detect login form fields from accessibility tree nodes.
@@ -161,31 +161,31 @@ chromiumoxide form interaction:
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 ```rust
 "authenticate" => {
     let service = input.arguments.get("service")
         .and_then(|v| v.as_str())
-        .ok_or(Temm1eError::Tool("'service' name required".into()))?;
+        .ok_or(ElectroError::Tool("'service' name required".into()))?;
 
     // 1. Retrieve credential from vault (CREDENTIAL EXECUTION DOMAIN)
     let vault = self.vault.as_ref()
-        .ok_or(Temm1eError::Tool("Vault not available".into()))?;
+        .ok_or(ElectroError::Tool("Vault not available".into()))?;
     let raw_bytes = vault.get_secret(&format!("web_cred:{}", service)).await?
-        .ok_or(Temm1eError::Tool(format!("No credentials stored for '{}'. Use /addcred {} first.", service, service)))?;
+        .ok_or(ElectroError::Tool(format!("No credentials stored for '{}'. Use /addcred {} first.", service, service)))?;
     let mut zeroizing = Zeroizing::new(raw_bytes);
     let cred: WebCredential = serde_json::from_slice(&zeroizing)
-        .map_err(|e| Temm1eError::Tool(format!("Credential parse error: {e}")))?;
+        .map_err(|e| ElectroError::Tool(format!("Credential parse error: {e}")))?;
 
     let page = self.ensure_browser().await?;
 
     // 2. Detect login form
     let ax_result = page.execute(GetFullAxTreeParams::default()).await
-        .map_err(|e| Temm1eError::Tool(format!("Auth observe: {e}")))?;
+        .map_err(|e| ElectroError::Tool(format!("Auth observe: {e}")))?;
 
     let (user_id, pass_id, submit_id) = detect_login_form(&ax_result.result.nodes)
-        .ok_or(Temm1eError::Tool("Could not detect login form on this page".into()))?;
+        .ok_or(ElectroError::Tool("Could not detect login form on this page".into()))?;
 
     // 3. Resolve AX node IDs to DOM elements via backendDOMNodeId
     let user_node = find_node_by_id(&ax_result.result.nodes, &user_id)?;
@@ -231,9 +231,9 @@ chromiumoxide form interaction:
 
 ### Helper: resolve AX node to Element
 ```rust
-async fn resolve_element(page: &Page, node: &AxNode) -> Result<Element, Temm1eError> {
+async fn resolve_element(page: &Page, node: &AxNode) -> Result<Element, ElectroError> {
     let backend_id = node.backend_dom_node_id.as_ref()
-        .ok_or(Temm1eError::Tool("AX node has no DOM backing".into()))?;
+        .ok_or(ElectroError::Tool("AX node has no DOM backing".into()))?;
 
     // Use DOM.resolveNode to get a RemoteObjectId, then wrap as Element
     use chromiumoxide::cdp::browser_protocol::dom::*;
@@ -258,7 +258,7 @@ async fn resolve_element(page: &Page, node: &AxNode) -> Result<Element, Temm1eEr
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/credential_scrub.rs` (new)
+**File:** `crates/electro-tools/src/credential_scrub.rs` (new)
 
 ```rust
 use once_cell::sync::Lazy;
@@ -320,7 +320,7 @@ pub fn scrub(text: &str, known_values: &[&str]) -> String {
 
 ### Implementation
 
-**File:** `crates/temm1e-channels/src/telegram.rs` (or wherever credential capture is handled)
+**File:** `crates/electro-channels/src/telegram.rs` (or wherever credential capture is handled)
 
 After detecting a credential message and storing it in vault:
 ```rust

@@ -1,4 +1,4 @@
-# TEMM1E Hive — Project Build Benchmark (Verified)
+# ELECTRO Hive — Project Build Benchmark (Verified)
 
 **Date:** 2026-03-18
 **Model:** gemini-3.1-flash-lite-preview

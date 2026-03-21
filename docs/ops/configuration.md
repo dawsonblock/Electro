@@ -1,21 +1,21 @@
 # Operations Guide: Configuration
 
-This guide covers the operational aspects of configuring TEMM1E: environment variables, secret management, configuration hierarchy, and common patterns for production deployments.
+This guide covers the operational aspects of configuring ELECTRO: environment variables, secret management, configuration hierarchy, and common patterns for production deployments.
 
 ## Configuration Hierarchy
 
-TEMM1E loads configuration from multiple sources. Each source overrides the previous:
+ELECTRO loads configuration from multiple sources. Each source overrides the previous:
 
 ```
 1. Compiled defaults        (hardcoded in Rust Default implementations)
        |
-2. /etc/temm1e/config.toml (system-level config, set during Docker build)
+2. /etc/electro/config.toml (system-level config, set during Docker build)
        |
-3. ~/.temm1e/config.toml   (user-level config)
+3. ~/.electro/config.toml   (user-level config)
        |
 4. ./config.toml            (workspace-level config)
        |
-5. TEMM1E_* env vars       (environment variable overrides)
+5. ELECTRO_* env vars       (environment variable overrides)
        |
 6. CLI flags                (--mode, --config)
        |
@@ -23,27 +23,27 @@ TEMM1E loads configuration from multiple sources. Each source overrides the prev
 ```
 
 In Docker deployments, the typical sources are:
-- `/etc/temm1e/default.toml` (baked into the image)
-- A mounted `/etc/temm1e/config.toml` (deployment-specific)
+- `/etc/electro/default.toml` (baked into the image)
+- A mounted `/etc/electro/config.toml` (deployment-specific)
 - Environment variables (secrets and runtime overrides)
 
 ## Environment Variables
 
-### TEMM1E_* Prefix Mapping
+### ELECTRO_* Prefix Mapping
 
-Any configuration key can be set via an environment variable using the `TEMM1E_` prefix. Nested keys use double underscores (`__`).
+Any configuration key can be set via an environment variable using the `ELECTRO_` prefix. Nested keys use double underscores (`__`).
 
 | Environment Variable | Config Key | Example |
 |---------------------|------------|---------|
-| `TEMM1E_MODE` | `temm1e.mode` | `cloud` |
-| `TEMM1E_GATEWAY__HOST` | `gateway.host` | `0.0.0.0` |
-| `TEMM1E_GATEWAY__PORT` | `gateway.port` | `443` |
-| `TEMM1E_GATEWAY__TLS` | `gateway.tls` | `true` |
-| `TEMM1E_PROVIDER__NAME` | `provider.name` | `anthropic` |
-| `TEMM1E_PROVIDER__MODEL` | `provider.model` | `claude-sonnet-4-6` |
-| `TEMM1E_MEMORY__BACKEND` | `memory.backend` | `postgres` |
-| `TEMM1E_OBSERVABILITY__LOG_LEVEL` | `observability.log_level` | `debug` |
-| `TEMM1E_OBSERVABILITY__OTEL_ENABLED` | `observability.otel_enabled` | `true` |
+| `ELECTRO_MODE` | `electro.mode` | `cloud` |
+| `ELECTRO_GATEWAY__HOST` | `gateway.host` | `0.0.0.0` |
+| `ELECTRO_GATEWAY__PORT` | `gateway.port` | `443` |
+| `ELECTRO_GATEWAY__TLS` | `gateway.tls` | `true` |
+| `ELECTRO_PROVIDER__NAME` | `provider.name` | `anthropic` |
+| `ELECTRO_PROVIDER__MODEL` | `provider.model` | `claude-sonnet-4-6` |
+| `ELECTRO_MEMORY__BACKEND` | `memory.backend` | `postgres` |
+| `ELECTRO_OBSERVABILITY__LOG_LEVEL` | `observability.log_level` | `debug` |
+| `ELECTRO_OBSERVABILITY__OTEL_ENABLED` | `observability.otel_enabled` | `true` |
 
 ### ${ENV_VAR} Expansion in Config Files
 
@@ -58,7 +58,7 @@ api_key = "${ANTHROPIC_API_KEY}"
 token = "${TELEGRAM_BOT_TOKEN}"
 ```
 
-At load time, `${ANTHROPIC_API_KEY}` is replaced with the value of the `ANTHROPIC_API_KEY` environment variable. If the variable is not set, TEMM1E reports a configuration error at startup.
+At load time, `${ANTHROPIC_API_KEY}` is replaced with the value of the `ANTHROPIC_API_KEY` environment variable. If the variable is not set, ELECTRO reports a configuration error at startup.
 
 ### Common Environment Variables
 
@@ -75,7 +75,7 @@ These are the environment variables most frequently set in production:
 | `WHATSAPP_API_TOKEN` | If using WhatsApp | WhatsApp Business API token |
 | `DATABASE_URL` | If using PostgreSQL | PostgreSQL connection string |
 | `RUST_LOG` | No | Log filter (overrides `observability.log_level`) |
-| `TEMM1E_MODE` | No | Runtime mode override |
+| `ELECTRO_MODE` | No | Runtime mode override |
 
 ## vault:// URIs
 
@@ -85,7 +85,7 @@ The `vault://` URI scheme references secrets stored in the encrypted vault.
 
 1. A config value is set to `vault://key-name`
 2. At startup, the config loader detects `vault://` prefixes
-3. The vault backend decrypts the named secret from `~/.temm1e/vault.enc`
+3. The vault backend decrypts the named secret from `~/.electro/vault.enc`
 4. The plaintext value replaces the `vault://` URI in memory
 5. The vault file itself is never modified during resolution
 
@@ -112,8 +112,8 @@ Alternatively, the vault can be managed programmatically through the `Vault` tra
 
 | Mode | Vault File | Key File |
 |------|-----------|----------|
-| Local | `~/.temm1e/vault.enc` | `~/.temm1e/vault.key` |
-| Docker | `/var/lib/temm1e/vault.enc` | `/var/lib/temm1e/vault.key` |
+| Local | `~/.electro/vault.enc` | `~/.electro/vault.key` |
+| Docker | `/var/lib/electro/vault.enc` | `/var/lib/electro/vault.key` |
 
 The vault key file must be protected. In Docker deployments, it lives on the persistent volume. For production, consider mounting it from a secrets manager.
 
@@ -131,15 +131,15 @@ The vault key file must be protected. In Docker deployments, it lives on the per
 Recommended settings for production cloud deployments:
 
 ```toml
-[temm1e]
+[electro]
 mode = "cloud"
 
 [gateway]
 host = "0.0.0.0"
 port = 443
 tls = true
-tls_cert = "/etc/temm1e/cert.pem"
-tls_key = "/etc/temm1e/key.pem"
+tls_cert = "/etc/electro/cert.pem"
+tls_key = "/etc/electro/key.pem"
 
 [memory]
 backend = "postgres"
@@ -171,7 +171,7 @@ Cloud mode automatically:
 Recommended settings for local development:
 
 ```toml
-[temm1e]
+[electro]
 mode = "local"
 
 [gateway]
@@ -180,7 +180,7 @@ port = 8080
 
 [memory]
 backend = "sqlite"
-path = "~/.temm1e/memory.db"
+path = "~/.electro/memory.db"
 
 [observability]
 log_level = "debug"
@@ -194,7 +194,7 @@ Local mode automatically:
 
 ### Auto Mode
 
-When `mode = "auto"`, TEMM1E detects the environment:
+When `mode = "auto"`, ELECTRO detects the environment:
 
 1. Container runtime detected (/.dockerenv or cgroup)? -> cloud
 2. Cloud metadata endpoint reachable (169.254.169.254)? -> cloud
@@ -203,23 +203,23 @@ When `mode = "auto"`, TEMM1E detects the environment:
 
 ## ZeroClaw Configuration Compatibility
 
-TEMM1E reads ZeroClaw TOML configuration files. If a `config.toml` is detected as ZeroClaw format, it is automatically converted at load time.
+ELECTRO reads ZeroClaw TOML configuration files. If a `config.toml` is detected as ZeroClaw format, it is automatically converted at load time.
 
 Mapped sections:
-- ZeroClaw provider configs -> TEMM1E `[provider]`
-- ZeroClaw channel configs -> TEMM1E `[channel.*]`
-- ZeroClaw memory configs -> TEMM1E `[memory]`
-- ZeroClaw tunnel configs -> TEMM1E `[tunnel]`
+- ZeroClaw provider configs -> ELECTRO `[provider]`
+- ZeroClaw channel configs -> ELECTRO `[channel.*]`
+- ZeroClaw memory configs -> ELECTRO `[memory]`
+- ZeroClaw tunnel configs -> ELECTRO `[tunnel]`
 
 Unsupported fields generate a warning in the logs.
 
 ## OpenClaw Configuration Compatibility
 
-TEMM1E can also read OpenClaw YAML configuration files. If a `.yaml` or `.yml` config is detected, it is parsed and converted to the TEMM1E format.
+ELECTRO can also read OpenClaw YAML configuration files. If a `.yaml` or `.yml` config is detected, it is parsed and converted to the ELECTRO format.
 
 ```bash
 # Migrate from OpenClaw
-temm1e migrate --from openclaw /path/to/openclaw/workspace
+electro migrate --from openclaw /path/to/openclaw/workspace
 ```
 
 ## Configuration Validation
@@ -227,7 +227,7 @@ temm1e migrate --from openclaw /path/to/openclaw/workspace
 Validate your configuration before deploying:
 
 ```bash
-temm1e config validate
+electro config validate
 ```
 
 This checks:
@@ -240,7 +240,7 @@ This checks:
 To see the fully resolved configuration:
 
 ```bash
-temm1e config show
+electro config show
 ```
 
 This prints the merged configuration from all sources (with secrets redacted in the output).

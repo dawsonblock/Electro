@@ -4,16 +4,16 @@ This archive adds a fail-closed hardening pass over the highest-risk surfaces.
 
 ## Default behavior changes
 
-- Shell commands now use an isolated container runner by default. `TEMM1E_SHELL_BACKEND=auto` tries `docker` and then `podman`.
+- Shell commands now use an isolated container runner by default. `ELECTRO_SHELL_BACKEND=auto` tries `docker` and then `podman`.
 - The shell runner mounts only the workspace at `/workspace`, uses a read-only root filesystem, drops Linux capabilities, applies resource limits, and denies network by default.
-- Direct host fallback now clears the inherited environment, redirects HOME/XDG state into workspace-local `.temm1e-host-*` directories, and blocks launcher programs such as `sh`, `bash`, and `sudo`.
-- Direct host execution now requires **both** `TEMM1E_SHELL_BACKEND=host` and `TEMM1E_ENABLE_HOST_SHELL=1`.
+- Direct host fallback now clears the inherited environment, redirects HOME/XDG state into workspace-local `.electro-host-*` directories, and blocks launcher programs such as `sh`, `bash`, and `sudo`.
+- Direct host execution now requires **both** `ELECTRO_SHELL_BACKEND=host` and `ELECTRO_ENABLE_HOST_SHELL=1`.
 - Shell commands are parsed into argv and executed directly. This archive no longer relies on `sh -c` for either the isolated runner or the host fallback path.
 - File tools now accept only workspace-relative paths.
 - Web fetch blocks private, loopback, local, and internal targets, now including hostname resolutions that map to private IPs and redirects to blocked targets.
-- Browser launches with a clean profile by default. Inheriting the live Chrome session now requires `TEMM1E_INHERIT_BROWSER_SESSION=1`.
-- Custom tool loading, creation, and execution are disabled unless `TEMM1E_ENABLE_CUSTOM_TOOLS=1`.
-- Telegram, Slack, and Discord no longer auto-promote the first user to admin unless `TEMM1E_ALLOW_FIRST_USER_BOOTSTRAP=1`.
+- Browser launches with a clean profile by default. Inheriting the live Chrome session now requires `ELECTRO_INHERIT_BROWSER_SESSION=1`.
+- Custom tool loading, creation, and execution are disabled unless `ELECTRO_ENABLE_CUSTOM_TOOLS=1`.
+- Telegram, Slack, and Discord no longer auto-promote the first user to admin unless `ELECTRO_ALLOW_FIRST_USER_BOOTSTRAP=1`.
 - OTLP exporter health is reported as degraded because transport is not implemented.
 - The orchestrator factory now fails closed instead of constructing placeholder backends that only error later.
 
@@ -21,24 +21,24 @@ This archive adds a fail-closed hardening pass over the highest-risk surfaces.
 
 Environment variables:
 
-- `TEMM1E_SHELL_BACKEND=auto|docker|podman|host`
-- `TEMM1E_SHELL_CONTAINER_IMAGE=debian:bookworm-slim`
-- `TEMM1E_SHELL_ALLOW_NETWORK=0|1`
-- `TEMM1E_SHELL_MEMORY_MB=256`
-- `TEMM1E_SHELL_PIDS_LIMIT=128`
-- `TEMM1E_SHELL_CPU_LIMIT=1.0`
-- `TEMM1E_SHELL_TMPFS_MB=64`
-- `TEMM1E_SHELL_PASSTHROUGH_ENV=OPENAI_API_KEY,ANTHROPIC_API_KEY` for explicit host-fallback env allowlisting after the environment is cleared
-- `TEMM1E_ENABLE_HOST_SHELL=1` only when combined with `TEMM1E_SHELL_BACKEND=host`
+- `ELECTRO_SHELL_BACKEND=auto|docker|podman|host`
+- `ELECTRO_SHELL_CONTAINER_IMAGE=debian:bookworm-slim`
+- `ELECTRO_SHELL_ALLOW_NETWORK=0|1`
+- `ELECTRO_SHELL_MEMORY_MB=256`
+- `ELECTRO_SHELL_PIDS_LIMIT=128`
+- `ELECTRO_SHELL_CPU_LIMIT=1.0`
+- `ELECTRO_SHELL_TMPFS_MB=64`
+- `ELECTRO_SHELL_PASSTHROUGH_ENV=OPENAI_API_KEY,ANTHROPIC_API_KEY` for explicit host-fallback env allowlisting after the environment is cleared
+- `ELECTRO_ENABLE_HOST_SHELL=1` only when combined with `ELECTRO_SHELL_BACKEND=host`
 
 ## What is still not solved
 
 - The isolated shell runner depends on an installed `docker` or `podman` CLI. I added the runner path, but I could not verify it in this environment.
 - The default container image is still `debian:bookworm-slim`, but the repo now includes `docker/shell-runner.Dockerfile` plus helper scripts to build and smoke-test a richer trusted image with `git`, `python3`, `node`, `jq`, and common dev tools.
 - Browser automation can still reach public sites; it is not isolated in a separate network namespace from the rest of the process.
-- Browser and web_fetch now share an optional domain allowlist via `TEMM1E_PUBLIC_WEB_ALLOWLIST`, and browser navigation now performs DNS resolution checks before and after navigation.
-- Browser JavaScript evaluation is disabled by default and now requires `TEMM1E_BROWSER_ALLOW_EVAL=1`.
-- Browser supports an operator-supplied proxy via `TEMM1E_BROWSER_PROXY_SERVER` and `TEMM1E_BROWSER_PROXY_BYPASS`.
+- Browser and web_fetch now share an optional domain allowlist via `ELECTRO_PUBLIC_WEB_ALLOWLIST`, and browser navigation now performs DNS resolution checks before and after navigation.
+- Browser JavaScript evaluation is disabled by default and now requires `ELECTRO_BROWSER_ALLOW_EVAL=1`.
+- Browser supports an operator-supplied proxy via `ELECTRO_BROWSER_PROXY_SERVER` and `ELECTRO_BROWSER_PROXY_BYPASS`.
 - I could not run `cargo check` or the Rust test suite in this environment because `cargo` and `rustc` were not installed.
 
 ## Recommended next step
@@ -51,7 +51,7 @@ The next hardening step is to move browser and web-fetch traffic behind a real p
 - Added `scripts/smoke_shell_runner.sh` to verify the runner baseline without enabling network.
 - Expanded the starter runner image with common developer tooling so operators do not need to fall back to host execution for basic repo work.
 
-- Browser runtime now prefers a remote isolated Chrome instance over CDP (`TEMM1E_BROWSER_ISOLATION_MODE=remote`, `TEMM1E_BROWSER_REMOTE_URL=http://127.0.0.1:9223`).
+- Browser runtime now prefers a remote isolated Chrome instance over CDP (`ELECTRO_BROWSER_ISOLATION_MODE=remote`, `ELECTRO_BROWSER_REMOTE_URL=http://127.0.0.1:9223`).
 - Added `docker-compose.browser-sandbox.yml` with a browser container on an internal Docker network and a dedicated proxy sidecar for egress.
 - Local browser fallback is now explicit and fails closed unless a proxy is configured or the operator deliberately weakens the policy.
 - Added `docs/BROWSER_SANDBOX.md` plus build/run/smoke scripts for the browser sandbox stack.

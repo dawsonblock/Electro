@@ -1,5 +1,5 @@
 # ================================================
-# TEMM1E - Fly.io Deployment Configuration
+# ELECTRO - Fly.io Deployment Configuration
 # Alternative to Terraform/AWS for quick deploys.
 #
 # Usage:
@@ -8,7 +8,7 @@
 #   fly secrets set ANTHROPIC_API_KEY=sk-...
 # ================================================
 
-app = "temm1e"
+app = "electro"
 primary_region = "iad"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
@@ -17,7 +17,7 @@ kill_timeout = "5s"
   dockerfile = "../../Dockerfile"
 
 [env]
-  TEMM1E_MODE = "cloud"
+  ELECTRO_MODE = "cloud"
   RUST_LOG = "info"
 
 [http_service]
@@ -63,6 +63,6 @@ kill_timeout = "5s"
   cpus = 1
 
 [mounts]
-  source = "temm1e_data"
-  destination = "/var/lib/temm1e"
+  source = "electro_data"
+  destination = "/var/lib/electro"
   initial_size = "1gb"

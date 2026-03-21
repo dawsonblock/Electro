@@ -3,10 +3,10 @@
 ## Status: Proposed
 
 ## Context
-TEMM1E is cloud-native first, but must also run on developers' local machines. Same binary, different defaults.
+ELECTRO is cloud-native first, but must also run on developers' local machines. Same binary, different defaults.
 
 ## Decision
-Support three runtime modes configured via `temm1e.mode` in config or `--mode` CLI flag:
+Support three runtime modes configured via `electro.mode` in config or `--mode` CLI flag:
 
 | Mode | Bind | TLS | Memory Default | Vault Default | Browser |
 |------|------|-----|---------------|---------------|---------|

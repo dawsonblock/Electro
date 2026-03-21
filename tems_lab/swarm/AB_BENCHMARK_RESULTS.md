@@ -1,4 +1,4 @@
-# TEMM1E Hive A/B Benchmark — Live Results
+# ELECTRO Hive A/B Benchmark — Live Results
 
 **Date:** 2026-03-17
 **Model:** Gemini 3.1 Flash Lite Preview

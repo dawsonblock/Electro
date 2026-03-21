@@ -1,6 +1,6 @@
 # Tem Prowl: A Messaging-First, Mathematically Rigorous Web-Native Agent Architecture
 
-> **Authors:** Quan Duong, Tem (TEMM1E Labs)
+> **Authors:** Quan Duong, Tem (ELECTRO Labs)
 > **Date:** March 2026
 > **Status:** Draft v0.4 (live-validated, cloned profile architecture)
 > **Branch:** `tem-browse`
@@ -428,12 +428,12 @@ We need a protocol that:
 
 ### 5.2 Protocol Overview
 
-OTK (One-Time Key) Session Capture extends TEMM1E's existing OTK infrastructure (used for API key onboarding) to web authentication:
+OTK (One-Time Key) Session Capture extends ELECTRO's existing OTK infrastructure (used for API key onboarding) to web authentication:
 
 ```
 1. User:    "Log me into Amazon"
 2. Tem:     Generates OTK, creates ephemeral browser session
-            Sends link: "https://temm1e-labs.github.io/temm1e/browse#{otk_hex}"
+            Sends link: "https://electro-labs.github.io/electro/browse#{otk_hex}"
 3. User:    Clicks link → sees a live browser frame (Amazon.com)
             Logs in using their own credentials (types password, handles 2FA)
 4. Browser: User completes authentication → page shows logged-in state
@@ -456,7 +456,7 @@ encryption_key = BLAKE3(otk || "encrypt")  // Derives session encryption key
 
 **Link construction:**
 ```
-link = "https://temm1e-labs.github.io/temm1e/browse#{otk_hex}"
+link = "https://electro-labs.github.io/electro/browse#{otk_hex}"
 ```
 
 The OTK is placed in the URL fragment (`#`), which is **never sent to any server** — it is processed entirely client-side by the browser. This means:
@@ -519,7 +519,7 @@ From the user's perspective in Telegram:
 User:  Can you check my Amazon orders?
 Tem:   I need to be logged into Amazon. Tap this link to log in —
        I'll never see your password:
-       🔗 https://temm1e-labs.github.io/temm1e/browse#a1b2c3...
+       🔗 https://electro-labs.github.io/electro/browse#a1b2c3...
 
        [User taps link, sees Amazon.com in browser]
        [User logs in with their credentials]
@@ -580,7 +580,7 @@ Browser-based tasks can fail in ways that text-based LLM tasks cannot:
 
 **Invariant (Failure Isolation):** *No browser failure in the execution of task `T_i` affects the execution of any other task `T_j` (where `i ≠ j`) or the stability of the Tem agent process.*
 
-This mirrors TEMM1E's existing resilience architecture (the `catch_unwind` + session rollback pattern from the Vietnamese text incident). We extend it to browser tasks:
+This mirrors ELECTRO's existing resilience architecture (the `catch_unwind` + session rollback pattern from the Vietnamese text incident). We extend it to browser tasks:
 
 ```rust
 // Pseudocode — actual implementation in Rust with catch_unwind
@@ -681,7 +681,7 @@ The quadratic term $\bar{h} \cdot m(m+1)/2$ dominates for web tasks because $\ba
 
 ### 7.2 Many Tems: Existing Swarm Infrastructure
 
-TEMM1E v3.0.0 includes Many Tems, a stigmergic swarm intelligence layer (`temm1e-hive` crate, 2,490 lines, 71 tests) that eliminates the quadratic context cost through parallel task execution with scent-based coordination. The key components:
+ELECTRO v3.0.0 includes Many Tems, a stigmergic swarm intelligence layer (`electro-hive` crate, 2,490 lines, 71 tests) that eliminates the quadratic context cost through parallel task execution with scent-based coordination. The key components:
 
 **Alpha (Coordinator):** Decomposes a complex task into a DAG of subtasks with dependency edges. One LLM call.
 
@@ -877,7 +877,7 @@ Combined with the existing Many Tems resilience (Axiom A4: if N-1 workers panic,
 
 1. **Browser-level:** Playwright context isolation prevents cross-Tem browser crashes
 2. **Task-level:** `catch_unwind` prevents panics from propagating
-3. **Worker-level:** Dead worker detection + respawn (existing TEMM1E infra)
+3. **Worker-level:** Dead worker detection + respawn (existing ELECTRO infra)
 4. **Swarm-level:** Den state machine enables seamless task handoff from failed to healthy Tems
 5. **Pheromone-level:** Failure and BotDetected scents warn other Tems away from hostile sites ∎
 
@@ -1058,7 +1058,7 @@ We propose a Tem Prowl-specific benchmark that tests messaging-first scenarios:
 The architecture described in Sections 3-7 was implemented across six phases (~3,500 lines of Rust, ~180 new tests) and validated through a progressive series of experiments: 11 automated CLI tests, 4 UX tests, 3 multi-step benchmarks, an OTK dry run on a test site, and a live end-to-end test on Facebook via Telegram. The live test is the definitive validation — it exercises every major component (observation, credential isolation, OTK session capture, session persistence, SPA navigation) against a hostile real-world target (Facebook's React SPA with aggressive bot detection).
 
 **Test environment:**
-- Agent runtime: TEMM1E v3.0.0 + Tem Prowl (Phases 0-5)
+- Agent runtime: ELECTRO v3.0.0 + Tem Prowl (Phases 0-5)
 - LLM provider: Gemini 3 Flash Preview via Gemini API
 - Browser: Headless Chromium via chromiumoxide (CDP)
 - Channel: Telegram (live user on mobile)
@@ -1202,10 +1202,10 @@ The breakthrough is deceptively simple: **clone the user's real Chrome profile t
    - Linux:   ~/.config/google-chrome/Default
 
 2. Copy the profile directory to a working directory:
-   /tmp/temm1e-chrome-profile/ (or configurable path)
+   /tmp/electro-chrome-profile/ (or configurable path)
 
 3. Launch Chrome with:
-   --user-data-dir=/tmp/temm1e-chrome-profile
+   --user-data-dir=/tmp/electro-chrome-profile
    --remote-debugging-port=9222
 
 4. Connect via CDP as usual.
@@ -1311,8 +1311,8 @@ The web is the second home for humans. With Tem Prowl, it becomes the second hom
 
 [10] IETF. "RFC 7636: Proof Key for Code Exchange (PKCE)." 2015.
 
-[11] Duong, Q., Claude Opus 4.6. "Many Tems: Stigmergic Swarm Intelligence for AI Agent Runtimes." TEMM1E Labs, 2026. (5.86x speedup, 3.4x token savings on 12-task benchmark with zero coordination tokens.)
+[11] Duong, Q., Claude Opus 4.6. "Many Tems: Stigmergic Swarm Intelligence for AI Agent Runtimes." ELECTRO Labs, 2026. (5.86x speedup, 3.4x token savings on 12-task benchmark with zero coordination tokens.)
 
 ---
 
-*Draft v0.4 (live-validated, cloned profile architecture) — March 2026. TEMM1E Labs.*
+*Draft v0.4 (live-validated, cloned profile architecture) — March 2026. ELECTRO Labs.*

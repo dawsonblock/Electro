@@ -11,7 +11,7 @@
 
 Deterministic, O(1) function. No LLM calls. Examines tree metadata to decide observation tier.
 
-**File:** `crates/temm1e-tools/src/browser_observation.rs` (new)
+**File:** `crates/electro-tools/src/browser_observation.rs` (new)
 
 ```rust
 pub enum ObservationTier {
@@ -91,7 +91,7 @@ pub fn select_tier(
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 New action in `execute()` match:
 
@@ -104,7 +104,7 @@ New action in `execute()` match:
     // Always get accessibility tree first
     use chromiumoxide::cdp::browser_protocol::accessibility::*;
     let ax_result = page.execute(GetFullAxTreeParams::default()).await
-        .map_err(|e| Temm1eError::Tool(format!("Observe: {e}")))?;
+        .map_err(|e| ElectroError::Tool(format!("Observe: {e}")))?;
     let tree_text = format_ax_tree(&ax_result.result.nodes);
 
     // Analyze and select tier
@@ -181,7 +181,7 @@ Add `observe` to the tool's `parameters_schema()`:
 
 ### Implementation
 
-**Cargo.toml** (temm1e-tools):
+**Cargo.toml** (electro-tools):
 ```toml
 htmd = "0.1"  # HTML to Markdown
 ```
@@ -203,7 +203,7 @@ let markdown = htmd::convert(&html_string).unwrap_or(html_string);
 
 ### Implementation
 
-**File:** `crates/temm1e-tools/src/browser.rs`
+**File:** `crates/electro-tools/src/browser.rs`
 
 Add to `BrowserTool` struct:
 ```rust

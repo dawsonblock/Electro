@@ -1,6 +1,6 @@
 # Tem Prowl: Final Report
 
-> **Authors:** Quan Duong, Claude Opus 4.6 (TEMM1E Labs)
+> **Authors:** Quan Duong, Claude Opus 4.6 (ELECTRO Labs)
 > **Date:** 2026-03-21 (V2 update)
 > **Branch:** `tem-browse`
 > **Status:** Live-validated. Facebook end-to-end test passed. Zalo Web breakthrough via cloned profile.
@@ -48,7 +48,7 @@ Chrome launch now tries headed mode first (better anti-bot resilience, required 
 
 ## Executive Summary
 
-Tem Prowl adds web-native browsing capabilities to TEMM1E, a messaging-first AI agent runtime. Over six implementation phases, we built a layered observation architecture, a credential isolation protocol with formal dataflow proof, an OTK (One-Time Key) session capture mechanism, web browsing blueprints, and stigmergic swarm browsing infrastructure. The system was validated with 11 automated experiments, 4 UX tests, 3 multi-step benchmarks, an OTK dry run, and a live end-to-end test on Facebook via Telegram.
+Tem Prowl adds web-native browsing capabilities to ELECTRO, a messaging-first AI agent runtime. Over six implementation phases, we built a layered observation architecture, a credential isolation protocol with formal dataflow proof, an OTK (One-Time Key) session capture mechanism, web browsing blueprints, and stigmergic swarm browsing infrastructure. The system was validated with 11 automated experiments, 4 UX tests, 3 multi-step benchmarks, an OTK dry run, and a live end-to-end test on Facebook via Telegram.
 
 The Facebook test is the definitive result: a real user on Telegram triggered `/login facebook`, authenticated via OTK session capture, and the agent autonomously navigated Facebook's React SPA, composed a post, set "Only Me" privacy, and published it. The post appeared on the user's actual Facebook feed. Total cost: $0.29, 67 API calls, 65 tool uses, running on Gemini 3 Flash Preview.
 
@@ -140,7 +140,7 @@ Seeded into memory on first run when browser tools are enabled. 4 unit tests for
 
 **Login Registry.** A registry of 100+ services with known login URL patterns, enabling detection of whether a URL is a login page without tree analysis.
 
-**Chrome Zombie Fix.** Headless Chrome child processes persisted after TEMM1E exited. Identified as a known issue; documented mitigation via explicit process tree kill in Drop handler.
+**Chrome Zombie Fix.** Headless Chrome child processes persisted after ELECTRO exited. Identified as a known issue; documented mitigation via explicit process tree kill in Drop handler.
 
 **System Prompt Security Rules.** Added rules to the browser tool description ensuring the LLM never attempts to read, type, or reason about credentials.
 
@@ -422,7 +422,7 @@ Gemini 3.1 Pro failed the Facebook task at $0.22 due to context window overflow.
 | Issue | Root Cause | Fix | Status |
 |-------|-----------|-----|--------|
 | AX tree "uninteresting" deserialization error | chromiumoxide 0.7.0 cannot fully deserialize `Accessibility.getFullAXTree` CDP response | Replaced CDP typed API with JavaScript DOM walking | Fixed, verified |
-| Chrome zombie processes | Headless Chrome child processes persist after TEMM1E exits | Documented; needs explicit process tree kill in Drop handler | Known issue |
+| Chrome zombie processes | Headless Chrome child processes persist after ELECTRO exits | Documented; needs explicit process tree kill in Drop handler | Known issue |
 | get_text overflow on dense pages | Full page text exceeds Gemini context window | observe mode filters to interactive elements only | Fixed (observe is the solution) |
 | Session detection false positives | "sign in" / "log in" text appears in nav links on authenticated pages | Needs positive indicator check instead of negative login check | Known issue |
 | Piped stdin timing mismatch | CLI piped input arrives faster than browser can process clicks | Not a code bug; works with human-speed input (Telegram, interactive) | By design |
@@ -541,4 +541,4 @@ The key architectural insight is that the messaging-first constraint produces a 
 
 ---
 
-*Final report for Tem Prowl. Live-validated on Facebook via Telegram. March 2026. TEMM1E Labs.*
+*Final report for Tem Prowl. Live-validated on Facebook via Telegram. March 2026. ELECTRO Labs.*

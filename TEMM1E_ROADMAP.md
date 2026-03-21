@@ -1,4 +1,4 @@
-# TEMM1E Roadmap
+# ELECTRO Roadmap
 
 > Every item is measured against the [Five Pillars](./VISION.md). Nothing ships without clear user value.
 
@@ -7,7 +7,7 @@
 - **Innovation Score**: 1–10. How novel is this relative to existing agent runtimes (OpenClaw, ZeroClaw, OpenHands, etc.)?
 - **Risk**: `LOW` → well-understood, isolated change. `MEDIUM` → cross-cutting or requires design decisions. `HIGH` → architectural, may need iteration. `CRITICAL` → could destabilize existing functionality.
 
-**Current state:** TEMM1E is a production-ready single-instance Telegram agent with Anthropic/OpenAI providers, 8 tools, SQLite/Markdown memory, heartbeat, and local vault. The Tem's Mind runs ORDER → THINK → ACTION but lacks explicit VERIFY, task persistence, and self-correction. ~10.6K LOC Rust.
+**Current state:** ELECTRO is a production-ready single-instance Telegram agent with Anthropic/OpenAI providers, 8 tools, SQLite/Markdown memory, heartbeat, and local vault. The Tem's Mind runs ORDER → THINK → ACTION but lacks explicit VERIFY, task persistence, and self-correction. ~10.6K LOC Rust.
 
 ---
 
@@ -93,7 +93,7 @@ Current limits: `max_turns=6`, `max_tool_rounds=50`. The Vision demands no task 
 
 ## Phase 1 — The Tem's Mind
 
-*Pillar: Tem's Mind, Autonomy. This is the heart of TEMM1E. Everything else serves it.*
+*Pillar: Tem's Mind, Autonomy. This is the heart of ELECTRO. Everything else serves it.*
 
 ### 1.1 Verification Engine — Explicit Post-Action Verification ✓ DONE (2026-03-08)
 
@@ -137,7 +137,7 @@ Tasks currently live in memory. Process restart = all tasks lost. The Vision dem
 
 | Metric | Rating |
 |--------|--------|
-| **User Value** | `CRITICAL` — A deploy that restarts TEMM1E currently kills all running tasks. Users must re-issue orders. Directly violates Pillar II (Robustness). |
+| **User Value** | `CRITICAL` — A deploy that restarts ELECTRO currently kills all running tasks. Users must re-issue orders. Directly violates Pillar II (Robustness). |
 | **Innovation** | 6/10 — Process-level task persistence is uncommon in agent runtimes. Most assume ephemeral sessions. |
 | **Risk** | `HIGH` — Serializing/deserializing agent state (conversation history, tool context, pending messages) is non-trivial. Schema must handle version migration. |
 | **Pillar** | Robustness, Tem's Mind |
@@ -214,7 +214,7 @@ The agent currently has no memory across tasks beyond raw conversation history. 
 
 ### 2.1 Process Supervisor / Watchdog ✓ DONE (2026-03-08)
 
-TEMM1E currently relies on systemd for restart-on-crash. There is no internal self-monitoring.
+ELECTRO currently relies on systemd for restart-on-crash. There is no internal self-monitoring.
 
 - Implement an internal watchdog thread that monitors:
   - Agent loop liveness (has it produced output in the last N minutes?)
@@ -377,9 +377,9 @@ Full Discord bot integration via `serenity` crate. Mirror Telegram capabilities:
 
 | Metric | Rating |
 |--------|--------|
-| **User Value** | `HIGH` — Discord is the second most requested channel. Opens TEMM1E to developer communities, gaming, and team use cases. |
+| **User Value** | `HIGH` — Discord is the second most requested channel. Opens ELECTRO to developer communities, gaming, and team use cases. |
 | **Innovation** | 3/10 — Standard channel integration. The trait system makes this straightforward. |
-| **Risk** | `LOW` — The `Channel` trait is well-defined. Implementation is isolated to `temm1e-channels`. |
+| **Risk** | `LOW` — The `Channel` trait is well-defined. Implementation is isolated to `electro-channels`. |
 | **Pillar** | Autonomy |
 
 ### 4.2 Git Tool ✓ DONE (2026-03-08)
@@ -401,7 +401,7 @@ Native git operations: clone, pull, push, commit, branch, diff, log. Currently u
 
 Load and execute user-defined skills from Markdown files with YAML frontmatter. No signing yet — local skills only.
 
-- Scan `~/.temm1e/skills/` and workspace `skills/` directories.
+- Scan `~/.electro/skills/` and workspace `skills/` directories.
 - Parse skill format: name, description, capabilities, instructions.
 - Inject skill instructions into system prompt when the agent detects a relevant task.
 - `/skills` command: list available skills.
@@ -409,7 +409,7 @@ Load and execute user-defined skills from Markdown files with YAML frontmatter. 
 | Metric | Rating |
 |--------|--------|
 | **User Value** | `MEDIUM` — Power users can extend the agent with domain-specific knowledge. Not needed for basic use. |
-| **Innovation** | 5/10 — OpenClaw has a skill system. TEMM1E's version is simpler but safer (sandbox enforcement). |
+| **Innovation** | 5/10 — OpenClaw has a skill system. ELECTRO's version is simpler but safer (sandbox enforcement). |
 | **Risk** | `MEDIUM` — Skill injection into prompts can conflict with system instructions. Needs priority/override rules. |
 | **Pillar** | Elegance, Tem's Mind |
 
@@ -419,14 +419,14 @@ Slack Bot integration via Slack API (Events API + Web API). Workspace-level depl
 
 | Metric | Rating |
 |--------|--------|
-| **User Value** | `HIGH` — Slack is dominant in enterprise. Opens TEMM1E to professional team use. |
+| **User Value** | `HIGH` — Slack is dominant in enterprise. Opens ELECTRO to professional team use. |
 | **Innovation** | 3/10 — Standard integration. |
 | **Risk** | `MEDIUM` — Slack's API is more complex than Telegram's (OAuth app installation, event subscriptions, workspace permissions). |
 | **Pillar** | Autonomy |
 
 ### 4.5 Web Dashboard (Minimal) ✓ DONE (2026-03-08)
 
-A lightweight web UI for monitoring TEMM1E: active tasks, health status, configuration, logs. Not a chat interface — the messaging app remains primary.
+A lightweight web UI for monitoring ELECTRO: active tasks, health status, configuration, logs. Not a chat interface — the messaging app remains primary.
 
 - Serve from the existing gateway on `/dashboard`.
 - Static HTML + HTMX (no JS framework). Total <50KB.
@@ -454,7 +454,7 @@ Implement the `FileStore` trait with S3-compatible object storage. For files tha
 |--------|--------|
 | **User Value** | `MEDIUM` — Enables large file exchange. Currently capped at Telegram's 50MB limit. |
 | **Innovation** | 3/10 — Standard cloud integration. |
-| **Risk** | `LOW` — Isolated crate (`temm1e-filestore`). Trait already defined. |
+| **Risk** | `LOW` — Isolated crate (`electro-filestore`). Trait already defined. |
 | **Pillar** | Autonomy |
 
 ### 5.2 OpenTelemetry Observability ✓ DONE (2026-03-08)
@@ -482,7 +482,7 @@ The `Tenant` trait: per-user workspaces, isolated file systems, separate memory 
 
 | Metric | Rating |
 |--------|--------|
-| **User Value** | `HIGH` — Enables shared TEMM1E instances for teams. Currently single-user only. |
+| **User Value** | `HIGH` — Enables shared ELECTRO instances for teams. Currently single-user only. |
 | **Innovation** | 6/10 — Multi-tenant agent runtimes are rare. Most are single-user or require separate deployments. |
 | **Risk** | `HIGH` — Cross-tenant isolation is a security-critical feature. File system jails, memory isolation, and quota enforcement all need careful implementation. A bug here is a security vulnerability. |
 | **Pillar** | Robustness, Elegance |
@@ -547,7 +547,7 @@ For complex tasks, the primary agent spawns a sub-agent with a scoped objective.
 | Metric | Rating |
 |--------|--------|
 | **User Value** | `HIGH` — Complex tasks (e.g., "refactor the codebase and update all tests") benefit from divide-and-conquer. |
-| **Innovation** | 9/10 — Multi-agent orchestration within a single runtime is frontier territory. Most multi-agent systems are framework-level (LangGraph, CrewAI). TEMM1E doing this natively in Rust is novel. |
+| **Innovation** | 9/10 — Multi-agent orchestration within a single runtime is frontier territory. Most multi-agent systems are framework-level (LangGraph, CrewAI). ELECTRO doing this natively in Rust is novel. |
 | **Risk** | `HIGH` — Agent coordination is hard. Sub-agents can conflict, loop, or produce inconsistent results. Needs strict scoping and a clear aggregation protocol. |
 | **Pillar** | Tem's Mind, Autonomy |
 
@@ -562,7 +562,7 @@ The agent currently only acts on user messages and heartbeats. It never initiate
 
 | Metric | Rating |
 |--------|--------|
-| **User Value** | `HIGH` — Transforms TEMM1E from reactive (waits for orders) to proactive (anticipates needs). This is the difference between a tool and an assistant. |
+| **User Value** | `HIGH` — Transforms ELECTRO from reactive (waits for orders) to proactive (anticipates needs). This is the difference between a tool and an assistant. |
 | **Innovation** | 8/10 — Event-driven agent initiation is rare in current runtimes. Most are purely conversational. |
 | **Risk** | `HIGH` — Proactive agents that act without user input can cause damage. Needs strict guardrails: action requires user confirmation for destructive operations, rate limits on proactive actions. |
 | **Pillar** | Tem's Mind, Autonomy |
@@ -597,7 +597,7 @@ Three-tier observation system — accessibility tree, targeted DOM extraction, s
 |--------|--------|
 | **User Value** | `HIGH` — 3-10x cheaper than screenshot-based browsing. Enables affordable web tasks. |
 | **Innovation** | 8/10 — Formal token complexity bounds for web observation. No other agent runtime has this. |
-| **Risk** | `LOW` — Additive module in temm1e-tools. No existing behavior changes. |
+| **Risk** | `LOW` — Additive module in electro-tools. No existing behavior changes. |
 | **Pillar** | Brutal Efficiency, Autonomy |
 
 ### 7.2 Credential Isolation Protocol ✓ DONE (2026-03-20)
@@ -635,7 +635,7 @@ Four web-specific blueprints: `web_login`, `web_search`, `web_extract`, `web_com
 
 ### 7.5 Swarm Browsing ✓ DONE (2026-03-20)
 
-Extends Many Tems (temm1e-hive) to parallel browser operation. Browser pool with lock-free atomic CAS slot allocation. Four browse-specific pheromone signal types. N browsers, zero coordination tokens.
+Extends Many Tems (electro-hive) to parallel browser operation. Browser pool with lock-free atomic CAS slot allocation. Four browse-specific pheromone signal types. N browsers, zero coordination tokens.
 
 | Metric | Rating |
 |--------|--------|
@@ -771,7 +771,7 @@ Independent tracks that can proceed in parallel:
 **Immediate** (unblocks everything else):
 `0.5` → `0.3` → `0.1` → `0.2`
 
-**Next** (the Tem's Mind — TEMM1E's differentiator):
+**Next** (the Tem's Mind — ELECTRO's differentiator):
 `1.1` → `1.6` → `1.5` → `1.3` → `1.4` → `1.7`
 
 **Parallel track** (efficiency + ecosystem, no dependencies on Phase 1):

@@ -1,6 +1,6 @@
 # Agentic Core Snapshot — v2.6.0
 
-> Exact implementation snapshot of `crates/temm1e-agent/src/runtime.rs` as of v2.6.0.
+> Exact implementation snapshot of `crates/electro-agent/src/runtime.rs` as of v2.6.0.
 > This document captures the full `process_message()` flow so future conversations
 > can reference the architecture without re-reading 1500+ lines of code.
 
@@ -15,13 +15,13 @@ AgentRuntime::process_message(
     reply_tx: Option<mpsc::UnboundedSender<OutboundMessage>>,
     status_tx: Option<watch::Sender<AgentTaskStatus>>,
     cancel: Option<CancellationToken>,
-) -> Result<(OutboundMessage, TurnUsage), Temm1eError>
+) -> Result<(OutboundMessage, TurnUsage), ElectroError>
 ```
 
 ## Phase 1: Message Intake (lines 258-405)
 
 1. **User text extraction** — prioritizes `msg.text`, falls back to attachment descriptions, returns early for empty messages.
-2. **Credential detection** — `temm1e_vault::detect_credentials()` scans for API keys. Detected but not stored in plain text.
+2. **Credential detection** — `electro_vault::detect_credentials()` scans for API keys. Detected but not stored in plain text.
 3. **Vision attachment loading** — reads image files from workspace, base64-encodes, creates `ContentPart::Image` parts.
 4. **Vision capability check** — if model doesn't support vision (`model_supports_vision()`), strips images and prepends notice to user text.
 5. **History push** — user message appended to `session.history` (as Text or Parts with images).
