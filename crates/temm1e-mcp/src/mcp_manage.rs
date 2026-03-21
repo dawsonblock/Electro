@@ -77,7 +77,7 @@ impl Tool for McpManageTool {
     fn declarations(&self) -> CapabilityPolicy {
         CapabilityPolicy {
             file_access: vec![],
-            network_access: vec!["*".to_string()],
+            network_access: temm1e_core::net_policy::NetworkPolicy::Unrestricted,
             shell_access: temm1e_core::policy::ShellPolicy::Allowed,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked, // Spawns subprocesses for stdio transport
         }

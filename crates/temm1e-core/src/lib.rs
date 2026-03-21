@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod net_policy;
 pub mod config;
 pub mod orchestrator_impl;
 pub mod policy;

@@ -7,8 +7,12 @@
 //! - DNS resolution must stay on public addresses
 
 use url::Url;
+pub use temm1e_core::net_policy::host_address_is_blocked_for_public_web as host_is_blocked;
 
-/// Split and normalize a comma-separated allowlist of hostnames.
+pub use temm1e_core::net_policy::host_matches_allow_entry;
+pub use temm1e_core::net_policy::PUBLIC_WEB_ALLOWLIST_ENV;
+
+/// Split and normalize a comma-separated allowlist of hostnames from a specific env var.
 pub fn load_domain_allowlist_from_env(var_name: &str) -> Vec<String> {
     std::env::var(var_name)
         .unwrap_or_default()
@@ -16,15 +20,6 @@ pub fn load_domain_allowlist_from_env(var_name: &str) -> Vec<String> {
         .map(|s| s.trim().trim_matches('.').to_ascii_lowercase())
         .filter(|s| !s.is_empty())
         .collect()
-}
-
-pub fn host_matches_allow_entry(host: &str, entry: &str) -> bool {
-    let host = host.trim().trim_matches('.').to_ascii_lowercase();
-    let entry = entry.trim().trim_matches('.').to_ascii_lowercase();
-    if host.is_empty() || entry.is_empty() {
-        return false;
-    }
-    host == entry || host.ends_with(&format!(".{entry}"))
 }
 
 pub fn enforce_host_allowlist(host: &str, allowlist: &[String], label: &str) -> Result<(), String> {
@@ -45,41 +40,52 @@ pub fn enforce_host_allowlist(host: &str, allowlist: &[String], label: &str) -> 
     }
 }
 
-pub fn host_is_blocked(host: &str) -> bool {
-    let host = host.trim().to_ascii_lowercase();
-    if host.is_empty() {
-        return true;
+/// Build a standard reqwest::Client configured with standard timeouts and redirect policies.
+pub fn build_standard_client(
+    policy: &temm1e_core::net_policy::NetworkPolicy,
+) -> Result<reqwest::Client, String> {
+    let mut builder = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .user_agent("TEMM1E/0.1");
+
+    match policy {
+        temm1e_core::net_policy::NetworkPolicy::Blocked => {
+            builder = builder.redirect(reqwest::redirect::Policy::none());
+        }
+        temm1e_core::net_policy::NetworkPolicy::PublicWeb { allowlist } => {
+            let allowlist = allowlist.clone();
+            builder = builder.redirect(reqwest::redirect::Policy::custom(move |attempt| {
+                let host = attempt.url().host_str().map(|s| s.to_owned());
+                match host {
+                    Some(h) if host_is_blocked(&h) => {
+                        attempt.error(format!("Blocked redirect to private/internal host: {h}"))
+                    }
+                    Some(h) => {
+                        if let Some(ref list) = allowlist {
+                            if !list.is_empty()
+                                && !list.iter().any(|entry| host_matches_allow_entry(&h, entry))
+                            {
+                                return attempt.error(format!(
+                                    "Blocked redirect: {h} is not in the allowlist"
+                                ));
+                            }
+                        }
+                        attempt.follow()
+                    }
+                    None => attempt.error("Redirect target missing host"),
+                }
+            }));
+        }
+        temm1e_core::net_policy::NetworkPolicy::Unrestricted => {
+            builder = builder.redirect(reqwest::redirect::Policy::default());
+        }
     }
 
-    if matches!(host.as_str(), "localhost" | "localhost.localdomain")
-        || host.ends_with(".local")
-        || host.ends_with(".internal")
-        || host.ends_with(".localhost")
-    {
-        return true;
-    }
-
-    if let Ok(ip) = host.parse::<std::net::IpAddr>() {
-        return match ip {
-            std::net::IpAddr::V4(ip) => {
-                ip.is_private()
-                    || ip.is_loopback()
-                    || ip.is_link_local()
-                    || ip.is_multicast()
-                    || ip.is_unspecified()
-            }
-            std::net::IpAddr::V6(ip) => {
-                let seg0 = ip.segments()[0];
-                ip.is_loopback()
-                    || ip.is_unspecified()
-                    || (seg0 & 0xfe00) == 0xfc00
-                    || (seg0 & 0xffc0) == 0xfe80
-            }
-        };
-    }
-
-    false
+    builder
+        .build()
+        .map_err(|e| format!("Failed to build reqwest client: {}", e))
 }
+
 
 pub fn validate_public_url(raw: &str) -> Result<Url, String> {
     let url = Url::parse(raw).map_err(|e| format!("Invalid URL: {}", e))?;

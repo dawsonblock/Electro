@@ -60,7 +60,7 @@ impl Tool for SendFileTool {
     fn declarations(&self) -> CapabilityPolicy {
         CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Read(".".into())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }

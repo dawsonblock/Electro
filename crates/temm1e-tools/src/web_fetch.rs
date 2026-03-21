@@ -1,8 +1,8 @@
 //! Web fetch tool — retrieves content from public URLs via HTTP GET.
 
 use crate::network_guard::{
-    enforce_host_allowlist, ensure_resolved_host_is_public, host_is_blocked,
-    load_domain_allowlist_from_env, validate_public_url,
+    build_standard_client, enforce_host_allowlist, ensure_resolved_host_is_public,
+    load_domain_allowlist_from_env, validate_public_url, PUBLIC_WEB_ALLOWLIST_ENV,
 };
 use async_trait::async_trait;
 use temm1e_core::types::error::Temm1eError;
@@ -11,7 +11,6 @@ use temm1e_core::policy::CapabilityPolicy;
 
 
 /// Default request timeout in seconds.
-const DEFAULT_TIMEOUT_SECS: u64 = 10;
 
 /// Maximum response body size (32 KB — keeps tool output within token budget).
 const MAX_RESPONSE_SIZE: usize = 32 * 1024;
@@ -28,32 +27,13 @@ impl Default for WebFetchTool {
 
 impl WebFetchTool {
     pub fn new() -> Self {
-        let redirect_allowlist = load_domain_allowlist_from_env(PUBLIC_WEB_ALLOWLIST_ENV);
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(DEFAULT_TIMEOUT_SECS))
-            .user_agent("TEMM1E/0.1")
-            .redirect(reqwest::redirect::Policy::custom(move |attempt| {
-                let host = attempt.url().host_str().map(|s| s.to_string());
-                match host.as_deref() {
-                    Some(h) if host_is_blocked(h) => attempt.error(format!(
-                        "Blocked redirect target '{}'. Private, loopback, local, and internal redirects are disabled.",
-                        h
-                    )),
-                    Some(h) => match enforce_host_allowlist(h, &redirect_allowlist, "redirect host") {
-                        Ok(()) => attempt.follow(),
-                        Err(msg) => attempt.error(msg),
-                    },
-                    None => attempt.error("Redirect target is missing a host"),
-                }
-            }))
-            .build()
-            .unwrap_or_else(|_| reqwest::Client::new());
+        let policy = temm1e_core::net_policy::NetworkPolicy::public_web_from_env();
+        let client = build_standard_client(&policy).unwrap_or_else(|_| reqwest::Client::new());
 
         Self { client }
     }
 }
 
-const PUBLIC_WEB_ALLOWLIST_ENV: &str = "TEMM1E_PUBLIC_WEB_ALLOWLIST";
 
 #[async_trait]
 impl Tool for WebFetchTool {
@@ -86,9 +66,9 @@ impl Tool for WebFetchTool {
     fn declarations(&self) -> CapabilityPolicy {
         CapabilityPolicy {
             file_access: Vec::new(),
-            network_access: vec!["public-http".to_string()],
+            network_access: temm1e_core::net_policy::NetworkPolicy::public_web_from_env(),
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
-browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
+            browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
     }
 
@@ -183,6 +163,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::network_guard::host_is_blocked;
 
     #[test]
     fn host_filter_blocks_local_targets() {

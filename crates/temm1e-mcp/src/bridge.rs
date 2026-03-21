@@ -66,7 +66,7 @@ impl Tool for McpBridgeTool {
         // since they may call external services, but can't know specifics.
         CapabilityPolicy {
             file_access: vec![],
-            network_access: vec!["*".to_string()], // MCP tools may access any network
+            network_access: temm1e_core::net_policy::NetworkPolicy::Unrestricted, // MCP tools may access any network
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }

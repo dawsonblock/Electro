@@ -1,5 +1,6 @@
 //! Shared browser launch/runtime policy for local and remote isolated browser backends.
 
+use crate::network_guard::build_standard_client;
 use chromiumoxide::browser::{Browser, BrowserConfig};
 use chromiumoxide::handler::Handler;
 use temm1e_core::types::error::Temm1eError;
@@ -97,9 +98,7 @@ pub async fn connect_or_launch_browser(
             url.clone()
         };
         let health_url = format!("{}/json/version", http_url.trim_end_matches('/'));
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(2))
-            .build()
+        let client = build_standard_client(&temm1e_core::net_policy::NetworkPolicy::Unrestricted)
             .map_err(|e| Temm1eError::Tool(format!("Failed to build health check client: {}", e)))?;
 
         if let Err(e) = client.get(&health_url).send().await {

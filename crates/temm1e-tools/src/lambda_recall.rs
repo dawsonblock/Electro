@@ -52,7 +52,7 @@ impl Tool for LambdaRecallTool {
     fn declarations(&self) -> CapabilityPolicy {
         CapabilityPolicy {
             file_access: Vec::new(),
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }

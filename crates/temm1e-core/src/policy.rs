@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 pub struct CapabilityPolicy {
     /// Permitted file access modes (read, write) and their restricted scopes
     pub file_access: Vec<FileAccessPolicy>,
-    /// Permitted network egress domains/patterns
-    pub network_access: Vec<String>,
+    /// Permitted network egress class
+    pub network_access: crate::net_policy::NetworkPolicy,
     /// Permitted shell execution limits
     pub shell_access: ShellPolicy,
     /// Automated browser interaction permissions

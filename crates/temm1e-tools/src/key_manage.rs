@@ -56,7 +56,7 @@ impl Tool for KeyManageTool {
     fn declarations(&self) -> CapabilityPolicy {
         CapabilityPolicy {
             file_access: Vec::new(),
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         }
@@ -232,6 +232,6 @@ mod tests {
         let decl = tool.declarations();
         assert_eq!(decl.shell_access, temm1e_core::policy::ShellPolicy::Blocked);
         assert!(decl.file_access.is_empty());
-        assert!(decl.network_access.is_empty());
+        assert!(matches!(decl.network_access, temm1e_core::net_policy::NetworkPolicy::Blocked));
     }
 }

@@ -524,15 +524,7 @@ fn validate_arguments(
         }
 
         if let Some(serde_json::Value::String(raw_url)) = map.get("url") {
-            validate_public_url_argument(tool_name, raw_url)?;
-
-            // Additionally enforce that if it attempts network, it must have it
-            if policy.network_access.is_empty() && tool_name != "browser" {
-                return Err(Temm1eError::SandboxViolation(format!(
-                    "Policy rejection: Tool '{}' attempted network access to '{}' but declared no network capabilities.",
-                    tool_name, raw_url
-                )));
-            }
+            validate_public_url_argument(tool_name, raw_url, &policy.network_access)?;
         }
     }
 
@@ -571,8 +563,17 @@ fn validate_arguments(
     Ok(())
 }
 
-/// Validate that a file path argument resolves to within the workspace.
-fn validate_public_url_argument(tool_name: &str, raw_url: &str) -> Result<(), Temm1eError> {
+fn validate_public_url_argument(tool_name: &str, raw_url: &str, policy: &temm1e_core::net_policy::NetworkPolicy) -> Result<(), Temm1eError> {
+    if policy == &temm1e_core::net_policy::NetworkPolicy::Unrestricted {
+        return Ok(());
+    }
+    if policy == &temm1e_core::net_policy::NetworkPolicy::Blocked {
+        return Err(Temm1eError::SandboxViolation(format!(
+            "Policy rejection: Tool '{}' attempted network access to '{}' but declared no network capabilities.",
+            tool_name, raw_url
+        )));
+    }
+
     let parsed = Url::parse(raw_url).map_err(|e| {
         Temm1eError::SandboxViolation(format!(
             "Tool '{}' received invalid URL '{}': {}",
@@ -597,37 +598,32 @@ fn validate_public_url_argument(tool_name: &str, raw_url: &str) -> Result<(), Te
         ))
     })?;
 
-    let host_lower = host.to_ascii_lowercase();
-    let blocked_name = matches!(host_lower.as_str(), "localhost" | "localhost.localdomain")
-        || host_lower.ends_with(".local")
-        || host_lower.ends_with(".internal")
-        || host_lower.ends_with(".localhost");
-
-    let blocked_ip = host_lower
-        .parse::<std::net::IpAddr>()
-        .map(|ip| match ip {
-            std::net::IpAddr::V4(ip) => {
-                ip.is_private()
-                    || ip.is_loopback()
-                    || ip.is_link_local()
-                    || ip.is_multicast()
-                    || ip.is_unspecified()
-            }
-            std::net::IpAddr::V6(ip) => {
-                let seg0 = ip.segments()[0];
-                ip.is_loopback()
-                    || ip.is_unspecified()
-                    || (seg0 & 0xfe00) == 0xfc00
-                    || (seg0 & 0xffc0) == 0xfe80
-            }
-        })
-        .unwrap_or(false);
-
-    if blocked_name || blocked_ip {
+    if temm1e_core::net_policy::host_address_is_blocked_for_public_web(host) {
         return Err(Temm1eError::SandboxViolation(format!(
             "Tool '{}' URL '{}' targets a blocked local/private/internal host",
             tool_name, raw_url
         )));
+    }
+
+    if let temm1e_core::net_policy::NetworkPolicy::PublicWeb { allowlist: Some(ref domains) } = policy {
+        if domains.is_empty() {
+            return Ok(());
+        }
+        let host_lower = host.trim().trim_matches('.').to_ascii_lowercase();
+        let allowed = domains.iter().any(|entry| {
+            let entry_lower = entry.trim().trim_matches('.').to_ascii_lowercase();
+            if entry_lower.is_empty() {
+                false
+            } else {
+                host_lower == entry_lower || host_lower.ends_with(&format!(".{entry_lower}"))
+            }
+        });
+        if !allowed {
+            return Err(Temm1eError::SandboxViolation(format!(
+                "Blocked URL target '{}'. The host is not permitted by the policy allowlist.",
+                host
+            )));
+        }
     }
 
     Ok(())
@@ -831,7 +827,7 @@ mod tests {
         fn declarations(&self) -> CapabilityPolicy {
             CapabilityPolicy {
                 file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
-                network_access: Vec::new(),
+                network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
                 shell_access: temm1e_core::policy::ShellPolicy::Blocked,
                 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
@@ -872,7 +868,7 @@ mod tests {
         fn declarations(&self) -> CapabilityPolicy {
             CapabilityPolicy {
                 file_access: Vec::new(),
-                network_access: Vec::new(),
+                network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
                 shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
@@ -907,7 +903,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         fn declarations(&self) -> CapabilityPolicy {
             CapabilityPolicy {
                 file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
-                network_access: Vec::new(),
+                network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
                 shell_access: temm1e_core::policy::ShellPolicy::Blocked,
                 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
             }
@@ -965,7 +961,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 
         let tool = MockTool::new("file_tool").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Read("subdir".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -991,7 +987,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 
         let tool = MockTool::new("evil_tool").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Write("/etc/passwd".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1021,7 +1017,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 
         let tool = MockTool::new("traversal_tool").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Read("../../etc/shadow".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1068,7 +1064,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         // Path with encoded-style traversal (literal string, not URL-encoded)
         let tool = MockTool::new("encoded_traversal").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Read("../../../etc/passwd".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1094,7 +1090,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 
         let tool = MockTool::new("root_access").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::ReadWrite("/".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1121,7 +1117,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
 
         let tool = MockTool::new("nested_tool").with_declarations(CapabilityPolicy {
             file_access: vec![FileAccessPolicy::Read("src/lib".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1151,7 +1147,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
                 FileAccessPolicy::Read("src".to_string()),
                 FileAccessPolicy::Write("docs".to_string()),
             ],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1180,7 +1176,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
                 FileAccessPolicy::Read("valid".to_string()),
                 FileAccessPolicy::Write("/etc/shadow".to_string()),
             ],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
 browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         });
@@ -1699,7 +1695,7 @@ browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
     async fn parallel_multiple_different_tools() {
         let decl_policy = temm1e_core::policy::CapabilityPolicy {
             file_access: vec![temm1e_core::policy::FileAccessPolicy::ReadWrite("*".to_string())],
-            network_access: Vec::new(),
+            network_access: temm1e_core::net_policy::NetworkPolicy::Blocked,
             shell_access: temm1e_core::policy::ShellPolicy::Blocked,
             browser_access: temm1e_core::policy::BrowserPolicy::Blocked,
         };
