@@ -25,7 +25,8 @@ use electro_core::Provider;
 // ---------------------------------------------------------------------------
 
 const MODEL: &str = "gemini-3.1-flash-lite-preview";
-/// Artifacts go to /tmp during build, then copied to docs/ after verification.
+/// Artifacts go to /tmp during build, then are copied to
+/// target/swarm/experiment_artifacts after verification.
 /// This avoids Cargo workspace auto-detection on nested Cargo.toml files.
 const ARTIFACT_BASE: &str = "/tmp/electro_hive_bench";
 const ARTIFACT_FINAL: &str = "target/swarm/experiment_artifacts";
