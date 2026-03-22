@@ -20,7 +20,7 @@ use electro_core::Provider;
 
 const MODEL: &str = "gemini-3.1-pro-preview";
 const BUILD_DIR: &str = "/tmp/electro_bench_py";
-const ARTIFACT_DIR: &str = "docs/swarm/experiment_artifacts";
+const ARTIFACT_DIR: &str = "target/swarm/experiment_artifacts";
 
 // ---------------------------------------------------------------------------
 // Provider + tracking (same as v2)

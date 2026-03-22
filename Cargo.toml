@@ -1,6 +1,5 @@
 [workspace]
 resolver = "2"
-exclude = ["docs/swarm/experiment_artifacts"]
 members = [
     "crates/electro-core",
     "crates/electro-gateway",

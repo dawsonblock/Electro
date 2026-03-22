@@ -5,7 +5,7 @@
 //!
 //! **Key invariant:** `bone + active + output_reserve + guard + λ_tokens ≤ skull`
 //!
-//! See `tems_lab/LAMBDA_MEMORY.md` for full design.
+//! See `research/tems_lab/LAMBDA_MEMORY.md` for full design.
 
 use std::collections::HashMap;
 
