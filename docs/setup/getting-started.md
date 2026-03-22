@@ -120,7 +120,7 @@ At startup, ELECTRO checks for credentials in this order:
    ```
    Logs are written to `~/.electro/electro.log`.
 
-3. **If using an API key:** Send your key directly in the Telegram chat. ELECTRO auto-detects the provider and validates the key.
+3. **If using an API key:** Configure your key using ELECTRO's secure setup flow (for example, an encrypted one-time setup link or local configuration file). Avoid pasting API keys directly into Telegram chats, since chat history and logs can retain secrets.
 
 4. **Test it out:** Send a message to your bot. Try:
    - `Hello!` — basic chat
