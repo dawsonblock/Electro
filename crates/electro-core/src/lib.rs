@@ -7,6 +7,7 @@ pub mod policy;
 pub mod tenant_impl;
 pub mod traits;
 pub mod types;
+pub mod paths;
 
 pub use traits::*;
 pub use types::*;

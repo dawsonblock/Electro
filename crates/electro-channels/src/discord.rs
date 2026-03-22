@@ -13,7 +13,7 @@ use electro_core::types::config::ChannelConfig;
 use electro_core::types::error::ElectroError;
 use electro_core::types::file::{FileData, FileMetadata, OutboundFile, ReceivedFile};
 use electro_core::types::message::{AttachmentRef, InboundMessage, OutboundMessage, ParseMode};
-use electro_core::{Channel, FileTransfer};
+use electro_core::{paths, Channel, FileTransfer};
 
 use serenity::all::{
     ChannelId, Context, CreateAttachment, CreateMessage, EventHandler, GatewayIntents, Message,
@@ -49,7 +49,7 @@ fn allow_first_user_bootstrap_enabled() -> bool {
 }
 
 fn allowlist_path() -> Option<std::path::PathBuf> {
-    dirs::home_dir().map(|h| h.join(".electro").join("discord_allowlist.toml"))
+    paths::discord_allowlist_file().ok()
 }
 
 /// Load the persisted Discord allowlist from disk.
@@ -72,14 +72,12 @@ fn load_allowlist_file() -> Option<AllowlistFile> {
 
 /// Save the Discord allowlist to disk. Creates `~/.electro/` if needed.
 fn save_allowlist_file(data: &AllowlistFile) -> Result<(), ElectroError> {
-    let path = allowlist_path().ok_or_else(|| {
-        ElectroError::Channel("Cannot determine home directory for Discord allowlist".into())
+    paths::ensure_electro_home().map_err(|e| {
+        ElectroError::Channel(format!("Failed to create ~/.electro directory: {e}"))
     })?;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| {
-            ElectroError::Channel(format!("Failed to create ~/.electro directory: {e}"))
-        })?;
-    }
+    let path = paths::discord_allowlist_file().map_err(|e| {
+        ElectroError::Channel(format!("Cannot determine home directory for Discord allowlist: {e}"))
+    })?;
     let content = toml::to_string_pretty(data)
         .map_err(|e| ElectroError::Channel(format!("Failed to serialize Discord allowlist: {e}")))?;
     std::fs::write(&path, content).map_err(|e| {

@@ -1,3 +1,4 @@
+use crate::paths;
 use crate::types::config::{AgentAccessibleConfig, ElectroConfig};
 use crate::types::error::ElectroError;
 use std::path::{Path, PathBuf};
@@ -10,9 +11,7 @@ fn config_paths() -> Vec<PathBuf> {
     paths.push(PathBuf::from("/etc/electro/config.toml"));
 
     // 2. User config
-    if let Some(home) = dirs::home_dir() {
-        paths.push(home.join(".electro").join("config.toml"));
-    }
+    paths.push(paths::electro_home().join("config.toml"));
 
     // 3. Workspace config
     paths.push(PathBuf::from("config.toml"));
@@ -71,9 +70,7 @@ fn agent_config_paths() -> Vec<PathBuf> {
     let mut paths = Vec::new();
 
     // 1. User agent config
-    if let Some(home) = dirs::home_dir() {
-        paths.push(home.join(".electro").join("agent-config.toml"));
-    }
+    paths.push(paths::agent_config_file());
 
     // 2. Workspace agent config
     paths.push(PathBuf::from("agent-config.toml"));
@@ -81,9 +78,9 @@ fn agent_config_paths() -> Vec<PathBuf> {
     paths
 }
 
-/// Returns the default agent config file path (`~/.electro/agent-config.toml`)
+/// Returns the default agent config file path (`~/.electro/agent.toml`)
 pub fn default_agent_config_path() -> Option<PathBuf> {
-    dirs::home_dir().map(|h| h.join(".electro").join("agent-config.toml"))
+    Some(paths::agent_config_file())
 }
 
 /// Load agent-accessible config from discovered agent config files.

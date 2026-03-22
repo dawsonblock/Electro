@@ -289,7 +289,10 @@ fn default_train_schedule() -> String {
     "0 3 * * *".to_string()
 }
 fn default_artifacts_dir() -> String {
-    "~/.electro/eigentune".to_string()
+    electro_core::paths::electro_home()
+        .join("eigentune")
+        .to_string_lossy()
+        .to_string()
 }
 
 impl Default for EigenTuneConfig {

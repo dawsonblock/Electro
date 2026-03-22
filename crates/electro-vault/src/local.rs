@@ -14,6 +14,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, warn};
 use zeroize::Zeroizing;
 
+use electro_core::paths;
 use electro_core::types::error::ElectroError;
 use electro_core::Vault;
 
@@ -44,11 +45,7 @@ pub struct LocalVault {
 impl LocalVault {
     /// Create (or open) a local vault in the default location (`~/.electro/`).
     pub async fn new() -> Result<Self, ElectroError> {
-        let base = dirs::home_dir()
-            .ok_or_else(|| ElectroError::Vault("cannot determine home directory".into()))?
-            .join(".electro");
-
-        Self::with_dir(base).await
+        Self::with_dir(paths::electro_home()).await
     }
 
     /// Create (or open) a local vault in a custom directory.

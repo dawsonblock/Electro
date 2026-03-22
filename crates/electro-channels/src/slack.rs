@@ -18,7 +18,7 @@ use electro_core::types::config::ChannelConfig;
 use electro_core::types::error::ElectroError;
 use electro_core::types::file::{FileData, FileMetadata, OutboundFile, ReceivedFile};
 use electro_core::types::message::{AttachmentRef, InboundMessage, OutboundMessage};
-use electro_core::{Channel, FileTransfer};
+use electro_core::{paths, Channel, FileTransfer};
 
 /// Maximum message length Slack supports (approximately 4000 characters for
 /// `chat.postMessage`). We use a conservative limit to account for formatting.
@@ -143,7 +143,7 @@ fn allow_first_user_bootstrap_enabled() -> bool {
 }
 
 fn allowlist_path() -> Option<std::path::PathBuf> {
-    dirs::home_dir().map(|h| h.join(".electro").join("slack_allowlist.toml"))
+    paths::slack_allowlist_file().ok()
 }
 
 /// Load the persisted Slack allowlist from disk.
@@ -156,14 +156,12 @@ fn load_allowlist_file() -> Option<AllowlistFile> {
 
 /// Save the Slack allowlist to disk. Creates `~/.electro/` if needed.
 fn save_allowlist_file(data: &AllowlistFile) -> Result<(), ElectroError> {
-    let path = allowlist_path().ok_or_else(|| {
-        ElectroError::Channel("Cannot determine home directory for Slack allowlist".into())
+    paths::ensure_electro_home().map_err(|e| {
+        ElectroError::Channel(format!("Failed to create ~/.electro directory: {e}"))
     })?;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| {
-            ElectroError::Channel(format!("Failed to create ~/.electro directory: {e}"))
-        })?;
-    }
+    let path = paths::slack_allowlist_file().map_err(|e| {
+        ElectroError::Channel(format!("Cannot determine home directory for Slack allowlist: {e}"))
+    })?;
     let content = toml::to_string_pretty(data)
         .map_err(|e| ElectroError::Channel(format!("Failed to serialize Slack allowlist: {e}")))?;
     std::fs::write(&path, content)

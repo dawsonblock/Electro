@@ -22,16 +22,26 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
+        curl \
         chromium \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root electro user
+RUN groupadd -g 1000 electro && \
+    useradd -u 1000 -g electro -m -d /home/electro electro
+
 # chromiumoxide looks for "chromium" or "chromium-browser" on PATH
 ENV CHROME_PATH=/usr/bin/chromium
+ENV HOME=/home/electro
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/temm1e ./temm1e
+COPY --from=builder /app/target/release/electro ./electro
+
+RUN chown -R electro:electro /app /home/electro
 
 EXPOSE 8080
 
-ENTRYPOINT ["./temm1e", "start"]
+USER electro
+
+ENTRYPOINT ["./electro", "start"]

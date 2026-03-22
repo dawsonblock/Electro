@@ -86,11 +86,11 @@ jobs:
           fi
 
       - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }} --bin temm1e
+        run: cargo build --release --target ${{ matrix.target }} --bin electro
 
       - name: Check binary size (<10 MB)
         run: |
-          BINARY="target/${{ matrix.target }}/release/temm1e"
+          BINARY="target/${{ matrix.target }}/release/electro"
           SIZE=$(stat -c%s "$BINARY")
           SIZE_MB=$(echo "scale=2; $SIZE / 1048576" | bc)
           echo "Binary size: ${SIZE_MB} MB ($SIZE bytes)"
@@ -103,8 +103,8 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: temm1e-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/temm1e
+          name: electro-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/electro
           retention-days: 7
 
   # -----------------------------------------------
@@ -125,14 +125,14 @@ jobs:
         with:
           context: .
           push: false
-          tags: temm1e:ci-${{ github.sha }}
+          tags: electro:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Check image size (<50 MB)
         run: |
-          docker buildx build --load -t temm1e:size-check .
-          SIZE=$(docker image inspect temm1e:size-check --format='{{.Size}}')
+          docker buildx build --load -t electro:size-check .
+          SIZE=$(docker image inspect electro:size-check --format='{{.Size}}')
           SIZE_MB=$(echo "scale=2; $SIZE / 1048576" | bc)
           echo "Image size: ${SIZE_MB} MB"
           if [ "$SIZE" -gt 52428800 ]; then

@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use electro_core::error::ElectroError;
+use electro_core::paths;
 use tokio::fs;
 
 /// A parsed skill loaded from a `.md` file.
@@ -65,10 +66,8 @@ impl SkillRegistry {
         let mut dirs_to_scan: Vec<PathBuf> = Vec::new();
 
         // Global skills directory
-        if let Some(home) = dirs::home_dir() {
-            let global_dir = home.join(".electro").join("skills");
-            dirs_to_scan.push(global_dir);
-        }
+        let global_dir = paths::electro_home().join("skills");
+        dirs_to_scan.push(global_dir);
 
         // Workspace skills directory
         let workspace_dir = self.workspace_path.join("skills");
