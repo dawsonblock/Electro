@@ -456,7 +456,7 @@ async fn live_ab_benchmark() {
 
     // Save results to JSON
     let json = serde_json::to_string_pretty(&all_results).unwrap_or_default();
-    let results_path = std::path::Path::new("tems_lab/swarm/results");
+    let results_path = std::path::Path::new("target/bench/swarm/results");
     let _ = std::fs::create_dir_all(results_path);
     let ts = chrono::Utc::now().format("%Y%m%d_%H%M%S");
     let file = results_path.join(format!("bench_{ts}.json"));
@@ -658,7 +658,7 @@ async fn execution_time_benchmark() {
     );
 
     // Save
-    let results_path = std::path::Path::new("tems_lab/swarm/results");
+    let results_path = std::path::Path::new("target/bench/swarm/results");
     let _ = std::fs::create_dir_all(results_path);
     let ts = chrono::Utc::now().format("%Y%m%d_%H%M%S");
     let content = format!(

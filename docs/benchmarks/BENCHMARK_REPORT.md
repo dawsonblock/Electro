@@ -181,8 +181,8 @@ Post-session    |  9.8     | cleanup  | MCP detached, GC-equivalent drop
 
 ## Raw Log Files
 
-- **Conversation log:** [`cli-3turn-gpt4o-mini-2026-03-11.log`](cli-3turn-gpt4o-mini-2026-03-11.log)
-- **Memory samples:** [`memory-samples-2026-03-11.csv`](memory-samples-2026-03-11.csv)
+- **Conversation log:** [`cli-3turn-gpt4o-mini-2026-03-11.log`](research/benchmarks/raw/cli-3turn-gpt4o-mini-2026-03-11.log)
+- **Memory samples:** [`memory-samples-2026-03-11.csv`](research/benchmarks/raw/memory-samples-2026-03-11.csv)
 
 ---
 

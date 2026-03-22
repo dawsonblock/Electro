@@ -451,5 +451,5 @@ usage → monitor DAG execution in logs → flip default to ON once validated in
 ## Appendix: Raw Test Outputs
 
 Full test outputs saved for reference:
-- `docs/design/test1_parallel_off_output.txt` — Test 1 raw output (490 lines)
-- `docs/design/test2_parallel_on_output.txt` — Test 2 raw output (535 lines)
+- `research/design/raw/test1_parallel_off_output.txt` — Test 1 raw output (490 lines)
+- `research/design/raw/test2_parallel_on_output.txt` — Test 2 raw output (535 lines)
