@@ -46,6 +46,7 @@ use electro_agent::agent_task_status::AgentTaskStatus;
 use electro_core::config::credentials::{
     load_active_provider_keys, load_saved_credentials, save_credentials,
 };
+use electro_core::paths;
 use electro_core::types::config::ElectroConfig;
 use electro_core::types::model_registry::default_model;
 
@@ -372,8 +373,9 @@ fn parse_file_references(text: &str) -> (String, Vec<electro_core::types::messag
     if let Some(path_str) = trimmed.strip_prefix("/file ") {
         let path = std::path::Path::new(path_str.trim());
         let expanded = if path_str.trim().starts_with('~') {
-            dirs::home_dir()
-                .unwrap_or_default()
+            paths::electro_home()
+                .parent()
+                .unwrap_or(path)
                 .join(path_str.trim().trim_start_matches("~/"))
         } else {
             path.to_path_buf()
@@ -395,8 +397,9 @@ fn parse_file_references(text: &str) -> (String, Vec<electro_core::types::messag
     // Auto-detect bare file paths (e.g. dragged into terminal)
     // Check if the entire input looks like a file path
     let expanded = if trimmed.starts_with('~') {
-        dirs::home_dir()
-            .unwrap_or_default()
+        paths::electro_home()
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
             .join(trimmed.trim_start_matches("~/"))
     } else {
         std::path::PathBuf::from(trimmed)

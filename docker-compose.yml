@@ -15,7 +15,8 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - RUST_LOG=info
     volumes:
-      - electro-data:/var/lib/electro
+      # Mount host .electro directory for development
+      # Ensure Dockerfile creates 'electro' user with HOME=/home/electro
       - ${HOME}/.electro:/home/electro/.electro
     restart: unless-stopped
     healthcheck:
@@ -46,6 +47,5 @@ services:
   #     timeout: 5s
   #     retries: 5
 
-volumes:
-  electro-data:
-  # pgdata:
+# volumes:
+  # pgdata:  # Uncomment when using PostgreSQL

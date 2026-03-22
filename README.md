@@ -18,15 +18,15 @@
 
 ## What is Electro
 
-Electro is a full agent runtime—not just an LLM wrapper. It treats the language model as a finite brain with a strict token budget, managing context building, tool execution loops, persistent memory, and multi-channel deployment from a single binary. It runs headless on a $5 VPS and stays up with four-layer panic resilience.
+Electro is a cloud-native AI agent runtime written in Rust. It connects to messaging channels, routes messages through an agent loop that calls AI providers, executes tools, and persists conversation history to memory backends—all from a single binary that runs headless on minimal hardware.
 
 ## Capabilities
 
 - **Multi-channel deployment**: Telegram, Discord, Slack, CLI, or interactive TUI
 - **6 AI providers**: Anthropic, OpenAI, Google Gemini, xAI Grok, OpenRouter, and ChatGPT via OAuth—no API key needed for Codex
 - **Built-in tools**: Shell, vision browser (screenshot → click), file ops, web fetch, git, MCP client
-- **λ-Memory**: Exponential decay memory with hash-based recall; 95% cross-session accuracy
-- **Blueprints**: Structured, replayable recipes that capture learned procedures without extra LLM calls
+- **λ-Memory**: Exponential decay memory with hash-based recall
+- **Blueprints**: Structured, replayable recipes that capture learned procedures
 - **Many Tems**: Stigmergic swarm intelligence for parallel task execution
 - **Eigen-Tune**: Self-tuning distillation that trains local models from LLM interactions
 
@@ -44,53 +44,30 @@ cargo build --release
 ./target/release/electro tui
 ```
 
-First run launches an arrow-key setup wizard. Paste any supported API key—the provider is detected automatically.
-
-**Mode 2 — Server (persistent channel bot)**
+**Mode 2 — Server with Telegram bot**
 
 ```bash
 export TELEGRAM_BOT_TOKEN="your-token"
 ./target/release/electro start
 ```
 
-Replace `TELEGRAM_BOT_TOKEN` with `DISCORD_BOT_TOKEN` or `SLACK_BOT_TOKEN` for those channels.
-
-## State and Configuration
-
-Electro stores state in `~/.electro/`:
-
-- `electro.toml` — main configuration
-- `memory/` — SQLite + Markdown memory backends
-- `vault/` — ChaCha20-Poly1305 encrypted secrets
-- `blueprints/` — saved procedure recipes
-- `logs/` — structured tracing output
-
-Run `electro config validate` to check your configuration. See [docs/configuration.md](docs/configuration.md) for the full schema.
-
-## Security Model
-
-- **Deny-by-default access control**: Empty allowlists block all users until explicitly provisioned
-- **Workspace isolation**: All file operations sandboxed via `resolve_safe_path`—no path escapes
-- **Network isolation**: Browser and web_fetch restricted to public web or explicit allowlist
-- **Secrets at rest**: ChaCha20-Poly1305 vault with `vault://` URI scheme; AES-256-GCM one-time key encryption on first setup
-- **Credential hygiene**: API keys auto-stripped from chat; secret output filtered on replies
-
-See [docs/security.md](docs/security.md) for details.
+See [docs/setup/getting-started.md](docs/setup/getting-started.md) for full setup instructions.
 
 ## Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [docs/](docs/) | Full documentation index |
-| [docs/configuration.md](docs/configuration.md) | Config schema, environment variables |
-| [docs/security.md](docs/security.md) | Security architecture, threat model |
-| [docs/channels.md](docs/channels.md) | Telegram, Discord, Slack setup |
-| [docs/providers.md](docs/providers.md) | AI provider configuration |
-| [docs/tools.md](docs/tools.md) | Built-in tools, MCP servers |
-| [docs/memory.md](docs/memory.md) | λ-Memory, SQLite, Markdown backends |
-| [docs/architecture.md](docs/architecture.md) | Deep dive on crates, traits, message flow |
-
-Join the community at https://discord.gg/3ux2c5xz
+| [docs/setup/getting-started.md](docs/setup/getting-started.md) | Initial setup and configuration |
+| [docs/setup/docker-oauth.md](docs/setup/docker-oauth.md) | Docker deployment with OAuth |
+| [docs/dev/getting-started.md](docs/dev/getting-started.md) | Development environment setup |
+| [docs/dev/architecture.md](docs/dev/architecture.md) | Architecture deep dive |
+| [docs/dev/contributor-protocol.md](docs/dev/contributor-protocol.md) | Contributing guidelines |
+| [docs/ops/configuration.md](docs/ops/configuration.md) | Configuration reference |
+| [docs/ops/deployment.md](docs/ops/deployment.md) | Deployment guides |
+| [docs/ops/monitoring.md](docs/ops/monitoring.md) | Monitoring and observability |
+| [docs/ops/upgrade.md](docs/ops/upgrade.md) | Upgrade procedures |
+| [docs/channels/](docs/channels/) | Channel setup guides (Telegram, Discord, Slack) |
+| [docs/architecture/vision.md](docs/architecture/vision.md) | Project vision and roadmap |
 
 ## Workspace Layout
 
@@ -123,10 +100,6 @@ cargo build --release                                # Release binary
 ```
 
 Requires **Rust 1.82+** and Chrome/Chromium (for the browser tool).
-
-## Status
-
-Electro is production-ready (v3.2.0). The project follows a monthly release cadence with full regression testing (1,638 tests, zero warnings).
 
 ---
 

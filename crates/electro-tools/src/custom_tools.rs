@@ -14,6 +14,7 @@ use std::sync::Arc;
 use electro_core::types::error::ElectroError;
 use electro_core::{Tool, ToolContext, ToolInput, ToolOutput};
 use electro_core::policy::CapabilityPolicy;
+use electro_core::paths;
 
 use tracing::{debug, info, warn};
 
@@ -228,10 +229,8 @@ pub struct CustomToolRegistry {
 
 impl CustomToolRegistry {
     pub fn new() -> Self {
-        let tools_dir = dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(".electro")
-            .join("custom-tools");
+        let tools_dir = paths::custom_tools_dir();
+        let _ = paths::ensure_electro_home();
         Self {
             tools_dir,
             tools_changed: AtomicBool::new(false),

@@ -160,8 +160,7 @@ impl McpServerConfig {
 
 /// Path to `~/.electro/mcp.toml`.
 pub fn mcp_config_path() -> PathBuf {
-    let base = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-    base.join(".electro").join("mcp.toml")
+    electro_core::paths::electro_home().join("mcp.toml")
 }
 
 /// Load MCP config from `~/.electro/mcp.toml`.

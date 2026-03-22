@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use tracing;
 
+use crate::paths;
 use crate::types::error::ElectroError;
 
 // ── Data Types ──────────────────────────────────────────────────────
@@ -54,10 +55,7 @@ pub struct DetectedCredential {
 
 /// Returns `~/.electro/credentials.toml`.
 pub fn credentials_path() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(".electro")
-        .join("credentials.toml")
+    paths::credentials_file()
 }
 
 // ── Placeholder Detection ───────────────────────────────────────────
@@ -307,11 +305,9 @@ pub async fn save_credentials(
     model: &str,
     custom_base_url: Option<&str>,
 ) -> Result<(), ElectroError> {
-    let dir = dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(".electro");
+    let dir = paths::electro_home();
     tokio::fs::create_dir_all(&dir).await?;
-    let path = dir.join("credentials.toml");
+    let path = paths::credentials_file();
 
     let mut creds = load_credentials_file().unwrap_or_default();
 

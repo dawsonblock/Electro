@@ -13,6 +13,7 @@ use tokio::sync::{mpsc, watch, Mutex, RwLock};
 use electro_agent::agent_task_status::AgentTaskStatus;
 use electro_agent::AgentRuntime;
 use electro_core::config::credentials;
+use electro_core::paths;
 use electro_core::types::config::{ElectroConfig, ElectroMode};
 use electro_core::types::error::ElectroError;
 use electro_core::types::message::{InboundMessage, OutboundMessage};
@@ -99,9 +100,7 @@ pub async fn spawn_agent(
 
     // 2. Create memory backend
     let memory_url = setup.config.memory.path.clone().unwrap_or_else(|| {
-        let data_dir = dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(".electro");
+        let data_dir = paths::electro_home();
         std::fs::create_dir_all(&data_dir).ok();
         format!("sqlite:{}/memory.db?mode=rwc", data_dir.display())
     });
@@ -110,10 +109,7 @@ pub async fn spawn_agent(
     );
 
     // 3. Create workspace
-    let workspace = dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(".electro")
-        .join("workspace");
+    let workspace = paths::workspace_dir();
     std::fs::create_dir_all(&workspace).ok();
 
     // 4. Determine personality mode

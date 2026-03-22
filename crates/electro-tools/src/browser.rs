@@ -46,6 +46,7 @@ use serde::{Deserialize, Serialize};
 use electro_core::types::error::ElectroError;
 use electro_core::{
     Tool, ToolContext, ToolInput, ToolOutput, ToolOutputImage, Vault};
+use electro_core::paths;
 use electro_core::policy::{CapabilityPolicy, FileAccessPolicy,
 };
 use tokio::sync::Mutex;
@@ -368,24 +369,24 @@ impl BrowserTool {
 
     /// Find the user's real Chrome/Chromium profile directory (cross-platform).
     fn find_chrome_profile() -> Option<std::path::PathBuf> {
-        let home = dirs::home_dir()?;
+        let sessions = paths::sessions_dir();
 
         // Platform-specific Chrome profile locations
         let candidates: Vec<std::path::PathBuf> = if cfg!(target_os = "macos") {
             vec![
-                home.join("Library/Application Support/Google/Chrome/Default"),
-                home.join("Library/Application Support/Chromium/Default"),
+                sessions.join("Library/Application Support/Google/Chrome/Default"),
+                sessions.join("Library/Application Support/Chromium/Default"),
             ]
         } else if cfg!(target_os = "windows") {
             vec![
-                home.join("AppData/Local/Google/Chrome/User Data/Default"),
-                home.join("AppData/Local/Chromium/User Data/Default"),
+                sessions.join("AppData/Local/Google/Chrome/User Data/Default"),
+                sessions.join("AppData/Local/Chromium/User Data/Default"),
             ]
         } else {
             // Linux
             vec![
-                home.join(".config/google-chrome/Default"),
-                home.join(".config/chromium/Default"),
+                sessions.join(".config/google-chrome/Default"),
+                sessions.join(".config/chromium/Default"),
             ]
         };
 
@@ -1107,9 +1108,7 @@ impl BrowserTool {
 
 /// Return the sessions directory path: `~/.electro/sessions/`.
 fn sessions_dir() -> Result<std::path::PathBuf, ElectroError> {
-    dirs::home_dir()
-        .map(|h| h.join(".electro").join(SESSIONS_DIR))
-        .ok_or_else(|| ElectroError::Tool("Cannot determine home directory".into()))
+    Ok(paths::sessions_dir())
 }
 
 /// Extract the base domain from a URL (e.g., "https://www.facebook.com/login" -> "facebook").

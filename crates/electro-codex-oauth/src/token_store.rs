@@ -7,6 +7,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+use electro_core::paths;
 use electro_core::types::error::ElectroError;
 use tokio::sync::Mutex;
 
@@ -202,10 +203,7 @@ impl TokenStore {
 
     /// Default path: ~/.electro/oauth.json
     fn default_path() -> PathBuf {
-        dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(".electro")
-            .join("oauth.json")
+        paths::oauth_file()
     }
 
     /// Delete the token file (for logout).
